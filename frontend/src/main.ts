@@ -1,5 +1,5 @@
-import { CardData, parseCardURL } from "./card.factory"
-import { promptDeviceAuthentication } from './webauthn.factory'
+import { CardData, parseCardURL } from "./card.factory.js"
+// import { promptDeviceAuthentication } from './webauthn.factory.js'
 
 const main = async () => {
 
@@ -8,15 +8,25 @@ const main = async () => {
 
     console.log(card);
 
-    try {
-        const credential = await promptDeviceAuthentication()
-        console.log("Device nullifier:", credential.deviceNullifier)
+    const hnInput = `${name}|${password}|${cardSecret}`
+    const seed = await humanNetwork.voprf(hnInput)
+
+    // Store card secret encrypted with password
+    const encryptedSecret = encrypt(cardSecret, password)
+    localStorage.setItem('cardSecret', encryptedSecret)
+
+    // On return: decrypt and use
+    const cardSecret = decrypt(localStorage.getItem('cardSecret'), password)
+
+    // try {
+    //     const credential = await promptDeviceAuthentication()
+    //     console.log("Device nullifier:", credential.deviceNullifier)
         
-        // Use this nullifier for your smart contract
-        // It will be the same every time on this device
-    } catch (error: any) {
-        console.error("Authentication failed:", error.message)
-    }
+    //     // Use this nullifier for your smart contract
+    //     // It will be the same every time on this device
+    // } catch (error: any) {
+    //     console.error("Authentication failed:", error.message)
+    // }
         
 
 }
