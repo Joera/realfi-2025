@@ -1,5 +1,6 @@
-import { CardData, parseCardURL } from "./card.factory"
-import { promptDeviceAuthentication } from './webauthn.factory'
+import './styles/main.scss';
+import { CardData, parseCardURL } from "./card.factory.js"
+import { promptDeviceAuthentication } from './webauthn.factory.js'
 
 const main = async () => {
 

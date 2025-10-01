@@ -1,5 +1,30 @@
-@import './variables.css';
+@import './variables.scss';
+@import './typography.scss';
+
+html {
+    position: relative;
+    min-height: 100vh;
+}
 
 body {
+    position: relative;
     background: $bg;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(0deg, $bg 0%, $bg-lighter 50%);
+    min-height: 100vh;
+
+}
+
+header {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    height: 4.8rem;
+    background-color: $bg;
+    border-bottom: 1px solid $bg-darker;
+    background: linear-gradient(0deg, $bg 0%, $bg-lighter 50%);
+    
 }
