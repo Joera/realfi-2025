@@ -1,0 +1,47 @@
+@use './variables.scss' as vars;
+@use './typography.scss';
+
+html {
+    position: relative;
+    min-height: 100vh;
+}
+
+body {
+    position: relative;
+    background: vars.$bg;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(0deg, vars.$bg 0%, vars.$bg-lighter 50%);
+    min-height: 100vh;
+
+}
+
+header {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    background-color: vars.$bg;
+    border-bottom: 1px solid vars.$bg-darker;
+    background: #fff;
+    // background: linear-gradient(0deg, vars.$bg 0%, vars.$bg-lighter 50%, #fff 100%);
+    justify-content: flex-start;
+    align-items: flex-start;
+    // padding: 0 1.5rem;
+    width: 192px;
+    height: 192px;
+    border-bottom-right-radius: 100%;
+    margin-top: -2.5rem;
+}
+
+main {
+    display: flex;
+    position: relative;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    min-height: calc(100vh - 192px - 3rem);
+}
+

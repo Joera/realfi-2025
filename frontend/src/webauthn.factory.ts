@@ -69,8 +69,8 @@ class WebAuthnDeviceAuth {
           },
           user: {
             id: userId,
-            name: "s3ntiment-user",
-            displayName: "S3ntiment User"
+            name: "s3ntiment acccount",
+            displayName: "S3ntiment Account"
           },
           pubKeyCredParams: [
             { alg: -7, type: "public-key" },  // ES256
@@ -273,55 +273,55 @@ async function promptDeviceAuthentication(): Promise<DeviceCredential> {
   const status = await auth.getStatusMessage()
   console.log("Authentication status:", status)
 
-  // Show loading/instruction UI
-  const instruction = document.createElement('div')
-  instruction.innerHTML = `
-    <div id="auth-modal" style="
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
-      font-family: system-ui; z-index: 1000;
-    ">
-      <div style="
-        background: white; padding: 30px; border-radius: 10px; text-align: center;
-        max-width: 400px; margin: 20px;
-      ">
-        <h3>Device Authentication Required</h3>
-        <p>${status}</p>
-        <p>Please authenticate with your fingerprint, face, or device PIN</p>
-        <div id="auth-spinner" style="margin: 20px 0;">⏳ Waiting for authentication...</div>
-        <button id="cancel-auth" style="margin-top: 20px;">Cancel</button>
-      </div>
-    </div>
-  `
+  // // Show loading/instruction UI
+  // const instruction = document.createElement('div')
+  // instruction.innerHTML = `
+  //   <div id="auth-modal" style="
+  //     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  //     background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center;
+  //     font-family: system-ui; z-index: 1000;
+  //   ">
+  //     <div style="
+  //       background: white; padding: 30px; border-radius: 10px; text-align: center;
+  //       max-width: 400px; margin: 20px;
+  //     ">
+  //       <h3>We want to use a passkey to generate a blockchain account</h3>
+  //       <p>${status}</p>
+  //       <p>Please authenticate with your fingerprint, face, or device PIN</p>
+  //       <div id="auth-spinner" style="margin: 20px 0;">⏳ Waiting for authentication...</div>
+  //       <button id="cancel-auth" style="margin-top: 20px;">Cancel</button>
+  //     </div>
+  //   </div>
+  // `
   
-  document.body.appendChild(instruction)
+  // document.body.appendChild(instruction)
 
   try {
     // Set up cancel button
-    const cancelBtn = document.getElementById('cancel-auth')
-    let cancelled = false
-    cancelBtn?.addEventListener('click', () => {
-      cancelled = true
-      document.body.removeChild(instruction)
-    })
+    // const cancelBtn = document.getElementById('cancel-auth')
+    // let cancelled = false
+    // cancelBtn?.addEventListener('click', () => {
+    //   cancelled = true
+    //   document.body.removeChild(instruction)
+    // })
 
     // Attempt authentication
     const credential = await auth.getOrCreateDeviceCredential()
     
-    if (cancelled) {
-      throw new Error("Authentication cancelled")
-    }
+    // if (cancelled) {
+    //   throw new Error("Authentication cancelled")
+    // }
 
-    // Remove UI on success
-    document.body.removeChild(instruction)
+    // // Remove UI on success
+    // document.body.removeChild(instruction)
     
     return credential
 
   } catch (error) {
     // Remove UI on error
-    if (document.body.contains(instruction)) {
-      document.body.removeChild(instruction)
-    }
+    // if (document.body.contains(instruction)) {
+    //   document.body.removeChild(instruction)
+    // }
     throw error
   }
 }

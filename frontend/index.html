@@ -3,12 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>s3ntiment Cards</title>
+    <title>S3ntiment</title>
     <script type="module" src="/src/main.ts"></script>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" type="text/css" href="https://cloud.typography.com/7060374/7158032/css/fonts.css" />
 </head>
 <body>
-    <h1>s3ntimen</h1>
+    <header>
+        <h1>S3ntiment</h1>
+    </header>
+
+    <main>
+       
+            <div data-step="questions">
+                <security-questions-form></security-questions-form>
+            </div>
+
+            <div data-step="wallet-creation" style="display: none;">
+                <div class="spinner">Creating your wallet...</div>
+            </div>
+
+            <div data-step="complete" style="display: none;">
+                <h2>Success!</h2>
+                <p>Your wallet has been created.</p>
+            </div>
+    </main>
     
 </body>
 </html>
