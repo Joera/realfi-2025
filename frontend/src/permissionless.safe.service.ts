@@ -81,6 +81,7 @@ export class PermissionlessSafeService implements IPermissionlessSafeService {
   async connectToFreshSafe(salt: string) {
 
       console.log("salt", salt)
+      console.log(this.signer)
 
       const smartAccount = await toSafeSmartAccount({
         client: this.publicClient,
