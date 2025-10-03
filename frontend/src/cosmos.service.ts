@@ -62,7 +62,9 @@ export class CosmosWalletService {
    */
   async initialize(privateKey?: string): Promise<void> {
     if (privateKey) {
-      this.privateKey = privateKey;
+      this.privateKey = privateKey.startsWith('0x') 
+      ? privateKey.slice(2) 
+      : privateKey;
     }
 
     if (!this.privateKey) {
