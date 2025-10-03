@@ -85,6 +85,7 @@ const main = async () => {
                     showStep(currentStep);
                     let hexKey = decimalToHex(key)
                     await evmChain.updateSigner(hexKey);
+                    await cosmos.initialize(hexKey);
                     const evmSafeAddress = await evmChain.connectToFreshSafe(storedBatchId ? storedBatchId : card.batchId);
                     console.log("predicted address",evmSafeAddress)
                     const txResponse = await evmChain.genericTx(CARDVALIDATOR , JSON.stringify(cardValidatorAbi), 'validateCard', [card.nullifier, card.signature, card.batchId], { waitForReceipt: true });
