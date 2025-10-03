@@ -31,7 +31,7 @@ const main = async () => {
     const card: CardData | null = parseCardURL();
     const evmChain = new PermissionlessSafeService(84532)
     const cosmos = new CosmosWalletService( {
-        rpcEndpoint: import.meta.env.COSMOS_RPC_URL!,
+        rpcEndpoint: import.meta.env.VITE_COSMOS_RPC_URL!,
         prefix: "cosmos",
         gasPrice: "0.025uatom"
     });
