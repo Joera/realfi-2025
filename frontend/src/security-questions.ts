@@ -30,7 +30,7 @@ class SecurityQuestionsForm extends HTMLElement {
 
   private selectedAnswers: SelectedAnswer[] = []
   private currentStep = 0
-  private readonly totalSteps = 3
+  private readonly totalSteps = 2
 
   constructor() {
     super()

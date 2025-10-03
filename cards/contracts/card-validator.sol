@@ -7,11 +7,15 @@ contract CardValidator {
     
     // Track card usage per batch
     mapping(string => uint256) public batchCardCount;
-    mapping(bytes32 => bool) public usedSecrets;
+    mapping(bytes32 => bool) public usedNullifiers;
     
     event PublicKeySet(address indexed newPublicKey);
     event SignatureValidated(address indexed signer, bytes32 messageHash);
-    event CardValidated(string indexed batchId, string secret, uint256 newCount);
+    event CardValidated(string indexed batchId, string nullifier, uint256 newCount);
+
+    error InvalidSignature();
+    error NullifierAlreadyUsed();
+    error InvalidPublicKey();
     
     constructor(address _initialPublicKey) {
         owner = msg.sender;
@@ -42,12 +46,15 @@ contract CardValidator {
         return publicKey;
     }
 
-    function validateCardSecret(
-        string memory secret,
+    // Add custom errors for better debugging
+
+
+    function validateCard(
+        string memory nullifier,
         bytes memory signature,
         string memory batchId
     ) external returns (bool) {
-        string memory message = string(abi.encodePacked(secret, "|", batchId));
+        string memory message = string(abi.encodePacked(nullifier, "|", batchId));
         bytes32 messageHash = keccak256(abi.encodePacked(message));
         bytes32 ethSignedMessageHash = keccak256(abi.encodePacked(
             "\x19Ethereum Signed Message:\n32", 
@@ -55,19 +62,18 @@ contract CardValidator {
         ));
         
         address recoveredSigner = recoverSigner(ethSignedMessageHash, signature);
-        require(recoveredSigner == publicKey, "Invalid signature");
+        if (recoveredSigner != publicKey) revert InvalidSignature();
         
-        // Check if secret already used for this batch
-        bytes32 secretHash = keccak256(abi.encodePacked(secret, "|", batchId));
-        require(!usedSecrets[secretHash], "Secret already used");
+        // Check if nullifier already used for this batch
+        if (usedNullifiers[messageHash]) revert NullifierAlreadyUsed();
         
-        // Mark secret as used
-        usedSecrets[secretHash] = true;
+        // Mark nullifier as used
+        usedNullifiers[messageHash] = true;
         
         // Increment batch counter
         batchCardCount[batchId]++;
         
-        emit CardValidated(batchId, secret, batchCardCount[batchId]);
+        emit CardValidated(batchId, nullifier, batchCardCount[batchId]);
         emit SignatureValidated(recoveredSigner, ethSignedMessageHash);
         
         return true;
@@ -83,14 +89,14 @@ contract CardValidator {
     }
     
     /**
-     * @dev Check if a specific secret has been used for a batch
-     * @param secret The card secret
+     * @dev Check if a specific nullifier has been used for a batch
+     * @param nullifier The card nullifier
      * @param batchId The batch identifier
-     * @return true if secret has been used
+     * @return true if nullifier has been used
      */
-    function isSecretUsed(string memory secret, string memory batchId) external view returns (bool) {
-        bytes32 secretHash = keccak256(abi.encodePacked(secret, "|", batchId));
-        return usedSecrets[secretHash];
+    function isNullifierUsed(string memory nullifier, string memory batchId) external view returns (bool) {
+        bytes32 cardHash = keccak256(abi.encodePacked(nullifier, "|", batchId));
+        return usedNullifiers[cardHash];
     }
     
     /**
