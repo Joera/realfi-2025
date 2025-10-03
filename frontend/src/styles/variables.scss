@@ -1,5 +1,5 @@
 @use 'sass:color';
 
-$bg : #73f1d6;
+$bg : #ccffff;
 $bg-lighter : color.adjust($bg, $lightness: 5%);
 $bg-darker : color.adjust($bg, $lightness: -10%);

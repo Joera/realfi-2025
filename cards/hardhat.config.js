@@ -1,7 +1,11 @@
-require('dotenv').config()
+import { config } from "dotenv";
+import "@nomicfoundation/hardhat-ethers";
+import "@nomicfoundation/hardhat-verify";
 
-module.exports = {
-  defaultNetwork: "base",
+config();
+
+export default {
+  defaultNetwork: "baseSepolia",
   solidity: {
     version: "0.8.24",
     settings: {
@@ -17,28 +21,35 @@ module.exports = {
   },
   networks: {
     base: {
-      url: process.env.BASE_RPC_URL,
+      url: process.env.BASE_RPC_URL || "https://mainnet.base.org",
       accounts: [process.env.PRIVATE_KEY],
       chainId: 8453,
-      gasPrice: "auto",
+    },
+    baseSepolia: {
+      url: process.env.BASE_SEPOLIA_RPC_URL || "https://sepolia.base.org",
+      accounts: [process.env.PRIVATE_KEY],
+      chainId: 84532,
     },
   },
   etherscan: {
-    apiKey: {
-      base: process.env.BASESCAN_API_KEY,
-    },
+    apiKey: process.env.BASESCAN_API_KEY, // Single API key (v2 format)
     customChains: [
       {
         network: "base",
         chainId: 8453,
         urls: {
           apiURL: "https://api.basescan.org/api",
-          browserURL: "https://basescan.org/",
+          browserURL: "https://basescan.org",
+        },
+      },
+      {
+        network: "baseSepolia",
+        chainId: 84532,
+        urls: {
+          apiURL: "https://api-sepolia.basescan.org/api",
+          browserURL: "https://sepolia.basescan.org",
         },
       },
     ],
   },
-  // ... rest of config ...
 };
-
-// ... existing code ...

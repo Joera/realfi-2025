@@ -1,4 +1,4 @@
-import { createWalletClient, http, createPublicClient } from 'viem'
+import { createWalletClient, http, createPublicClient, keccak256, toHex } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { mainnet } from 'viem/chains'
 import dotenv from 'dotenv'
@@ -7,10 +7,10 @@ import QRCode from 'qrcode'
 import fs from 'fs/promises'
 import path from 'path'
 
-const baseUrl = "https://s3ntiment.composible.io" // "https://s3ntiment.eth.link"
+const baseUrl = "https://s3ntiment.composible.io"
 
 interface CardData {
-  secret: string
+  nullifier: string
   signature: string
   batchId: string
 }
@@ -26,7 +26,7 @@ const account = privateKeyToAccount(pk);
 // Create wallet client
 const walletClient = createWalletClient({
   account,
-  chain: mainnet, // or your preferred chain
+  chain: mainnet,
   transport: http()
 })
 
@@ -37,22 +37,22 @@ const publicClient = createPublicClient({
 })
 
 /**
- * Generate a random secret for card
+ * Generate a random nullifier for card
  */
-function generateRandomSecret() {
+function generateRandomNullifier() {
   const randomBytes = crypto.randomBytes(16)
   return randomBytes.toString('base64url') // URL-safe base64
 }
 
 async function generateQRCodeSVG(cardData: CardData, outputDir: string = './qr-codes'): Promise<string> {
-  const { secret, batchId, signature } = cardData
+  const { nullifier, batchId, signature } = cardData
   
-  // Secure URL - only secret and batch in QR
-  const qrUrl = `${baseUrl}?s=${secret}&b=${batchId}&sig=${signature}`;
+  // Secure URL - only nullifier and batch in QR
+  const qrUrl = `${baseUrl}?n=${nullifier}&b=${batchId}&sig=${signature}`;
   console.log(qrUrl);
 
   // Generate filename
-  const filename = `${batchId}_${secret}.svg`
+  const filename = `${batchId}_${nullifier}.svg`
   const filepath = path.join(outputDir, filename)
   
   try {
@@ -77,7 +77,7 @@ async function generateQRCodeSVG(cardData: CardData, outputDir: string = './qr-c
     console.log(`QR code saved: ${filepath}`)
     return filepath
   } catch (error) {
-    console.error(`Error generating QR code for ${secret}:`, error)
+    console.error(`Error generating QR code for ${nullifier}:`, error)
     throw error
   }
 }
@@ -87,34 +87,29 @@ const generateCardSecrets = async (batchId: string, batchSize: number) => {
   
   for (let i = 0; i < batchSize; i++) {
 
-    const secret = generateRandomSecret()
-    const message = `${secret}|${batchId}`
+    const nullifier = generateRandomNullifier()
+    const message = `${nullifier}|${batchId}`
     
-    // Sign message with viem
+    // Hash the message first, then sign the hash
+    const messageHash = keccak256(toHex(message))
+    
+    // Sign the hash with EIP-191 prefix
     const signature = await walletClient.signMessage({
-      message: message
+      message: { raw: messageHash }
     })
     
-    
     const card: any = {
-      secret,
+      nullifier,
       batchId: batchId,
       signature: signature,
     };
   
-
-   await generateQRCodeSVG(card, './output/qr-codes')
-
-   cards.push(card)
-
+    await generateQRCodeSVG(card, './output/qr-codes')
+    cards.push(card)
   }
-
-  // console.log(cards);
   
   return cards;
 }
-
-
 
 const batch_size = 10;
 const batch_id = "mina_10-10";

@@ -1,7 +1,7 @@
 
 
 export interface CardData {
-  secret: string
+  nullifier: string
   batchId: string
   signature: string
 }
@@ -17,14 +17,14 @@ export const parseCardURL = (): CardData | null => {
     const params = url.searchParams
     
     // Extract parameters
-    const secret = params.get('s')
+    const nullifier = params.get('n')
     const batchId = params.get('b') 
     const signature = params.get('sig')
     
     // Validate all required parameters are present
-    if (!secret || !batchId || !signature) {
+    if (!nullifier || !batchId || !signature) {
       console.error('Missing required parameters:', {
-        secret: !!secret,
+        nullifier: !!nullifier,
         batchId: !!batchId,
         signature: !!signature
       })
@@ -32,7 +32,7 @@ export const parseCardURL = (): CardData | null => {
     }
     
     return {
-      secret: decodeURIComponent(secret),
+      nullifier: decodeURIComponent(nullifier),
       batchId: decodeURIComponent(batchId),
       signature: decodeURIComponent(signature)
     }

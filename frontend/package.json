@@ -19,6 +19,12 @@
     "vite": "^7.1.7"
   },
   "dependencies": {
+    "@cosmjs/amino": "^0.36.1",
+    "@cosmjs/cosmwasm-stargate": "^0.36.1",
+    "@cosmjs/crypto": "^0.36.1",
+    "@cosmjs/encoding": "^0.36.1",
+    "@cosmjs/proto-signing": "^0.36.1",
+    "@cosmjs/stargate": "^0.36.1",
     "@holonym-foundation/mishtiwasm": "^0.3.2",
     "dotenv": "^17.2.3",
     "permissionless": "^0.2.57",

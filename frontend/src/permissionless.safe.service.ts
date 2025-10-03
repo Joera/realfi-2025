@@ -10,6 +10,19 @@ import { getChainId, getRPCUrl, getScanApi, getViemChainById, getViemChainByName
 
 const ENTRYPOINT_ADDRESS_V07 = "0x0000000071727De22E5E9d8BAf0edAc6f37da032";
 
+interface TxResult {
+  txHash: string;
+  receipt?: any;
+  deployedAddress?: string;
+}
+
+interface TxOptions {
+  deploy?: boolean;
+  waitForReceipt?: boolean;
+  confirmations?: number;
+}
+
+
 interface InternalTransaction {
   contractAddress: string;
   from: string;
@@ -38,8 +51,8 @@ export interface IPermissionlessSafeService {
   connectToFreshSafe: (salt: string) => Promise<string>
   connectToExistingSafe: (safe_address: string) => Promise<string>
   genericRead: (address: string, abi: string, method: string, args: string[]) => Promise<any>;
-  genericTx: (address: string, abi: string, method: string, args: string[], deploy: boolean) => Promise<string>;
-  valueTx: (to: string, amount: string) => Promise<string>;
+  genericTx: (address: string, abi: string, method: string, args: string[], options: TxOptions) => Promise<TxResult>;
+  // valueTx: (to: string, amount: string) => Promise<string>;
   getSafeAddress: (owners: string[], salt: string) => Promise<string>;
 }
 
@@ -163,47 +176,57 @@ export class PermissionlessSafeService implements IPermissionlessSafeService {
     }
   }
 
-  async genericTx(address: string, abi: string, method: string, args: string[], deploy: boolean): Promise<string> {
+  async genericTx(
+    address: string, 
+    abi: string, 
+    method: string, 
+    args: string[], 
+    options: TxOptions = {}
+  ): Promise<TxResult> {
+    const { deploy = false, waitForReceipt = false, confirmations = 1 } = options;
+    
     console.log("Executing transaction:", { address, method, args });
 
     const data = encodeFunctionData({
-        abi: JSON.parse(abi),
-        functionName: method,
-        args: args,
+      abi: JSON.parse(abi),
+      functionName: method,
+      args: args,
     });
 
     const gasPrice = await this.pimlicoClient.getUserOperationGasPrice();
 
     // Execute via permissionless
     const txHash = await this.smartAccountClient.sendTransaction({
-        to: address as `0x${string}`,
-        data,
-        value: 0n,
-        maxFeePerGas: gasPrice.fast.maxFeePerGas,     
-        maxPriorityFeePerGas: gasPrice.fast.maxPriorityFeePerGas,
+      to: address as `0x${string}`,
+      data,
+      value: 0n,
+      maxFeePerGas: gasPrice.fast.maxFeePerGas,     
+      maxPriorityFeePerGas: gasPrice.fast.maxPriorityFeePerGas,
     });
 
-    if (!deploy) {
-      // For non-deployment transactions, just return the tx hash
-      return txHash;
+    const result: TxResult = { txHash };
+
+    // If we need to wait for receipt or handle deployment
+    if (waitForReceipt || deploy) {
+      try {
+        const receipt = await this.publicClient.waitForTransactionReceipt({ 
+          hash: txHash,
+          confirmations
+        });
+        
+        result.receipt = receipt;
+
+        // For deployment transactions, extract the deployed contract address
+        if (deploy) {
+          result.deployedAddress = await this.extractDeployedAddress(txHash);
+        }
+      } catch (error) {
+        console.error("Error waiting for receipt:", error);
+        // Still return the txHash even if receipt fails
+      }
     }
 
-    // For deployment transactions, extract the deployed contract address
-    return await this.extractDeployedAddress(txHash);
-  }
-
-  async valueTx(to: string, amount: string): Promise<string> {
-
-    const gasPrice = await this.pimlicoClient.getUserOperationGasPrice();
-
-    const txHash = await this.smartAccountClient.sendTransaction({
-      to: to as `0x${string}`,
-      value: parseEther(amount),
-      maxFeePerGas: gasPrice.fast.maxFeePerGas,     
-      maxPriorityFeePerGas: gasPrice.fast.maxPriorityFeePerGas
-    });
-
-    return txHash;
+    return result;
   }
 
   private async extractDeployedAddress(txHash: string): Promise<string> {
