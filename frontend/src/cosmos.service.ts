@@ -61,6 +61,8 @@ export class CosmosWalletService {
    * Initialize the wallet and clients
    */
   async initialize(privateKey?: string): Promise<void> {
+
+    console.log("in cosmos serv", privateKey)
     if (privateKey) {
       this.privateKey = privateKey.startsWith('0x') 
       ? privateKey.slice(2) 
@@ -92,9 +94,11 @@ export class CosmosWalletService {
       console.log(`Cosmos wallet initialized: ${this.address}`);
 
       // Initialize signing client
-      const gasPrice = this.config.gasPrice 
-        ? GasPrice.fromString(this.config.gasPrice)
-        : GasPrice.fromString("0.025uatom");
+      const gasPrice = this.config.gasPrice && this.config.gasPrice.trim() !== ""
+      ? GasPrice.fromString(this.config.gasPrice)
+      : GasPrice.fromString("0.025uatom");
+
+        console.log("gasPrice", GasPrice)
 
       this.signingClient = await SigningStargateClient.connectWithSigner(
         this.config.rpcEndpoint,
@@ -102,6 +106,7 @@ export class CosmosWalletService {
         { gasPrice }
       );
 
+       console.log(1)
       // Initialize CosmWasm client for smart contracts
       this.wasmClient = await SigningCosmWasmClient.connectWithSigner(
         this.config.rpcEndpoint,
@@ -109,9 +114,13 @@ export class CosmosWalletService {
         { gasPrice }
       );
 
+             console.log(2)
+
       // Initialize public clients (for queries)
       this.publicClient = await StargateClient.connect(this.config.rpcEndpoint);
       this.wasmPublicClient = await CosmWasmClient.connect(this.config.rpcEndpoint);
+
+             console.log(3)
 
       this.isInitialized = true;
       console.log("Cosmos clients connected");
