@@ -39,14 +39,12 @@ interface AppState {
   user: {
     nullifier: string | null;
     batchId: string | null;
+    signerAddress: string | null;
     safeAddress: string | null;
-  };
-  wallet: {
-    evmAddress: string | null;
-    cosmosAddress: string | null;
+    nillionAddress: string | null
   };
   ui: {
-    currentStep: 'questions' | 'wallet-creation' | 'complete';
+    currentStep: 'onboarding' | 'wallet-creation' | 'survey';
     isLoading: boolean;
   };
 }
@@ -63,14 +61,12 @@ class Store {
       user: new Observable<AppState['user']>({
         nullifier: localStorage.getItem('nullifer'),
         batchId: localStorage.getItem('batchId'),
-        safeAddress: null
-      }),
-      wallet: new Observable<AppState['wallet']>({
-        evmAddress: null,
-        cosmosAddress: null
+        signerAddress: localStorage.getItem('signerAddress'),
+        safeAddress: null,
+        nillionAddress: null,
       }),
       ui: new Observable<AppState['ui']>({
-        currentStep: 'questions',
+        currentStep: 'onboarding',
         isLoading: false
       })
     };
@@ -78,16 +74,11 @@ class Store {
 
   // Getters
   get user() { return this.observables.user.get(); }
-  get wallet() { return this.observables.wallet.get(); }
   get ui() { return this.observables.ui.get(); }
 
   // Setters
   setUser(update: Partial<AppState['user']>) {
     this.observables.user.update(current => ({ ...current, ...update }));
-  }
-
-  setWallet(update: Partial<AppState['wallet']>) {
-    this.observables.wallet.update(current => ({ ...current, ...update }));
   }
 
   setUI(update: Partial<AppState['ui']>) {
@@ -107,15 +98,15 @@ class Store {
     const user = this.user;
     if (user.nullifier) localStorage.setItem('nullifer', user.nullifier);
     if (user.batchId) localStorage.setItem('batchId', user.batchId);
+    if (user.signerAddress) localStorage.setItem('signerAddress', user.signerAddress);
   }
 
   // Clear all data
   clear() {
-    this.setUser({ nullifier: null, batchId: null, safeAddress: null });
-    this.setWallet({ evmAddress: null, cosmosAddress: null });
-    this.setUI({ currentStep: 'questions', isLoading: false });
+    this.setUI({ currentStep: 'onboarding'});
     localStorage.removeItem('nullifer');
     localStorage.removeItem('batchId');
+    localStorage.removeItem('signerAddress');
   }
 }
 

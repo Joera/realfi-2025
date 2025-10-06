@@ -27,6 +27,7 @@
     "@cosmjs/stargate": "^0.36.1",
     "@holonym-foundation/mishtiwasm": "^0.3.2",
     "dotenv": "^17.2.3",
+    "navigo": "^8.11.1",
     "permissionless": "^0.2.57",
     "viem": "^2.37.11"
   }

@@ -4,16 +4,20 @@ import { store } from '../services/store.service';
 import { reactive } from '../utils/reactive';
 import { CardData, parseCardURL } from "../card.factory"
 import { createKey } from '../oprf.factory';
-import { PermissionlessSafeService } from '../permissionless.safe.service';
+import { PermissionlessSafeService } from '../services/permissionless.safe.service';
 import { decimalToHex } from '../utils.factory';
 import { cardValidatorAbi } from '../abi.factory';
-import { CosmosWalletService } from '../cosmos.service';
-import '../security-questions.js'
+import { CosmosWalletService } from '../services/cosmos.service';
+import '../components/security-questions.js';
+import '../components/loading-spinner.js';
+import '../components/survey.js';
 
 const CARDVALIDATOR = "0x39b865Cbc7237888BC6FD58B9C256Eab39661f95"
 
 export class LandingController {
   private reactiveViews: any[] = [];
+  evmChain: any;
+  cosmos: any;
 
   private renderTemplate() {
     const app = document.querySelector('#app');
@@ -27,33 +31,30 @@ export class LandingController {
     const view = reactive('#landing-content', () => {
       const { currentStep, isLoading } = store.ui;
 
-      if (isLoading) {
-        return `
-          <div class="spinner">
-            <span class="loader"></span>
-          </div>
-        `;
-      }
+      // if (isLoading) {
+      //   return `
+      //     <div class="spinner">
+      //       <span class="loader"></span>
+      //     </div>
+      //   `;
+      // }
 
       switch (currentStep) {
-        case 'questions':
+        case 'onboarding':
           return `<security-questions-form></security-questions-form>`;
         
         case 'wallet-creation':
           return `
-            <div class="spinner">
-              <span class="loader"></span>
-              <p>Creating your wallet...</p>
-            </div>
+            <loading-spinner 
+              message="Creating your account" 
+              size="120" 
+              color="#2d6b5e">
+            </loading-spinner>
           `;
         
-        case 'complete':
+        case 'survey':
           return `
-            <div class="success">
-              <h2>Success!</h2>
-              <p>Your wallet has been created.</p>
-              <p>Safe Address: ${store.user.safeAddress || '...'}</p>
-            </div>
+           <survey-questions></survey-questions>
           `;
         
         default:
@@ -67,12 +68,102 @@ export class LandingController {
     }
   }
 
+  async process(card: any, fresh: boolean) {
+
+        // Store card data
+      
+        console.log("fresh", fresh);
+
+        await customElements.whenDefined('security-questions-form');
+        const form = document.querySelector('security-questions-form');
+    
+        if (form) {
+          form.addEventListener('security-questions-complete', async (e: any) => {
+            const { formattedInput } = e.detail;
+         
+            // Update UI state
+            store.setUI({ currentStep: 'wallet-creation' });
+            
+            try {
+              const key = await createKey(card.nullifier + '|' + formattedInput);
+              let hexKey = decimalToHex(key);
+
+              console.log(store.user)
+              const oldSigner = store.user.signerAddress;
+              
+              const signerAddress = await this.evmChain.updateSigner(hexKey);
+              console.log("signer", signerAddress)
+              store.setUser( { signerAddress})
+              store.persistUser();
+              let nillionAddress = await this.cosmos.initialize(hexKey);
+              store.setUser( { nillionAddress })
+              
+              const evmSafeAddress = await this.evmChain.connectToFreshSafe(
+                store.user.batchId || card.batchId
+              );
+
+              let success = false;
+
+              if(fresh) {
+
+                const txResponse = await this.evmChain.genericTx(
+                  CARDVALIDATOR, 
+                  JSON.stringify(cardValidatorAbi), 
+                  'validateCard', 
+                  [card.nullifier, card.signature, card.batchId], 
+                  { waitForReceipt: true }
+                );
+
+                console.log(txResponse);
+                if (txResponse.receipt?.status === 'success') {
+                  success = true;
+                } else {
+                  alert('❌ card validation failed');
+                }
+              } else {
+
+                  console.log(oldSigner,signerAddress)
+                  if (oldSigner == signerAddress) {
+
+                    success = true;
+                    console.log("existing user authenticated")
+
+
+                  } else {
+
+
+                    alert("incorrect answers to auth existing user")
+
+                  }
+              }
+              
+              if(success) {
+              
+           
+                await this.evmChain.connectToExistingSafe(evmSafeAddress);
+                console.log(2)
+                
+                // Update store with success
+                store.setUser({ safeAddress: evmSafeAddress });
+                store.setUI({ currentStep: 'survey', isLoading: false });
+              } 
+    
+            } catch (error) {
+              console.error(error);
+              alert('An error occurred');
+              store.setUI({ currentStep: 'onboarding', isLoading: false });
+            }
+          });
+        }
+
+  }
+
   async render() {
     this.renderTemplate();
     
     const card: CardData | null = parseCardURL();
-    const evmChain = new PermissionlessSafeService(84532)
-    const cosmos = new CosmosWalletService({
+    this.evmChain = new PermissionlessSafeService(84532)
+    this.cosmos = new CosmosWalletService({
       rpcEndpoint: import.meta.env.VITE_COSMOS_RPC_URL!,
       prefix: "cosmos",
       gasPrice: "0.025uatom"
@@ -81,7 +172,7 @@ export class LandingController {
     if (card) {
       console.log(card);
 
-      const cardIsUsed = await evmChain.genericRead(
+      const cardIsUsed = await this.evmChain.genericRead(
         CARDVALIDATOR, 
         JSON.stringify(cardValidatorAbi), 
         "isNullifierUsed", 
@@ -89,71 +180,34 @@ export class LandingController {
       );
       
       const phoneIsUsed = store.user.nullifier && store.user.nullifier !== card.nullifier;
- 
-      if (cardIsUsed && card.nullifier === store.user.nullifier) {
-        // Existing user
-      }
-      else if (cardIsUsed && card.nullifier !== store.user.nullifier) {
+
+      if (cardIsUsed && card.nullifier !== store.user.nullifier) {
         alert("card was used on another phone")
       } 
-      else if (!cardIsUsed && phoneIsUsed) {
-        alert("another card has previously been used on this phone")
-      } 
+ 
+      else if (cardIsUsed && card.nullifier === store.user.nullifier) {
+
+        const user = store.user;
+        this.process({
+          nullifier: user.nullifier,
+          batchId: user.batchId,
+        }, false)
+      }
+
       else {
-        // Store card data
+
+        if (!cardIsUsed && phoneIsUsed) {
+            alert("another card was used on this phone. Click ok to continue")
+            store.clear();
+        }
         store.setUser({
           nullifier: card.nullifier,
           batchId: card.batchId
         });
         store.persistUser();
-
-        await customElements.whenDefined('security-questions-form');
-        const form = document.querySelector('security-questions-form');
-    
-        if (form) {
-          form.addEventListener('security-questions-complete', async (e: any) => {
-            const { formattedInput } = e.detail;
-            
-            // Update UI state
-            store.setUI({ currentStep: 'wallet-creation', isLoading: true });
-            
-            try {
-              const key = await createKey(card.nullifier + '|' + formattedInput);
-              let hexKey = decimalToHex(key);
-              
-              await evmChain.updateSigner(hexKey);
-              await cosmos.initialize(hexKey);
-              
-              const evmSafeAddress = await evmChain.connectToFreshSafe(
-                store.user.batchId || card.batchId
-              );
-              
-              const txResponse = await evmChain.genericTx(
-                CARDVALIDATOR, 
-                JSON.stringify(cardValidatorAbi), 
-                'validateCard', 
-                [card.nullifier, card.signature, card.batchId], 
-                { waitForReceipt: true }
-              );
-              
-              if (txResponse.receipt?.status === 'success') {
-                await evmChain.connectToExistingSafe(evmSafeAddress);
-                
-                // Update store with success
-                store.setUser({ safeAddress: evmSafeAddress });
-                store.setUI({ currentStep: 'complete', isLoading: false });
-              } else {
-                alert('❌ card validation failed');
-                store.setUI({ isLoading: false });
-              }
-            } catch (error) {
-              console.error(error);
-              alert('An error occurred');
-              store.setUI({ currentStep: 'questions', isLoading: false });
-            }
-          });
-        }
+        this.process(card, true)
       }
+      
     }
   }
 

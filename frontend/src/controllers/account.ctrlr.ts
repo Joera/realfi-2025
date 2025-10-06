@@ -19,7 +19,7 @@ export class AccountController {
 
     // Reactive account info
     const view = reactive('#account-info', () => {
-      const { user, wallet } = store;
+      const { user } = store;
       
       if (!user.nullifier) {
         return '<p>No account found. Please scan a card first.</p>';
@@ -27,20 +27,15 @@ export class AccountController {
 
       return `
         <div class="account-details">
-          <h3>User Info</h3>
-          <p><strong>Nullifier:</strong> ${user.nullifier}</p>
-          <p><strong>Batch ID:</strong> ${user.batchId || 'N/A'}</p>
-          <p><strong>Safe Address:</strong> ${user.safeAddress || 'Not created yet'}</p>
-          
-          <h3>Wallet</h3>
-          <p><strong>EVM:</strong> ${wallet.evmAddress || 'N/A'}</p>
-          <p><strong>Cosmos:</strong> ${wallet.cosmosAddress || 'N/A'}</p>
+          <p><strong>Signer:</strong> ${user.signerAddress || 'Not created yet'}</p>
+          <p><strong>Safe:</strong> ${user.safeAddress || 'Not created yet'}</p>
+          <p><strong>Nillion:</strong> ${user.nillionAddress || 'N/A'}</p>
         </div>
       `;
     });
 
     if (view) {
-      view.bind('user').bind('wallet');
+      view.bind('user');
       this.reactiveViews.push(view);
     }
   }
