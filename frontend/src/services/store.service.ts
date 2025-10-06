@@ -1,0 +1,123 @@
+
+type Listener<T> = (value: T) => void;
+
+class Observable<T> {
+  private value: T;
+  private listeners: Set<Listener<T>> = new Set();
+
+  constructor(initialValue: T) {
+    this.value = initialValue;
+  }
+
+  get(): T {
+    return this.value;
+  }
+
+  set(newValue: T) {
+    this.value = newValue;
+    this.notify();
+  }
+
+  update(updater: (current: T) => T) {
+    this.value = updater(this.value);
+    this.notify();
+  }
+
+  subscribe(listener: Listener<T>): () => void {
+    this.listeners.add(listener);
+    // Return unsubscribe function
+    return () => this.listeners.delete(listener);
+  }
+
+  private notify() {
+    this.listeners.forEach(listener => listener(this.value));
+  }
+}
+
+// Store state interface
+interface AppState {
+  user: {
+    nullifier: string | null;
+    batchId: string | null;
+    safeAddress: string | null;
+  };
+  wallet: {
+    evmAddress: string | null;
+    cosmosAddress: string | null;
+  };
+  ui: {
+    currentStep: 'questions' | 'wallet-creation' | 'complete';
+    isLoading: boolean;
+  };
+}
+
+class Store {
+  // Make state public so it can be accessed
+  public readonly observables: {
+    [K in keyof AppState]: Observable<AppState[K]>;
+  };
+
+  constructor() {
+    // Initialize observables with proper types
+    this.observables = {
+      user: new Observable<AppState['user']>({
+        nullifier: localStorage.getItem('nullifer'),
+        batchId: localStorage.getItem('batchId'),
+        safeAddress: null
+      }),
+      wallet: new Observable<AppState['wallet']>({
+        evmAddress: null,
+        cosmosAddress: null
+      }),
+      ui: new Observable<AppState['ui']>({
+        currentStep: 'questions',
+        isLoading: false
+      })
+    };
+  }
+
+  // Getters
+  get user() { return this.observables.user.get(); }
+  get wallet() { return this.observables.wallet.get(); }
+  get ui() { return this.observables.ui.get(); }
+
+  // Setters
+  setUser(update: Partial<AppState['user']>) {
+    this.observables.user.update(current => ({ ...current, ...update }));
+  }
+
+  setWallet(update: Partial<AppState['wallet']>) {
+    this.observables.wallet.update(current => ({ ...current, ...update }));
+  }
+
+  setUI(update: Partial<AppState['ui']>) {
+    this.observables.ui.update(current => ({ ...current, ...update }));
+  }
+
+  // Subscribe to changes
+  subscribe<K extends keyof AppState>(
+    key: K,
+    listener: Listener<AppState[K]>
+  ): () => void {
+    return this.observables[key].subscribe(listener);
+  }
+
+  // Persist user data
+  persistUser() {
+    const user = this.user;
+    if (user.nullifier) localStorage.setItem('nullifer', user.nullifier);
+    if (user.batchId) localStorage.setItem('batchId', user.batchId);
+  }
+
+  // Clear all data
+  clear() {
+    this.setUser({ nullifier: null, batchId: null, safeAddress: null });
+    this.setWallet({ evmAddress: null, cosmosAddress: null });
+    this.setUI({ currentStep: 'questions', isLoading: false });
+    localStorage.removeItem('nullifer');
+    localStorage.removeItem('batchId');
+  }
+}
+
+// Export singleton instance
+export const store = new Store();
