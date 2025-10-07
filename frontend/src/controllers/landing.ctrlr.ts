@@ -29,7 +29,7 @@ export class LandingController {
 
     // Create reactive view that responds to UI state changes
     const view = reactive('#landing-content', () => {
-      const { currentStep, isLoading } = store.ui;
+      const { currentStep } = store.ui;
 
       // if (isLoading) {
       //   return `
@@ -80,6 +80,14 @@ export class LandingController {
         if (form) {
           form.addEventListener('security-questions-complete', async (e: any) => {
             const { formattedInput } = e.detail;
+
+            // Get the security questions form element
+            const securityForm = form as any; // Cast to access custom methods
+            const selectedQuestions = securityForm.getSelectedQuestions();
+            
+            // Save the question IDs to store
+            store.setUser({ questions: selectedQuestions });
+            store.persistUser();
          
             // Update UI state
             store.setUI({ currentStep: 'wallet-creation' });
@@ -88,9 +96,7 @@ export class LandingController {
               const key = await createKey(card.nullifier + '|' + formattedInput);
               let hexKey = decimalToHex(key);
 
-              console.log(store.user)
               const oldSigner = store.user.signerAddress;
-              
               const signerAddress = await this.evmChain.updateSigner(hexKey);
               console.log("signer", signerAddress)
               store.setUser( { signerAddress})
@@ -145,13 +151,13 @@ export class LandingController {
                 
                 // Update store with success
                 store.setUser({ safeAddress: evmSafeAddress });
-                store.setUI({ currentStep: 'survey', isLoading: false });
+                store.setUI({ currentStep: 'survey' });
               } 
     
             } catch (error) {
               console.error(error);
               alert('An error occurred');
-              store.setUI({ currentStep: 'onboarding', isLoading: false });
+              store.setUI({ currentStep: 'onboarding' });
             }
           });
         }

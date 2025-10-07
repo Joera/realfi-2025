@@ -42,8 +42,18 @@ class SecurityQuestionsForm extends HTMLElement {
   }
 
   connectedCallback() {
+    this.loadSavedQuestions();
     this.render()
     this.attachEventListeners()
+  }
+
+  private loadSavedQuestions() {
+    const savedQuestions = localStorage.getItem('questions');
+    if (savedQuestions) {
+      const questionIds = JSON.parse(savedQuestions) as string[];
+      console.log('Pre-loading saved questions:', questionIds);
+      // You could use this to pre-select questions or show which ones were used
+    }
   }
 
   private render() {
@@ -62,7 +72,7 @@ class SecurityQuestionsForm extends HTMLElement {
             margin: 1.5rem 0 .75rem 0;
               font-family: "Oswald";
               text-transform: uppercase;
-              letter-spacing: 1px;
+              letter-spacing: .4px;
               color: #276658;
               font-size: 2rem;
             }

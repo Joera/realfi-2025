@@ -21,20 +21,24 @@ header {
     position: relative;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-
-    // background-color: vars.$bg;
-    // border-bottom: 1px solid vars.$bg-darker;
-    // background: #fff;
-    // background: linear-gradient(0deg, vars.$bg 0%, vars.$bg-lighter 50%, #fff 100%);
     justify-content: flex-start;
     align-items: flex-start;
-    // padding: 0 1.5rem;
-    // width: 192px;
-    height: 192px;
-    // border-bottom-right-radius: 100%;
-    // margin-top: -2.5rem;
+    height: 9rem;
+    margin-bottom: -3rem;
+
+     svg {
+
+
+            margin: 1.5rem 1.5rem 0 0 ;
+            width: 4.8rem;
+            height: auto;
+            align-self: flex-end;
+            // margin-bottom: -1.9rem;
+
+             path {
+                fill: vars.$bg-too-dark;
+            }
+    }
 }
 
 main {
@@ -43,7 +47,7 @@ main {
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
-    min-height: calc(100vh - 192px - 3rem);
+    min-height: calc(100vh - 6rem - 3rem);
 }
 
 footer {

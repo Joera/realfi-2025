@@ -40,12 +40,12 @@ interface AppState {
     nullifier: string | null;
     batchId: string | null;
     signerAddress: string | null;
+    questions: number[];
     safeAddress: string | null;
     nillionAddress: string | null
   };
   ui: {
     currentStep: 'onboarding' | 'wallet-creation' | 'survey';
-    isLoading: boolean;
   };
 }
 
@@ -62,12 +62,12 @@ class Store {
         nullifier: localStorage.getItem('nullifer'),
         batchId: localStorage.getItem('batchId'),
         signerAddress: localStorage.getItem('signerAddress'),
+        questions: JSON.parse(localStorage.getItem('questions') || '[]'),
         safeAddress: null,
         nillionAddress: null,
       }),
       ui: new Observable<AppState['ui']>({
-        currentStep: 'onboarding',
-        isLoading: false
+        currentStep: 'onboarding'
       })
     };
   }
