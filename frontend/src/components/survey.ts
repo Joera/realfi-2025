@@ -16,7 +16,10 @@ interface SurveyQuestion {
 
 interface SurveyAnswer {
   questionId: string
+  questionText: string
+  questionType: 'radio' | 'checkbox' | 'text' | 'scale'
   answer: string | string[] | number
+  scaleRange?: { min: number; max: number; minLabel: string; maxLabel: string }
 }
 
 interface SurveyConfig {
@@ -355,12 +358,20 @@ class Survey extends HTMLElement {
       return
     }
 
-    // Save answer
+    // Save answer with full context
+    const enrichedAnswer: SurveyAnswer = {
+      questionId: currentQuestion.id,
+      questionText: currentQuestion.question,
+      questionType: currentQuestion.type,
+      answer: answer,
+      ...(currentQuestion.scaleRange && { scaleRange: currentQuestion.scaleRange })
+    }
+
     const existingIndex = this.answers.findIndex(a => a.questionId === currentQuestion.id)
     if (existingIndex >= 0) {
-      this.answers[existingIndex] = { questionId: currentQuestion.id, answer }
+      this.answers[existingIndex] = enrichedAnswer
     } else {
-      this.answers.push({ questionId: currentQuestion.id, answer })
+      this.answers.push(enrichedAnswer)
     }
 
     // Move to next or complete
@@ -422,7 +433,7 @@ class Survey extends HTMLElement {
     this.currentStep = this.totalSteps
     this.render()
 
-    console.log(this.answers)
+    // console.log('Survey completed with enriched answers:', this.answers)
 
     // Dispatch custom event with survey results
     const event = new CustomEvent('survey-complete', {

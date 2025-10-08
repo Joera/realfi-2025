@@ -6,11 +6,7 @@ const main = async () => {
   initRouter();
 }
 
-document.addEventListener('survey-complete', (event:any ) => {
-  console.log('Survey completed!');
-  console.log('Answers:', event.detail.answers);
-  console.log('Timestamp:', event.detail.timestamp);
-});
+
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', main)

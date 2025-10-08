@@ -1,8 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import { randomUUID } from 'crypto';
-import { NillionClient } from '@nillion/client-web';
+// import Did from '@nillion/client-web';
 import { NillionService } from './nillion.service';
+import { Did } from '@nillion/nuc';
+
 
 const app = express();
 app.use(cors());
@@ -21,8 +23,10 @@ app.post('/api/delegate-token', async (req, res) => {
 
     console.log(req.body)
   
-    const user_did = req.body.did;
-    const token = nillion.delegateToken(user_did);
+    const didString = req.body.did;
+    const publicKeyHex = didString.replace('did:nil:', '');
+    const did = Did.fromHex(publicKeyHex);
+    const token = nillion.delegateToken(did);
     console.log(token);
     res.send(JSON.stringify(token));
 });
@@ -32,7 +36,12 @@ app.post('/api/delegate-token', async (req, res) => {
 app.get('/api/survey-results/:surveyId', async (req, res) => {
   try {
     const { surveyId } = req.params;
-    const { userId } = req.query;
+
+    // Create and run queries on encrypted data
+    let response  = await nillion.querySurvey(surveyId) 
+    res.send(response)
+
+
   } catch (error: any) {
     console.log(error)
   }

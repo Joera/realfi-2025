@@ -104,7 +104,9 @@ class SecurityQuestionsForm extends HTMLElement {
         }
 
       </style>
-      <div><h2>Account setup</h2><p>You are about to fill out a survey that is anonymous. To encrypt your anserws you need a wallet. that wallet will be created from the id in the card and your input to a  question. You can choose which question to use. We will remove the capitalization and spaces from your answers, so don't worry about that.</p>
+      <div><h2>Account setup</h2><p>You’re about to fill out an anonymous survey.
+To keep your answers private, a temporary wallet will be created for you using the ID from your card and your answer to one security question.
+Just pick a question and we’ll handle the rest.</p>
         <div class="progress-indicator">
           <span id="progress">${this.currentStep + 1}/${this.totalSteps}</span>
         </div>

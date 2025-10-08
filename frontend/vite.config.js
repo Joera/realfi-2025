@@ -1,7 +1,7 @@
 // vite.config.js
 import { defineConfig } from 'vite';
-import { copyFileSync } from 'fs'
-import { join } from 'path'
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
+
 
 export default defineConfig({
   root: '.',
@@ -19,16 +19,26 @@ export default defineConfig({
     // Copy WASM files to output
     assetsInlineLimit: 0 // Don't inline WASM files
   },
-  // plugins: [
-  //   {
-  //     name: 'copy-wasm',
-  //     buildStart() {
-  //       // Copy WASM file during build
-  //       const wasmSrc = './node_modules/@holonym-foundation/mishtiwasm/pkg/esm/mishtiwasm_bg.wasm'
-  //       const wasmDest = 'public/mishtiwasm_bg.wasm'
-  //       copyFileSync(wasmSrc, wasmDest)
-  //     }
-  //   }
-  // ]
-})
-
+  plugins: [
+    nodePolyfills({
+      // Enable polyfills for specific globals and modules
+      globals: {
+        Buffer: true,
+        global: true,
+        process: true,
+      },
+    }),
+  ],
+  resolve: {
+    alias: {
+      buffer: 'buffer',
+    },
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      define: {
+        global: 'globalThis',
+      },
+    },
+  }
+});

@@ -11,7 +11,7 @@ import { CosmosWalletService } from '../services/cosmos.service';
 import '../components/security-questions.js';
 import '../components/loading-spinner.js';
 import '../components/survey.js';
-// import { NillionService } from '../services/nilldb.service';
+import { NillionService } from '../services/nilldb.service';
 
 const CARDVALIDATOR = "0x39b865Cbc7237888BC6FD58B9C256Eab39661f95"
 
@@ -99,14 +99,14 @@ export class LandingController {
               let hexKey = decimalToHex(key);
 
               const oldSigner = store.user.signerAddress;
-              const signerAddress = await this.evmChain.updateSigner(hexKey);``
+              const signerAddress = await this.evmChain.updateSigner(hexKey);
               console.log("signer", signerAddress)
               store.setUser( { signerAddress})
               store.persistUser();
-              let nillionAddress = await this.cosmos.initialize(hexKey);
-              store.setUser( { nillionAddress })
-              // this.nillion = new NillionService(hexKey.slice(2)); 
-              // await this.nillion.init();
+              // let nillionAddress = await this.cosmos.initialize(hexKey);
+              // store.setUser( { nillionAddress })
+              this.nillion = new NillionService(hexKey.slice(2)); 
+             
               
               const evmSafeAddress = await this.evmChain.connectToFreshSafe(
                 store.user.batchId || card.batchId
@@ -147,6 +147,7 @@ export class LandingController {
               if(success) {
               
            
+                this.setSurveyListener();
                 await this.evmChain.connectToExistingSafe(evmSafeAddress);
                 // console.log(2)
                 
@@ -223,5 +224,15 @@ export class LandingController {
     // Clean up subscriptions when leaving the page
     this.reactiveViews.forEach(view => view.destroy());
     this.reactiveViews = [];
+  }
+
+  async setSurveyListener() {
+
+      document.addEventListener('survey-complete', async (event:any ) => {
+        console.log('Survey completed!');
+        console.log('Answers:', event.detail.answers);
+        console.log('Timestamp:', event.detail.timestamp);
+        await this.nillion.store(event.detail.answers, "mina");
+      });
   }
 }
