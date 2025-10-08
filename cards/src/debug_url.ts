@@ -7,7 +7,7 @@ import QRCode from 'qrcode'
 import fs from 'fs/promises'
 import path from 'path'
 
-const baseUrl = "https://s3ntiment.composible.io"
+const baseUrl =  "http://localhost:9999" // "https://s3ntiment.composible.io"; //
 
 interface CardData {
   nullifier: string
@@ -60,7 +60,7 @@ const generateCard = async (batchId: string) => {
       message: { raw: messageHash }
     })
 
-    console.log(`http://localhost:9999?n=${nullifier}&b=${batchId}&sig=${signature}`);
+    console.log(`${baseUrl}?n=${nullifier}&b=${batchId}&sig=${signature}`);
 
     return;
   

@@ -19,13 +19,13 @@ interface SelectedAnswer {
 
 class SecurityQuestionsForm extends HTMLElement {
   private availableQuestions: SecurityQuestion[] = [
-    { id: 'name', label: 'Your name', type: 'text', placeholder: 'John Doe' },
+    // { id: 'name', label: 'Your name', type: 'text', placeholder: 'John Doe' },
     { id: 'password', label: 'Password', type: 'password', placeholder: 'Create a strong password' },
     { id: 'pet', label: "First pet's name", type: 'text', placeholder: 'Fluffy' },
-    { id: 'birthCity', label: 'City where you were born', type: 'text', placeholder: 'Amsterdam' },
-    { id: 'motherMaiden', label: "Mother's maiden name", type: 'text', placeholder: 'Smith' },
-    { id: 'school', label: 'Elementary school name', type: 'text', placeholder: 'Lincoln Elementary' },
-    { id: 'colour', label: 'Favorite colour', type: 'text', placeholder: 'Mint' },
+    // { id: 'birthCity', label: 'City where you were born', type: 'text', placeholder: 'Amsterdam' },
+    // { id: 'motherMaiden', label: "Mother's maiden name", type: 'text', placeholder: 'Smith' },
+    // { id: 'school', label: 'Elementary school name', type: 'text', placeholder: 'Lincoln Elementary' },
+    // { id: 'colour', label: 'Favorite colour', type: 'text', placeholder: 'Mint' },
     { id: 'vacation', label: 'Favorite vacation destination', type: 'text', placeholder: 'Bali' },
     { id: 'book', label: 'Favorite childhood book', type: 'text', placeholder: 'Harry Potter' },
     { id: 'car', label: 'First car model', type: 'text', placeholder: 'Toyota Corolla' }
@@ -33,7 +33,7 @@ class SecurityQuestionsForm extends HTMLElement {
 
   private selectedAnswers: SelectedAnswer[] = []
   private currentStep = 0
-  private readonly totalSteps = 2
+  private readonly totalSteps = 1
 
   constructor() {
     super()
@@ -104,8 +104,7 @@ class SecurityQuestionsForm extends HTMLElement {
         }
 
       </style>
-
-      <div><h2>Setup account</h2><p>We ask you to answer 3 security questions. You can choose which questions to use. We will remove the capitalization and spaces from your answers, so don't worry about that.</p>
+      <div><h2>Account setup</h2><p>You are about to fill out a survey that is anonymous. To encrypt your anserws you need a wallet. that wallet will be created from the id in the card and your input to a  question. You can choose which question to use. We will remove the capitalization and spaces from your answers, so don't worry about that.</p>
         <div class="progress-indicator">
           <span id="progress">${this.currentStep + 1}/${this.totalSteps}</span>
         </div>

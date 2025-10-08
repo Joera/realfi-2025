@@ -1,8 +1,8 @@
 import { SurveyConfig } from "../components/survey";
 
-export const MinaSurveyConfig: SurveyConfig = {
-  title: "Web3 Onboarding Experience",
-  description: "Help us understand your journey into Web3. Your feedback will improve onboarding for future users.",
+export const minaSurveyConfig: SurveyConfig = {
+  title: "Welcome to S3ntiment",
+  description: "You’ve been invited to take part in a short, anonymous Web3 onboarding survey, created for the RealFi Hackathon 2025 — where we’re exploring how communities can share honest feedback without losing privacy. Your responses are completely anonymous. No login, no name, no wallet tracking. Just authentic voices, processed privately through Nillion’s blind computation network. It takes less than 2 minutes. Be curious, be honest — and have fun!",
   questions: [
     {
       id: "reason",
@@ -57,31 +57,31 @@ export const MinaSurveyConfig: SurveyConfig = {
       ],
       required: true
     },
-    {
-      id: "playground",
-      question: "Have you attended a Playground event before?",
-      type: "radio",
-      options: [
-        "Yes, multiple times",
-        "Once before",
-        "This is my first",
-        "I’ve heard about it but never joined",
-        "No, new to this"
-      ],
-      required: true
-    },
-    {
-      id: "vibe",
-      question: "How did you experience the vibe at this event so far?",
-      type: "scale",
-      scaleRange: {
-        min: 1,
-        max: 10,
-        minLabel: "not my vibe",
-        maxLabel: "absolutely loved it)"
-      },
-      required: true
-    },
+    // {
+    //   id: "playground",
+    //   question: "Have you attended a Playground event before?",
+    //   type: "radio",
+    //   options: [
+    //     "Yes, multiple times",
+    //     "Once before",
+    //     "This is my first",
+    //     "I’ve heard about it but never joined",
+    //     "No, new to this"
+    //   ],
+    //   required: true
+    // },
+    // {
+    //   id: "vibe",
+    //   question: "How did you experience the vibe at this event so far?",
+    //   type: "scale",
+    //   scaleRange: {
+    //     min: 1,
+    //     max: 10,
+    //     minLabel: "not my vibe",
+    //     maxLabel: "absolutely loved it)"
+    //   },
+    //   required: true
+    // },
     {
       id: "events",
       question: "What kind of events would you like to see more often?",
@@ -121,12 +121,12 @@ export const MinaSurveyConfig: SurveyConfig = {
       ],
       required: true
     },
-    {
-      id: "additional_feedback",
-      question: "Any additional thoughts on this event",
-      type: "text",
-      required: false
-    },
+    // {
+    //   id: "additional_feedback",
+    //   question: "Any additional thoughts on this event",
+    //   type: "text",
+    //   required: false
+    // },
     {
       id: "anonimity",
       question: "How important is it to you that your answers stay completely anonymous?", // did you answer more freely, knowing that this surevy is completely anonymous and private?

@@ -1,4 +1,5 @@
 import { defaultSurveyConfig } from "../surveys/web3-onboarding";
+import { minaSurveyConfig } from "../surveys/mina";
 import { formStyles } from '../shared-form-styles.js'
 import { typograhyStyles } from '../shared-typograhy-styles.js'
 import { colourStyles } from '../shared-colour-styles.js'
@@ -35,7 +36,7 @@ class Survey extends HTMLElement {
     this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, colourStyles, buttonStyles] // formStyles have conflicts
     // Try to load config from attribute or use default
     const configAttr = this.getAttribute('config')
-    this.config = configAttr ? JSON.parse(configAttr) : defaultSurveyConfig
+    this.config = configAttr ? JSON.parse(configAttr) : minaSurveyConfig
   }
 
   connectedCallback() {
@@ -51,7 +52,7 @@ class Survey extends HTMLElement {
     if (!this.shadowRoot) return
 
     const currentQuestion = this.config.questions[this.currentStep]
-    const savedAnswer = this.answers.find(a => a.questionId === currentQuestion.id)
+    const savedAnswer = currentQuestion ? this.answers.find(a => a.questionId === currentQuestion.id) : undefined
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -296,7 +297,6 @@ class Survey extends HTMLElement {
             `).join('') || ''}
           </div>
         `
-
       case 'scale':
         const range = question.scaleRange!
         return `
@@ -421,6 +421,8 @@ class Survey extends HTMLElement {
   private complete() {
     this.currentStep = this.totalSteps
     this.render()
+
+    console.log(this.answers)
 
     // Dispatch custom event with survey results
     const event = new CustomEvent('survey-complete', {

@@ -60,6 +60,13 @@ footer {
     background: vars.$bg-darker;
 }
 
+#landing-content { 
+
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
 .about-page {
     position: relative;
     max-width: 100vw;

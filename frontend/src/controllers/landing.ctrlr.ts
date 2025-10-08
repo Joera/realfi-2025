@@ -11,6 +11,7 @@ import { CosmosWalletService } from '../services/cosmos.service';
 import '../components/security-questions.js';
 import '../components/loading-spinner.js';
 import '../components/survey.js';
+// import { NillionService } from '../services/nilldb.service';
 
 const CARDVALIDATOR = "0x39b865Cbc7237888BC6FD58B9C256Eab39661f95"
 
@@ -18,6 +19,7 @@ export class LandingController {
   private reactiveViews: any[] = [];
   evmChain: any;
   cosmos: any;
+  nillion: any;
 
   private renderTemplate() {
     const app = document.querySelector('#app');
@@ -97,12 +99,14 @@ export class LandingController {
               let hexKey = decimalToHex(key);
 
               const oldSigner = store.user.signerAddress;
-              const signerAddress = await this.evmChain.updateSigner(hexKey);
+              const signerAddress = await this.evmChain.updateSigner(hexKey);``
               console.log("signer", signerAddress)
               store.setUser( { signerAddress})
               store.persistUser();
               let nillionAddress = await this.cosmos.initialize(hexKey);
               store.setUser( { nillionAddress })
+              // this.nillion = new NillionService(hexKey.slice(2)); 
+              // await this.nillion.init();
               
               const evmSafeAddress = await this.evmChain.connectToFreshSafe(
                 store.user.batchId || card.batchId
@@ -134,12 +138,9 @@ export class LandingController {
                     success = true;
                     console.log("existing user authenticated")
 
-
                   } else {
 
-
                     alert("incorrect answers to auth existing user")
-
                   }
               }
               
@@ -147,7 +148,7 @@ export class LandingController {
               
            
                 await this.evmChain.connectToExistingSafe(evmSafeAddress);
-                console.log(2)
+                // console.log(2)
                 
                 // Update store with success
                 store.setUser({ safeAddress: evmSafeAddress });
@@ -168,7 +169,8 @@ export class LandingController {
     this.renderTemplate();
     
     const card: CardData | null = parseCardURL();
-    this.evmChain = new PermissionlessSafeService(84532)
+    this.evmChain = new PermissionlessSafeService(84532);
+   
     this.cosmos = new CosmosWalletService({
       rpcEndpoint: import.meta.env.VITE_COSMOS_RPC_URL!,
       prefix: "cosmos",
