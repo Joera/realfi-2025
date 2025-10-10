@@ -70,63 +70,57 @@ export const minaSurveyConfig: SurveyConfig = {
     //   ],
     //   required: true
     // },
-    // {
-    //   id: "vibe",
-    //   question: "How did you experience the vibe at this event so far?",
-    //   type: "scale",
-    //   scaleRange: {
-    //     min: 1,
-    //     max: 10,
-    //     minLabel: "not my vibe",
-    //     maxLabel: "absolutely loved it)"
-    //   },
-    //   required: true
-    // },
-    // {
-    //   id: "events",
-    //   question: "What kind of events would you like to see more often?",
-    //   type: "checkbox",
-    //   options: [
-    //     "Artist showcases / exhibitions",
-    //     "Educational sessions / workshops",
-    //     "Social mixers / networking",
-    //     "Parties / performances",
-    //     "Panels & discussions"
-    //   ],
-    //   required: true
-    // },
-    // {
-    //   id: "best",
-    //   question: "What’s the best thing about events like this",
-    //   type: "radio",
-    //   options: [
-    //     "Meeting people",
-    //     "The art",
-    //     "The vibe",
-    //     "Learning something new",
-    //     "Feeling part of something"
-    //   ],
-    //   required: true
-    // },
-    // {
-    //   id: "onboarding",
-    //   question: "Would you like help setting up a wallet or buying your first NFT?",
-    //   type: "radio",
-    //   options: [
-    //     "Yes please!",
-    //     "Maybe later",
-    //     "I already know how",
-    //     "Not interested",
-    //     "Not sure yet"
-    //   ],
-    //   required: true
-    // },
-    // // {
-    // //   id: "additional_feedback",
-    // //   question: "Any additional thoughts on this event",
-    // //   type: "text",
-    // //   required: false
-    // // },
+    {
+      id: "vibe",
+      question: "How did you experience the vibe at this event so far?",
+      type: "scale",
+      scaleRange: {
+        min: 1,
+        max: 10,
+        minLabel: "not my vibe",
+        maxLabel: "absolutely loved it)"
+      },
+      required: true
+    },
+    {
+      id: "events",
+      question: "What kind of events would you like to see more often?",
+      type: "checkbox",
+      options: [
+        "Artist showcases / exhibitions",
+        "Educational sessions / workshops",
+        "Social mixers / networking",
+        "Parties / performances",
+        "Panels & discussions"
+      ],
+      required: true
+    },
+    {
+      id: "best",
+      question: "What’s the best thing about events like this",
+      type: "radio",
+      options: [
+        "Meeting people",
+        "The art",
+        "The vibe",
+        "Learning something new",
+        "Feeling part of something"
+      ],
+      required: true
+    },
+    {
+      id: "onboarding",
+      question: "Would you like help setting up a wallet or buying your first NFT?",
+      type: "radio",
+      options: [
+        "Yes please!",
+        "Maybe later",
+        "I already know how",
+        "Not interested",
+        "Not sure yet"
+      ],
+      required: true
+    },
     {
       id: "anonimity",
       question: "How important is it to you that your answers stay completely anonymous?", // did you answer more freely, knowing that this surevy is completely anonymous and private?
