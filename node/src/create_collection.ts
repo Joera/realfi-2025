@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { NillionService } from "./nillion.service";
+import { NillionService } from "./nillion.service.js";
 
 const surveyResultsCollectionId = randomUUID();
 

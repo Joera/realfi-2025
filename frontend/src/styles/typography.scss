@@ -2,9 +2,7 @@
 h1 {
 
     font-size: 2.4rem;
-    font-family: "Operator Mono A", "Operator Mono B";
-    font-style: normal;
-    font-weight: 500;
+
     // margin-top: 4rem;
     // margin-left: 1.5rem;
     font-family: "Ringside Compressed A", "Ringside Compressed B";
@@ -25,6 +23,14 @@ h2 {
     font-style: normal;
     font-size: 1.125rem;
     // margin: 0 auto 5rem auto;
+}
+
+p {
+      font-family: "Operator Mono A", "Operator Mono B";
+      font-style: normal;
+      font-weight: 500;
+      font-size: 1rem;
+      line-height: 1.55;
 }
 
 

@@ -2,9 +2,28 @@ import express from 'express';
 import cors from 'cors';
 import { randomUUID } from 'crypto';
 // import Did from '@nillion/client-web';
-import { NillionService } from './nillion.service';
+import { NillionService } from './nillion.service.js';
 import { Did } from '@nillion/nuc';
+import DOMExceptionModule from 'domexception';
+import fetch from 'node-fetch';
+import { Crypto } from '@peculiar/webcrypto';
 
+if (typeof globalThis.DOMException === 'undefined') {
+  // Cast to any to bypass type incompatibility
+  globalThis.DOMException = DOMExceptionModule as any;
+}
+
+
+
+if (typeof globalThis.crypto === 'undefined') {
+  (globalThis as any).crypto = new Crypto();
+}
+
+
+
+if (!globalThis.fetch) {
+  (globalThis as any).fetch = fetch;
+}
 
 const app = express();
 app.use(cors());
@@ -38,7 +57,7 @@ app.get('/api/survey-results/:surveyId', async (req, res) => {
     const { surveyId } = req.params;
 
     // Create and run queries on encrypted data
-    let response  = await nillion.querySurvey(surveyId) 
+    let response  = await nillion.tabulateSurveyResults(surveyId)
     res.send(response)
 
 

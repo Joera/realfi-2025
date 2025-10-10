@@ -1,7 +1,7 @@
 import { SurveyConfig } from "../components/survey";
 
 export const minaSurveyConfig: SurveyConfig = {
-  title: "Welcome to S3ntiment",
+  title: "Our 1st survey",
   description: "This short, 2-minute survey has 10 quick questions about what brought you here, what inspires you, and how you experience this new wave of crypto art and community. It’s completely anonymous, so feel free to answer honestly.",
   questions: [
     {
@@ -30,33 +30,33 @@ export const minaSurveyConfig: SurveyConfig = {
       ],
       required: true
     },
-    // {
-    //   id: "experience",
-    //   question: "Have you ever bought or collected a crypto art piece (NFT)?",
-    //   type: "radio",
-    //   options: [
-    //     "Yes, many times",
-    //     "Once or twice",
-    //     "Used a dApp",
-    //     "Not yet, but planning to",
-    //     "No, but I’m curious",
-    //     "No interest"
-    //   ],
-    //   required: true
-    // },
-    // {
-    //   id: "motivation",
-    //   question: "What’s your motivation to collect (or want to collect) crypto art?",
-    //   type: "checkbox",
-    //   options: [
-    //     "Supporting artists",
-    //     "Investment opportunity",
-    //     "I love the art itself",
-    //     "Being part of a movement",
-    //     "Curiosity about technology"
-    //   ],
-    //   required: true
-    // },
+    {
+      id: "experience",
+      question: "Have you ever bought or collected a crypto art piece (NFT)?",
+      type: "radio",
+      options: [
+        "Yes, many times",
+        "Once or twice",
+        "Used a dApp",
+        "Not yet, but planning to",
+        "No, but I’m curious",
+        "No interest"
+      ],
+      required: true
+    },
+    {
+      id: "motivation",
+      question: "What’s your motivation to collect (or want to collect) crypto art?",
+      type: "checkbox",
+      options: [
+        "Supporting artists",
+        "Investment opportunity",
+        "I love the art itself",
+        "Being part of a movement",
+        "Curiosity about technology"
+      ],
+      required: true
+    },
     // {
     //   id: "playground",
     //   question: "Have you attended a Playground event before?",
@@ -127,18 +127,18 @@ export const minaSurveyConfig: SurveyConfig = {
     // //   type: "text",
     // //   required: false
     // // },
-    // {
-    //   id: "anonimity",
-    //   question: "How important is it to you that your answers stay completely anonymous?", // did you answer more freely, knowing that this surevy is completely anonymous and private?
-    //   type: "scale",
-    //   scaleRange: {
-    //     min: 1,
-    //     max: 10,
-    //     minLabel: "not important at all",
-    //     maxLabel: "extremely important"
-    //   },
-    //   required: true
-    // },
+    {
+      id: "anonimity",
+      question: "How important is it to you that your answers stay completely anonymous?", // did you answer more freely, knowing that this surevy is completely anonymous and private?
+      type: "scale",
+      scaleRange: {
+        min: 1,
+        max: 10,
+        minLabel: "not important at all",
+        maxLabel: "extremely important"
+      },
+      required: true
+    },
     
   ]
 }

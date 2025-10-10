@@ -33,6 +33,7 @@ header {
             width: 4.8rem;
             height: auto;
             align-self: flex-end;
+             transition: all 0.3s ease;
             // margin-bottom: -1.9rem;
 
              path {
@@ -188,4 +189,24 @@ footer {
 
     }
 }
+
+.onboarding-message {
+    margin: 0 1.5rem 1.5rem 1.5rem;
+
+    h2 {
+            margin: 1.5rem 0 .75rem 0;
+              font-family: "Oswald";
+              text-transform: uppercase;
+              letter-spacing: .4px;
+              color: #276658;
+              font-size: 2rem;
+              font-weight: 600;
+            }
+
+
+        p { 
+            margin: 0;
+            font-family: "Operator Mono A";
+        }
+    }
 

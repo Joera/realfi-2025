@@ -2,7 +2,7 @@ import { Bip39, Secp256k1, Slip10, Slip10Curve, stringToPath } from "@cosmjs/cry
 import { toBech32 } from "@cosmjs/encoding";
 import { rawSecp256k1PubkeyToRawAddress } from "@cosmjs/amino";
 
-async function findNillionKey(mnemonic, targetAddress) {
+async function findNillionKey(mnemonic: any, targetAddress: any) {
   const seed = await Bip39.mnemonicToSeed(mnemonic);
   
   console.log('🔍 Searching for address:', targetAddress);

@@ -22,10 +22,12 @@ class SecurityQuestionsForm extends HTMLElement {
     // { id: 'name', label: 'Your name', type: 'text', placeholder: 'John Doe' },
     { id: 'password', label: 'Password', type: 'password', placeholder: 'Create a strong password' },
     { id: 'pet', label: "First pet's name", type: 'text', placeholder: 'Fluffy' },
-    // { id: 'birthCity', label: 'City where you were born', type: 'text', placeholder: 'Amsterdam' },
-    // { id: 'motherMaiden', label: "Mother's maiden name", type: 'text', placeholder: 'Smith' },
-    // { id: 'school', label: 'Elementary school name', type: 'text', placeholder: 'Lincoln Elementary' },
-    // { id: 'colour', label: 'Favorite colour', type: 'text', placeholder: 'Mint' },
+
+    { id: 'song', label: "Most overplayed song ever", type: 'text', placeholder: 'Its raining men' },
+    { id: 'crush', label: "High school crush", type: 'text', placeholder: 'Lisanne' },
+    { id: 'idol', label: "Teenage idol", type: 'text', placeholder: 'Billy Idol' },
+    { id: 'idol', label: "Secret pleasure TV show", type: 'text', placeholder: 'Love boat' },
+
     { id: 'vacation', label: 'Favorite vacation destination', type: 'text', placeholder: 'Bali' },
     { id: 'book', label: 'Favorite childhood book', type: 'text', placeholder: 'Harry Potter' },
     { id: 'car', label: 'First car model', type: 'text', placeholder: 'Toyota Corolla' }
@@ -68,20 +70,7 @@ class SecurityQuestionsForm extends HTMLElement {
           margin: 0 auto;
         }
 
-        h2 {
-            margin: 1.5rem 0 .75rem 0;
-              font-family: "Oswald";
-              text-transform: uppercase;
-              letter-spacing: .4px;
-              color: #276658;
-              font-size: 2rem;
-            }
-
-
-        p { 
-        margin: 0;
-        }
-
+        
 
         .progress-indicator {
             text-align: right;
@@ -104,12 +93,10 @@ class SecurityQuestionsForm extends HTMLElement {
         }
 
       </style>
-      <div><h2>Account setup</h2><p>You’re about to fill out an anonymous survey.
-To keep your answers private, a temporary wallet will be created for you using the ID from your card and your answer to one security question.
-Just pick a question and we’ll handle the rest.</p>
-        <div class="progress-indicator">
-          <span id="progress">${this.currentStep + 1}/${this.totalSteps}</span>
-        </div>
+      <div>
+        <!-- <div class="progress-indicator">
+        //   <span id="progress">${this.currentStep + 1}/${this.totalSteps}</span>
+        // </div> -->
 
         <form id="securityForm">
           ${this.renderSteps()}
@@ -130,9 +117,9 @@ Just pick a question and we’ll handle the rest.</p>
   private renderSteps(): string {
     return Array.from({ length: this.totalSteps }, (_, index) => `
       <div class="step ${index !== this.currentStep ? 'hidden' : ''}" data-step="${index}">
-        <label for="question-select-${index}">
+   <!--     <label for="question-select-${index}">
           Security Question ${index + 1}
-        </label>
+        </label> -->
         <select 
           id="question-select-${index}" 
           name="question-${index}"

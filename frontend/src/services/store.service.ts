@@ -1,4 +1,4 @@
-
+import { CardUsageState } from '../controllers/landing.ctrlr';
 type Listener<T> = (value: T) => void;
 
 class Observable<T> {
@@ -34,6 +34,7 @@ class Observable<T> {
   }
 }
 
+
 // Store state interface
 interface AppState {
   user: {
@@ -42,10 +43,16 @@ interface AppState {
     signerAddress: string | null;
     questions: number[];
     safeAddress: string | null;
-    nillionAddress: string | null
+    // nillionAddress: string | null
   };
   ui: {
     currentStep: 'onboarding' | 'wallet-creation' | 'survey';
+    cardUsageState?: CardUsageState;
+  },
+   services: {
+    nillion?: any;
+    evmChain?: any;
+    [key: string]: any; 
   };
 }
 
@@ -64,11 +71,15 @@ class Store {
         signerAddress: localStorage.getItem('signerAddress'),
         questions: JSON.parse(localStorage.getItem('questions') || '[]'),
         safeAddress: null,
-        nillionAddress: null,
+        // nillionAddress: null,
       }),
       ui: new Observable<AppState['ui']>({
         currentStep: 'onboarding'
-      })
+      }),
+      services:  new Observable<AppState['services']>({
+        nillion: undefined,
+        evmChain: undefined
+      }),
     };
   }
 
@@ -83,6 +94,17 @@ class Store {
 
   setUI(update: Partial<AppState['ui']>) {
     this.observables.ui.update(current => ({ ...current, ...update }));
+  }
+
+  setService(name: string, service: any) {
+    this.observables.services = {
+      ...this.observables.services,
+      [name]: service
+    } as any;
+  }
+
+  getService(name: string) {
+    return (this.observables.services as any)[name];
   }
 
   // Subscribe to changes

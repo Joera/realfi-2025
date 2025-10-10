@@ -4,7 +4,8 @@ import { formStyles } from '../shared-form-styles.js'
 import { typograhyStyles } from '../shared-typograhy-styles.js'
 import { colourStyles } from '../shared-colour-styles.js'
 import { buttonStyles } from '../shared-button-styles'
-  
+import { store } from '../services/store.service';
+
 interface SurveyQuestion {
   id: string
   question: string
@@ -32,19 +33,98 @@ class Survey extends HTMLElement {
   private config: SurveyConfig
   private answers: SurveyAnswer[] = []
   private currentStep = 0
+  previousDocument: any;
 
   constructor() {
     super()
     this.attachShadow({ mode: 'open' })
-    this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, colourStyles, buttonStyles] // formStyles have conflicts
-    // Try to load config from attribute or use default
+    this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, colourStyles, buttonStyles]
     const configAttr = this.getAttribute('config')
     this.config = configAttr ? JSON.parse(configAttr) : minaSurveyConfig
   }
 
-  connectedCallback() {
+  async connectedCallback() {
+    // Check if returning user and load previous answers
+    const cardUsageState = store.ui.cardUsageState;
+    
+    if (cardUsageState === 'returning') {
+      console.log('🔄 Returning user - loading previous answers');
+      await this.loadPreviousAnswers();
+    }
+    
     this.render()
     this.attachEventListeners()
+  }
+
+  async loadPreviousAnswers() {
+    try {
+      const nillionService = store.getService('nillion');``
+      
+      if (!nillionService) {
+        console.warn('⚠️ Nillion service not available');
+        return;
+      }
+
+      const userId = store.user.signerAddress || store.user.nullifier;
+      const surveyId = 'mina'; // Could make this configurable
+      
+      console.log('Fetching previous answers for user:', userId);
+      
+      const previousResult = await nillionService.getUserSurveyAnswers(surveyId);
+
+      // console.log("xxxx", previousResult)
+      
+      if (previousResult && previousResult.answers) {
+        console.log('Found previous submission:', previousResult);
+        this.previousDocument = previousResult._id;
+        
+        this.answers = previousResult.answers.map((prevAnswer: any) => {
+          const parsedAnswer = this.parseAnswerFromShare(prevAnswer.answer);
+          
+          return {
+            questionId: prevAnswer.questionId,
+            questionText: prevAnswer.questionText,
+            questionType: prevAnswer.questionType,
+            // For checkbox type, ALWAYS ensure it's an array
+            answer: prevAnswer.questionType === 'checkbox' && !Array.isArray(parsedAnswer)
+              ? [parsedAnswer] // Wrap single value in array
+              : parsedAnswer,
+            ...(prevAnswer.scaleRange && { scaleRange: prevAnswer.scaleRange })
+          };
+        });
+      }
+
+    } catch (error) {
+      console.error('❌ Failed to load previous answers:', error);
+      // Continue with empty answers - not critical
+    }
+  }
+
+  parseAnswerFromShare(answerObj: any): string | string[] | number {
+    let value = answerObj;
+    
+    // Extract from wrapper if present
+    if (typeof answerObj === 'object' && answerObj !== null && !Array.isArray(answerObj)) {
+      value = answerObj['%share'] || answerObj['%allot'] || answerObj;
+    }
+    
+    // Already an array - return as is
+    if (Array.isArray(value)) {
+      return value;
+    }
+    
+    // String with commas = was an array (checkbox multiple selections)
+    if (typeof value === 'string' && value.includes(',')) {
+      return value.split(',').map((v: string) => v.trim());
+    }
+    
+    // Try to parse as number (for scale questions)
+    const numValue = Number(value);
+    if (!isNaN(numValue) && value !== '' && typeof value !== 'string') {
+      return numValue;
+    }
+    
+    return value;
   }
 
   get totalSteps(): number {
@@ -55,12 +135,10 @@ class Survey extends HTMLElement {
     if (!this.shadowRoot) return
 
     const currentQuestion = this.config.questions[this.currentStep]
-    const savedAnswer = currentQuestion ? this.answers.find(a => a.questionId === currentQuestion.id) : undefined
+    const savedAnswer = currentQuestion ? this.answers.find(a => a.questionId === currentQuestion.id) : undefined;
 
     this.shadowRoot.innerHTML = `
       <style>
-  
-
         .survey-container {
           padding: 1.5rem;
         }
@@ -210,6 +288,46 @@ class Survey extends HTMLElement {
           font-weight: 500;
         }
 
+        .scale-vertical {
+          flex-direction: column !important;
+          align-items: stretch;
+        }
+
+        .scale-option-vertical {
+          display: flex;
+          align-items: center;
+          padding: 0.75rem 1rem;
+          background: var(--bg-lightest);
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .scale-option-vertical:hover {
+          background: #f9fafb;
+        }
+
+        .scale-option-vertical input[type="radio"] {
+          margin: 0 0.75rem 0 0;
+          width: 20px;
+          height: 20px;
+        }
+
+        .scale-label-vertical {
+          font-size: 1rem;
+          font-weight: 500;
+        }
+
+        .scale-labels-vertical {
+          display: flex;
+          justify-content: space-between;
+          margin-top: 1rem;
+          padding: 0 1rem;
+          font-size: 0.875rem;
+          color: #666;
+          font-style: italic;
+        }
+
         .completion-screen {
           text-align: center;
           padding: 2rem 0;
@@ -219,11 +337,20 @@ class Survey extends HTMLElement {
           color: #000;
           margin-bottom: 1rem;
         }
+
+        a {
+          color: white;
+          text-decoration: none;
+          border-bottom: 1px solid white;
+        }
+        
+
       </style>
 
       <div class="survey-container">
         ${this.currentStep < this.totalSteps ? `
           <h1>${this.config.title}</h1>
+          
           ${this.currentStep === 0 && this.config.description ? `
             <p class="description">${this.config.description}</p>
           ` : ''}
@@ -257,7 +384,10 @@ class Survey extends HTMLElement {
         ` : `
           <div class="completion-screen">
             <h2>Thank you for your feedback!</h2>
-            <p>Your responses will help us improve the Web3 onboarding experience.</p>
+            <p>Your responses ${store.ui.cardUsageState === 'returning' ? 'have been updated' : 'will help us improve the Web3 onboarding experience'}.</p>
+
+            <h3>by the way ....</h3> 
+            <p>In the process a safe was created for you on Base Sepolia that is controlled by the private key constructed from the card and the answer to your security answer. <a href="https://app.safe.global/home?safe=basesep:${store.user.safeAddress}" target="_link">Link to UI here.</a> As much as this is an interesting survey, it is also an experiment to see how we can onboard people into a crypto / web3 experience with less friction or none at all. What do you think?</a 
           </div>
         `}
       </div>
@@ -265,6 +395,8 @@ class Survey extends HTMLElement {
   }
 
   private renderQuestion(question: SurveyQuestion, savedAnswer?: SurveyAnswer): string {
+
+
     switch (question.type) {
       case 'radio':
         return `
@@ -304,27 +436,27 @@ class Survey extends HTMLElement {
         const range = question.scaleRange!
         return `
           <div class="scale-container">
-            <div class="scale-options">
+            <div class="scale-options scale-vertical">
               ${Array.from({ length: range.max - range.min + 1 }, (_, i) => {
                 const value = range.min + i
                 return `
-                  <div class="scale-option">
+                  <label class="scale-option-vertical">
                     <input 
                       type="radio" 
                       name="${question.id}" 
                       value="${value}"
                       id="${question.id}-${value}"
-                      ${savedAnswer?.answer === value ? 'checked' : ''}
+                      ${savedAnswer?.answer === value.toString() ? 'checked' : ''}
                     >
-                    <label class="scale-label" for="${question.id}-${value}">${value}</label>
-                  </div>
+                    <span class="scale-label-vertical">${value}</span>
+                  </label>
                 `
               }).join('')}
             </div>
-            <div class="scale-labels">
-              <span>${range.minLabel}</span>
-              <span>${range.maxLabel}</span>
-            </div>
+            <!-- <div class="scale-labels-vertical">
+            <span>${range.minLabel}</span>
+            <span>${range.maxLabel}</span>
+            </div> -->
           </div>
         `
 
@@ -358,7 +490,6 @@ class Survey extends HTMLElement {
       return
     }
 
-    // Save answer with full context
     const enrichedAnswer: SurveyAnswer = {
       questionId: currentQuestion.id,
       questionText: currentQuestion.question,
@@ -374,7 +505,6 @@ class Survey extends HTMLElement {
       this.answers.push(enrichedAnswer)
     }
 
-    // Move to next or complete
     if (this.currentStep < this.totalSteps - 1) {
       this.currentStep++
       this.render()
@@ -433,13 +563,11 @@ class Survey extends HTMLElement {
     this.currentStep = this.totalSteps
     this.render()
 
-    // console.log('Survey completed with enriched answers:', this.answers)
-
-    // Dispatch custom event with survey results
     const event = new CustomEvent('survey-complete', {
       detail: {
         answers: this.answers,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        documentId: this.previousDocument
       },
       bubbles: true,
       composed: true
@@ -447,7 +575,6 @@ class Survey extends HTMLElement {
     this.dispatchEvent(event)
   }
 
-  // Public methods
   public getAnswers(): SurveyAnswer[] {
     return this.answers
   }

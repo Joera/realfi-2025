@@ -15,11 +15,65 @@ import { NillionService } from '../services/nilldb.service';
 
 const CARDVALIDATOR = "0x39b865Cbc7237888BC6FD58B9C256Eab39661f95"
 
+// Card usage states
+export enum CardUsageState {
+  FIRST_TIME = 'first-time',
+  RETURNING_SAME_CARD = 'returning',
+  NEW_CARD_SAME_PHONE = 'new-card',
+  CARD_USED_ELSEWHERE = 'card-conflict'
+}
+
+export interface CardUsageContext {
+  state: CardUsageState;
+  requiresValidation: boolean;
+  requiresAuth: boolean;
+  message?: string;
+}
+
 export class LandingController {
   private reactiveViews: any[] = [];
   evmChain: any;
   cosmos: any;
   nillion: any;
+  documentId: any;
+
+  private detectCardUsageState(card: CardData, cardIsUsed: boolean): CardUsageContext {
+    const storedNullifier = store.user.nullifier;
+    
+    if (cardIsUsed && card.nullifier !== storedNullifier) {
+      return {
+        state: CardUsageState.CARD_USED_ELSEWHERE,
+        requiresValidation: false,
+        requiresAuth: false,
+        message: "This card was used on another phone"
+      };
+    }
+    
+    if (cardIsUsed && card.nullifier === storedNullifier) {
+      return {
+        state: CardUsageState.RETURNING_SAME_CARD,
+        requiresValidation: false,
+        requiresAuth: true,
+        message: "Welcome back! Please verify your security questions"
+      };
+    }
+    
+    if (!cardIsUsed && storedNullifier && storedNullifier !== card.nullifier) {
+      return {
+        state: CardUsageState.NEW_CARD_SAME_PHONE,
+        requiresValidation: true,
+        requiresAuth: false,
+        message: "New card detected. Your previous data will be cleared."
+      };
+    }
+    
+    return {
+      state: CardUsageState.FIRST_TIME,
+      requiresValidation: true,
+      requiresAuth: false,
+      message: "Welcome! Let's set up your account"
+    };
+  }
 
   private renderTemplate() {
     const app = document.querySelector('#app');
@@ -29,35 +83,27 @@ export class LandingController {
       <div id="landing-content"></div>
     `;
 
-    // Create reactive view that responds to UI state changes
     const view = reactive('#landing-content', () => {
-      const { currentStep } = store.ui;
-
-      // if (isLoading) {
-      //   return `
-      //     <div class="spinner">
-      //       <span class="loader"></span>
-      //     </div>
-      //   `;
-      // }
+      const { currentStep, cardUsageState } = store.ui;
 
       switch (currentStep) {
         case 'onboarding':
-          return `<security-questions-form></security-questions-form>`;
+          return `
+            ${this.renderOnboardingMessage(cardUsageState)}
+            <security-questions-form></security-questions-form>
+          `;
         
         case 'wallet-creation':
           return `
             <loading-spinner 
               message="Creating your account" 
               size="120" 
-              color="#2d6b5e">
+              color="#2b7062">
             </loading-spinner>
           `;
         
         case 'survey':
-          return `
-           <survey-questions></survey-questions>
-          `;
+          return `<survey-questions></survey-questions>`;
         
         default:
           return '';
@@ -70,100 +116,133 @@ export class LandingController {
     }
   }
 
-  async process(card: any, fresh: boolean) {
-
-        // Store card data
+  private renderOnboardingMessage(state: CardUsageState | undefined): string {
+    switch (state) {
+      case CardUsageState.RETURNING_SAME_CARD:
+        return `
+          <div class="onboarding-message returning">
+            <h2>Welcome back</h2>
+            <p>Please answer your security question to connect your wallet.</p>
+          </div>
+        `;
       
-        console.log("fresh", fresh);
+      case CardUsageState.FIRST_TIME:
+        return `
+          <div class="onboarding-message first-time">
+            <h2>Welcome</h2>
+            <p>You're about to fill out an anonymous survey. 
+            To keep your answers private, a wallet will be created for you 
+            using the ID from your card and your answer to one security question. 
+            Just pick a question and we'll handle the rest.</p>
+          </div>
+        `;
+      // USING THE LOCAL STORAGE AS PROTECTION IS BS
+      // IT SHOULDNT MATTER WHAT CARD YOU BRING
+      // THERE IS JUST NEW CARD AND USED CARD 
+      case CardUsageState.NEW_CARD_SAME_PHONE:
+        return `
+          <div class="onboarding-message new-card">
+            <h2>New card detected</h2>
+            <p>Set up a new security question for this card.</p>
+          </div>
+        `;
+      
+      default:
+        return `
+          <div class="onboarding-message">
+            <h2>Account setup</h2>
+            <p>Choose a security question to get started.</p>
+          </div>
+        `;
+    }
+  }
 
-        await customElements.whenDefined('security-questions-form');
-        const form = document.querySelector('security-questions-form');
-    
-        if (form) {
-          form.addEventListener('security-questions-complete', async (e: any) => {
-            const { formattedInput } = e.detail;
+  async process(card: any, context: CardUsageContext) {
+    console.log('Processing with context:', context);
 
-            // Get the security questions form element
-            const securityForm = form as any; // Cast to access custom methods
-            const selectedQuestions = securityForm.getSelectedQuestions();
+    // Store context in UI state for reactive rendering
+    store.setUI({ cardUsageState: context.state });
+
+    await customElements.whenDefined('security-questions-form');
+    const form = document.querySelector('security-questions-form');
+
+    if (form) {
+      form.addEventListener('security-questions-complete', async (e: any) => {
+        const { formattedInput } = e.detail;
+
+        const securityForm = form as any;
+        const selectedQuestions = securityForm.getSelectedQuestions();
+        
+        store.setUser({ questions: selectedQuestions });
+        store.persistUser();
+     
+        store.setUI({ currentStep: 'wallet-creation' });
+        
+        try {
+          const key = await createKey(card.nullifier + '|' + formattedInput);
+          let hexKey = decimalToHex(key);
+
+          const oldSigner = store.user.signerAddress;
+          const signerAddress = await this.evmChain.updateSigner(hexKey);
+          console.log("signer", signerAddress);
+          
+          store.setUser({ signerAddress });
+          store.persistUser();
+          
+          this.nillion = new NillionService(hexKey.slice(2)); 
+          await this.nillion.init();
+          store.setService('nillion', this.nillion); // Store it
+          
+          const evmSafeAddress = await this.evmChain.connectToFreshSafe(
+            store.user.batchId || card.batchId
+          );
+
+          let success = false;
+
+          if (context.requiresValidation) {
+            console.log('🔐 Validating card on-chain...');
             
-            // Save the question IDs to store
-            store.setUser({ questions: selectedQuestions });
-            store.persistUser();
-         
-            // Update UI state
-            store.setUI({ currentStep: 'wallet-creation' });
-            
-            try {
-              const key = await createKey(card.nullifier + '|' + formattedInput);
-              let hexKey = decimalToHex(key);
+            const txResponse = await this.evmChain.genericTx(
+              CARDVALIDATOR, 
+              JSON.stringify(cardValidatorAbi), 
+              'validateCard', 
+              [card.nullifier, card.signature, card.batchId], 
+              { waitForReceipt: true }
+            );
 
-              const oldSigner = store.user.signerAddress;
-              const signerAddress = await this.evmChain.updateSigner(hexKey);
-              console.log("signer", signerAddress)
-              store.setUser( { signerAddress})
-              store.persistUser();
-              // let nillionAddress = await this.cosmos.initialize(hexKey);
-              // store.setUser( { nillionAddress })
-              this.nillion = new NillionService(hexKey.slice(2)); 
-             
-              
-              const evmSafeAddress = await this.evmChain.connectToFreshSafe(
-                store.user.batchId || card.batchId
-              );
-
-              let success = false;
-
-              if(fresh) {
-
-                const txResponse = await this.evmChain.genericTx(
-                  CARDVALIDATOR, 
-                  JSON.stringify(cardValidatorAbi), 
-                  'validateCard', 
-                  [card.nullifier, card.signature, card.batchId], 
-                  { waitForReceipt: true }
-                );
-
-                console.log(txResponse);
-                if (txResponse.receipt?.status === 'success') {
-                  success = true;
-                } else {
-                  alert('❌ card validation failed');
-                }
-              } else {
-
-                  console.log(oldSigner,signerAddress)
-                  if (oldSigner == signerAddress) {
-
-                    success = true;
-                    console.log("existing user authenticated")
-
-                  } else {
-
-                    alert("incorrect answers to auth existing user")
-                  }
-              }
-              
-              if(success) {
-              
-           
-                this.setSurveyListener();
-                await this.evmChain.connectToExistingSafe(evmSafeAddress);
-                // console.log(2)
-                
-                // Update store with success
-                store.setUser({ safeAddress: evmSafeAddress });
-                store.setUI({ currentStep: 'survey' });
-              } 
-    
-            } catch (error) {
-              console.error(error);
-              alert('An error occurred');
-              store.setUI({ currentStep: 'onboarding' });
+            if (txResponse.receipt?.status === 'success') {
+              success = true;
+              console.log('✅ Card validated');
+            } else {
+              alert('❌ Card validation failed');
             }
-          });
-        }
+          } 
+          else if (context.requiresAuth) {
+            console.log('🔑 Authenticating returning user...');
+            
+            if (oldSigner === signerAddress) {
+              success = true;
+              console.log('✅ Authentication successful');
+            } else {
+              alert('❌ Incorrect security answers');
+            }
+          }
+          
+          if (success) {
+            this.setSurveyListener();
+            await this.evmChain.connectToExistingSafe(evmSafeAddress);
+            
+            store.setUser({ safeAddress: evmSafeAddress });
+            store.setUI({ currentStep: 'survey' });
+          } 
 
+        } catch (error) {
+          console.error(error);
+          alert('An error occurred');
+          store.setUI({ currentStep: 'onboarding' });
+        }
+      });
+    }
   }
 
   async render() {
@@ -179,7 +258,7 @@ export class LandingController {
     });
 
     if (card) {
-      console.log(card);
+      console.log('📇 Card detected:', card);
 
       const cardIsUsed = await this.evmChain.genericRead(
         CARDVALIDATOR, 
@@ -188,51 +267,61 @@ export class LandingController {
         [card.nullifier, card.batchId]
       );
       
-      const phoneIsUsed = store.user.nullifier && store.user.nullifier !== card.nullifier;
+      const context = this.detectCardUsageState(card, cardIsUsed);
+      console.log('📊 Card usage context:', context);
 
-      if (cardIsUsed && card.nullifier !== store.user.nullifier) {
-        alert("card was used on another phone")
-      } 
- 
-      else if (cardIsUsed && card.nullifier === store.user.nullifier) {
-
-        const user = store.user;
-        this.process({
-          nullifier: user.nullifier,
-          batchId: user.batchId,
-        }, false)
-      }
-
-      else {
-
-        if (!cardIsUsed && phoneIsUsed) {
-            alert("another card was used on this phone. Click ok to continue")
+      switch (context.state) {
+        case CardUsageState.CARD_USED_ELSEWHERE:
+          alert(context.message);
+          return;
+          
+        case CardUsageState.NEW_CARD_SAME_PHONE:
+          if (confirm(context.message + '\n\nClick OK to continue')) {
             store.clear();
-        }
-        store.setUser({
-          nullifier: card.nullifier,
-          batchId: card.batchId
-        });
-        store.persistUser();
-        this.process(card, true)
+            store.setUser({
+              nullifier: card.nullifier,
+              batchId: card.batchId
+            });
+            store.persistUser();
+            this.process(card, context);
+          }
+          break;
+          
+        case CardUsageState.RETURNING_SAME_CARD:
+          const user = store.user;
+          this.process({
+            nullifier: user.nullifier,
+            batchId: user.batchId,
+          }, context);
+          break;
+          
+        case CardUsageState.FIRST_TIME:
+          store.setUser({
+            nullifier: card.nullifier,
+            batchId: card.batchId
+          });
+          store.persistUser();
+          this.process(card, context);
+          break;
       }
-      
     }
   }
 
   destroy() {
-    // Clean up subscriptions when leaving the page
     this.reactiveViews.forEach(view => view.destroy());
     this.reactiveViews = [];
   }
 
   async setSurveyListener() {
-
-      document.addEventListener('survey-complete', async (event:any ) => {
-        console.log('Survey completed!');
-        console.log('Answers:', event.detail.answers);
-        console.log('Timestamp:', event.detail.timestamp);
+    document.addEventListener('survey-complete', async (event: any) => {
+      console.log('Survey completed!');
+      console.log('event:', event);
+      
+      if (event.detail.documentId != undefined) {
+        await this.nillion.update(event.detail.answers, "mina", event.detail.documentId);
+      } else {
         await this.nillion.store(event.detail.answers, "mina");
-      });
+      }
+    });
   }
 }

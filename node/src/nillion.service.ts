@@ -106,6 +106,80 @@ export class NillionService {
         }
     }
 
+    async tabulateSurveyResults(survey_id: string) {
+        console.log(`Tabulating results for survey: ${survey_id}`);
+        
+        // Get all survey responses
+        const records = await this.builder.findData({
+            collection: COLLECTION,
+            filter: { surveyId: survey_id },
+        });
+
+        console.log(`Processing ${records.data.length} responses`);
+
+        // Group answers by question
+        const questionMap = new Map();
+
+        records.data.forEach((record: any) => {
+            record.answers.forEach((answer: any) => {
+            const questionId = answer.questionId;
+            
+            if (!questionMap.has(questionId)) {
+                questionMap.set(questionId, {
+                question: answer.questionText,
+                type: answer.questionType,
+                responses: []
+                });
+            }
+            
+            // Extract the actual answer value from %share
+            let answerValue = answer.answer;
+            
+            if (answerValue && typeof answerValue === 'object' && '%share' in answerValue) {
+                answerValue = answerValue['%share'];
+            }
+            
+            // For checkbox, split comma-separated values
+            // (your frontend stores arrays as comma-separated strings in %share)
+            const values = typeof answerValue === 'string' && answerValue.includes(',')
+                ? answerValue.split(',').map(v => v.trim())
+                : [answerValue];
+            
+            questionMap.get(questionId).responses.push(...values);
+            });
+        });
+
+        // Tabulate results for each question
+        const tabulated = Array.from(questionMap.entries()).map(([questionId, data]) => {
+            // Count frequency of each answer
+            const frequency = data.responses.reduce((acc: any, value: any) => {
+            const key = String(value);
+            acc[key] = (acc[key] || 0) + 1;
+            return acc;
+            }, {});
+
+            // Calculate percentages
+            const totalResponses = records.data.length;
+            const results = Object.entries(frequency)
+            .map(([answer, count]) => ({
+                answer,
+                count,
+                percentage: Math.round((count as number) / totalResponses * 100)
+            }))
+            .sort((a: any, b: any) => b.count - a.count);
+
+            return {
+            question: data.question,
+            type: data.type,
+            totalResponses,
+            results
+            };
+        });
+
+        console.log('Tabulation complete');
+        return tabulated;
+    }
+
     async querySurvey (survey_id: string) {
 
         console.log("builder", this.did)
@@ -117,90 +191,91 @@ export class NillionService {
 
        console.log("records", records.data)
 
-        // const query = {
-        //     _id: randomUUID(),
-        //     name: 'read all results',
-        //     collection: COLLECTION,
-        //     pipeline: [
-        //         { $match: { _id: { $exists: true } } }// Match everything
-        //     ],
-        //     variables: {}
-        // };
+      
+//         // const query = {
+//         //     _id: randomUUID(),
+//         //     name: 'read all results',
+//         //     collection: COLLECTION,
+//         //     pipeline: [
+//         //         { $match: { _id: { $exists: true } } }// Match everything
+//         //     ],
+//         //     variables: {}
+//         // };
           
-        const queryId = randomUUID();
+//         const queryId = randomUUID();
   
-  // Try the most minimal query first
-  const query = {
-    _id: queryId,
-    name: 'read survey results',
-    collection: COLLECTION,
-    variables: {}, // Empty but present
-    pipeline: [
-      { 
-        $match: { 
-          surveyId: survey_id
-        } 
-      }
-    ]
-  };
+//   // Try the most minimal query first
+//   const query = {
+//     _id: queryId,
+//     name: 'read survey results',
+//     collection: COLLECTION,
+//     variables: {}, // Empty but present
+//     pipeline: [
+//       { 
+//         $match: { 
+//           surveyId: survey_id
+//         } 
+//       }
+//     ]
+//   };
 
-  console.log('Creating query with:', JSON.stringify(query, null, 2));
+//   console.log('Creating query with:', JSON.stringify(query, null, 2));
 
-  try {
-    const createResult = await this.builder.createQuery(query);
-    console.log('Query created successfully:', createResult);
-  } catch (error) {
-    console.error('Query creation failed');
-    console.error('Error message:', error.message);
-    console.error('Error cause:', JSON.stringify(error.cause, null, 2));
-    console.error('Error body:', JSON.stringify(error.cause?.body, null, 2));
-    throw error;
-  }
+//   try {
+//     const createResult = await this.builder.createQuery(query);
+//     console.log('Query created successfully:', createResult);
+//   } catch (error) {
+//     console.error('Query creation failed');
+//     console.error('Error message:', error.message);
+//     console.error('Error cause:', JSON.stringify(error.cause, null, 2));
+//     console.error('Error body:', JSON.stringify(error.cause?.body, null, 2));
+//     throw error;
+//   }
 
-  // Run the query
-  const runResponse = await this.builder.runQuery({
-    _id: queryId,
-    variables: {}
-  } as RunQueryRequest);
+//   // Run the query
+//   const runResponse = await this.builder.runQuery({
+//     _id: queryId,
+//     variables: {}
+//   } as RunQueryRequest);
 
-  console.log('Run response:', runResponse);
+//   console.log('Run response:', runResponse);
 
-  // Extract run IDs from each node
-  const runIds = Object.fromEntries(
-    Object.entries(runResponse)
-      .filter(([_, r]: [any, any]) => r?.data)
-      .map(([nodeId, r]: [any, any]) => [nodeId, r.data])
-  );
+//   // Extract run IDs from each node
+//   const runIds = Object.fromEntries(
+//     Object.entries(runResponse)
+//       .filter(([_, r]: [any, any]) => r?.data)
+//       .map(([nodeId, r]: [any, any]) => [nodeId, r.data])
+//   );
 
-  console.log('Run IDs:', runIds);
+//   console.log('Run IDs:', runIds);
 
-  // Poll for results
-  for (let i = 0; i < 10; i++) {
-    await new Promise((resolve) => setTimeout(resolve, i < 3 ? 1000 : 3000));
+//   // Poll for results
+//   for (let i = 0; i < 10; i++) {
+//     await new Promise((resolve) => setTimeout(resolve, i < 3 ? 1000 : 3000));
 
-    const resultsResponse = await this.builder.readQueryRunResults(runIds);
+//     const resultsResponse = await this.builder.readQueryRunResults(runIds);
     
-    console.log(`Poll ${i + 1}:`, JSON.stringify(resultsResponse, null, 2));
+//     console.log(`Poll ${i + 1}:`, JSON.stringify(resultsResponse, null, 2));
 
-    const allResponses = Object.values(resultsResponse).filter((r: any) => r?.data);
+//     const allResponses = Object.values(resultsResponse).filter((r: any) => r?.data);
     
-    const completed : any = allResponses.filter((r: any) => r.data.status === 'complete');
-    const pending = allResponses.some((r: any) => r.data.status === 'pending');
-    const errors: any[] = allResponses.filter((r: any) => r.data.status === 'error');
+//     const completed : any = allResponses.filter((r: any) => r.data.status === 'complete');
+//     const pending = allResponses.some((r: any) => r.data.status === 'pending');
+//     const errors: any[] = allResponses.filter((r: any) => r.data.status === 'error');
 
-    if (errors.length > 0) {
-      console.error('Query execution errors:', JSON.stringify(errors, null, 2));
-      throw new Error('Query failed: ' + JSON.stringify(errors[0].data.errors));
-    }
+//     if (errors.length > 0) {
+//       console.error('Query execution errors:', JSON.stringify(errors, null, 2));
+//       throw new Error('Query failed: ' + JSON.stringify(errors[0].data.errors));
+//     }
 
-    if (completed.length > 0 && !pending) {
-      const results = completed[0].data.result;
-      console.log('Query completed successfully:', results);
-      return results;
-    }
-  }
+//     if (completed.length > 0 && !pending) {
+//       const results = completed[0].data.result;
+//       console.log('Query completed successfully:', results);
+//       return results;
+//     }
+//   }
   
-  throw new Error('Query timeout after 10 attempts');
+//   throw new Error('Query timeout after 10 attempts');
 
 
 }
