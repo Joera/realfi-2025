@@ -37,6 +37,43 @@
       "artifacts": [
         "CardValidator"
       ]
+    },
+    "/home/joera/Documents/realfi-2025/cards/contracts/survey-store.sol": {
+      "lastModificationDate": 1760346652032,
+      "contentHash": "cb55d1e36f64adc8b3894c56e4348e67",
+      "sourceName": "contracts/survey-store.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "SurveyStore"
+      ]
     }
   }
 }

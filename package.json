@@ -4,6 +4,8 @@
 		"cors": "^2.8.5",
 		"crypto": "^1.0.1",
 		"express": "^5.1.0",
-		"navigo": "^8.11.1"
+		"navigo": "^8.11.1",
+		"vite": "^7.1.9",
+		"vite-plugin-node-polyfills": "^0.24.0"
 	}
 }
