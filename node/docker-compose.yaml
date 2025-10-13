@@ -1,0 +1,22 @@
+services:
+  nillion-survey-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: s3ntiment-nillion-backend
+    ports:
+      - "3456:3456"
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env
+    restart: unless-stopped
+    # Uncomment if you need to persist data
+    # volumes:
+    #   - ./data:/app/data
+    networks:
+      - nillion-network
+
+networks:
+  nillion-network:
+    driver: bridge

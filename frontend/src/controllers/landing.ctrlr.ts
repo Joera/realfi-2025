@@ -201,6 +201,7 @@ export class LandingController {
 
           if (context.requiresValidation) {
             console.log('🔐 Validating card on-chain...');
+            // success = true;
             
             const txResponse = await this.evmChain.genericTx(
               CARDVALIDATOR, 

@@ -104,14 +104,14 @@ const generateCardSecrets = async (batchId: string, batchSize: number) => {
       signature: signature,
     };
   
-    await generateQRCodeSVG(card, './output/qr-codes')
+    await generateQRCodeSVG(card, './output/mina')
     cards.push(card)
   }
   
   return cards;
 }
 
-const batch_size = 10;
-const batch_id = "mina_10-10";
+const batch_size = 36;
+const batch_id = "mina_10-okt";
 
 generateCardSecrets(batch_id, batch_size)

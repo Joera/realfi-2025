@@ -1,8 +1,9 @@
 import { randomUUID } from 'node:crypto';
-import { config as loadEnv } from 'dotenv';
 
-// Load environment variables
-loadEnv();
+const NILCHAIN_URL = "http://rpc.testnet.nilchain-rpc-proxy.nilogy.xyz";
+const NILAUTH_URL = "https://nilauth.sandbox.app-cluster.sandbox.nilogy.xyz";
+const NILDB_NODES = "https://nildb-stg-n1.nillion.network,https://nildb-stg-n2.nillion.network,https://nildb-stg-n3.nillion.network";
+
 
 // Import Nillion SDK components
 import {
@@ -51,17 +52,17 @@ export class NillionService {
 
         const payer = await new PayerBuilder()
             .keypair(this.keypair)
-            .chainUrl(config.NILCHAIN_URL || "")
+            .chainUrl(NILCHAIN_URL || "")
             .build();
 
-        const nilauth = await NilauthClient.from(config.NILAUTH_URL || "", payer);
+        const nilauth = await NilauthClient.from(NILAUTH_URL || "", payer);
 
         this.builder = await SecretVaultBuilderClient.from({
             keypair: this.keypair,
             urls: {
-                chain: config.NILCHAIN_URL || "",
-                auth: config.NILAUTH_URL || "",
-                dbs: config.NILDB_NODES,
+                chain: NILCHAIN_URL || "",
+                auth: NILAUTH_URL || "",
+                dbs: NILDB_NODES.split(","),
             },
         });
 

@@ -7,7 +7,7 @@ import QRCode from 'qrcode'
 import fs from 'fs/promises'
 import path from 'path'
 
-const baseUrl = "https://s3ntiment.composible.io"; //  "http://localhost:9999" // 
+const baseUrl = "http://localhost:9999" //  "https://s3ntiment.composible.io"; //  
 
 interface CardData {
   nullifier: string
