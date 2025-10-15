@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 const NILCHAIN_URL = "http://rpc.testnet.nilchain-rpc-proxy.nilogy.xyz";
 const NILAUTH_URL = "https://nilauth.sandbox.app-cluster.sandbox.nilogy.xyz";
 const NILDB_NODES = "https://nildb-stg-n1.nillion.network,https://nildb-stg-n2.nillion.network,https://nildb-stg-n3.nillion.network";
-
+const BUILDER_PRIVATE_KEY = "c657ed5e26de39fe82b4fc006f68892234aed6f634fc7aba4ff6d9241eca488e";
 
 // Import Nillion SDK components
 import {
@@ -21,17 +21,17 @@ import {
 
 // Configuration
 const config = {
-  NILCHAIN_URL: process.env.NILCHAIN_URL,
-  NILAUTH_URL: process.env.NILAUTH_URL,
-  NILDB_NODES: process.env.NILDB_NODES!.split(','),
-  BUILDER_PRIVATE_KEY: process.env.BUILDER_PRIVATE_KEY,
+  NILCHAIN_URL: NILCHAIN_URL,
+  NILAUTH_URL: NILAUTH_URL,
+  NILDB_NODES: NILDB_NODES!.split(','),
+  BUILDER_PRIVATE_KEY: BUILDER_PRIVATE_KEY,
 };
 
 // Validate configuration
-if (!config.BUILDER_PRIVATE_KEY) {
-  console.error('❌ Please set BUILDER_PRIVATE_KEY in your .env file');
-  process.exit(1);
-}
+// if (!config.BUILDER_PRIVATE_KEY) {
+//   console.error('❌ Please set BUILDER_PRIVATE_KEY in your .env file');
+//   process.exit(1);
+// }
 
 const COLLECTION = "8840cd79-ab26-4773-9d9f-ac94b1fc5f33";
 
@@ -50,12 +50,15 @@ export class NillionService {
 
     async init() {
 
+        console.log(1)
+
         const payer = await new PayerBuilder()
             .keypair(this.keypair)
             .chainUrl(NILCHAIN_URL || "")
             .build();
 
         const nilauth = await NilauthClient.from(NILAUTH_URL || "", payer);
+
 
         this.builder = await SecretVaultBuilderClient.from({
             keypair: this.keypair,
@@ -66,29 +69,58 @@ export class NillionService {
             },
         });
 
-        // Refresh token using existing subscription
-        await this.builder.refreshRootToken();
+        console.log("b",this.builder)
 
+        // Refresh token using existing subscription
+        try {
+            await this.builder.refreshRootToken();
+            console.log('✅ Root token refreshed');
+        } catch (tokenError) {
+            console.log('⚠️ Token refresh failed, will attempt to continue');
+        }
+
+            // Try to read existing profile first
         try {
             const existingProfile = await this.builder.readProfile();
             console.log('✅ Builder already registered:', existingProfile.data.name);
-            } catch (profileError: any) {
-            try {
-                await this.builder.register({
-                did: this.did,
-                name: 'S3ntiment v1',
-                });
-                console.log('✅ Builder registered successfully');
-            } catch (registerError) {
-                // Handle duplicate key errors gracefully
-                if (registerError.message.includes('duplicate key')) {
-                console.log('✅ Builder already registered (duplicate key)');
-                } else {
-                throw registerError;
-                }
-            }
+            return; // Already registered, we're done!
+        } catch (profileError: any) {
+            console.log('⚠️ Could not read profile, attempting to register...');
         }
 
+    // Try to register
+        try {
+            await this.builder.register({
+                did: this.did,
+                name: 'S3ntiment v1',
+            });
+            console.log('✅ Builder registered successfully');
+        } catch (registerError: any) {
+            console.log('Full error:', JSON.stringify(registerError, null, 2));
+            
+            // Check if it's a duplicate key error (E11000 is MongoDB duplicate key error)
+            let isDuplicate = false;
+            
+            if (Array.isArray(registerError)) {
+                isDuplicate = registerError.some((err: any) => {
+                    const errorStr = JSON.stringify(err);
+                    return errorStr.includes('E11000') || 
+                        errorStr.includes('duplicate key') ||
+                        errorStr.includes('11000');
+                });
+            }
+
+            if (isDuplicate) {
+                console.log('✅ Builder already registered (duplicate key detected)');
+                // Don't throw - this is expected and fine
+            } else {
+                // If it's not a duplicate error, throw it
+                console.error('❌ Registration failed with unexpected error');
+                throw registerError;
+            }
+        }
+    
+        console.log('✅ Initialization complete');
     }
 
     async createCollection (collection: any) {

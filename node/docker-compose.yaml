@@ -1,11 +1,11 @@
 services:
-  nillion-survey-api:
+  api:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: s3ntiment-nillion-backend
+    container_name: s3ntiment
     ports:
-      - "3456:3456"
+      - "8080:8080"
     environment:
       - NODE_ENV=production
     env_file:

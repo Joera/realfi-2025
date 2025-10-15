@@ -51,7 +51,7 @@ app.get('/api/survey-results/:surveyId', async (req, res) => {
 
 // ====== SERVER STARTUP ======
 
-const PORT = process.env.PORT || 8080;
+const PORT = 8080;
 
 async function startServer() {
   try {
