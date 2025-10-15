@@ -1,0 +1,51 @@
+{
+  "name": "S3ntiment",
+  "tagline": "Anonymous voices, authentic insights",
+  "description": "S3ntiment uses Human Tech's OPRF and Nillion's blind computation for  truly anonymous surveys. Scan a QR card, submit responses processed privately—only aggregated results are ever visible. Tested at a real event, proving privacy-first feedback can be easy in use, secure, and fraud-proof",
+  "team": [
+    {
+      "name": "Joera Mulders",
+      "role": "Introvert affairs",
+      "github": "joera",
+      "twitter": ""
+    },
+    {
+      "name": "Lisanne Drost",
+      "role": "Extravert affairs",
+      "github": "",
+      "twitter": ""
+    }
+  ],
+  "tracks": [
+    "Build RealFi",
+    "Privacy Meets Identity",
+    "Secure Onboarding to RealFi",
+    "Private Data Manager (PDM)",
+    "Combined Privacy + DeFi App",
+    "Privacy-Preserving AI"
+  ],
+  "technologies": [
+    "Nillion",
+    "Human Network",
+    "SecretVaults",
+    "NilDB",
+    "React",
+    "TypeScript"
+  ],
+  "links": {
+    "demo": "https://your-demo-url.com",
+    "video": "https://youtube.com/your-video",
+    "slides": "https://your-slides-url.com",
+    "github": "https://github.com/yourusername/s3ntiment"
+  },
+  "bounties": [
+    "Nillion Privacy Challenge",
+    "Human Network Integration"
+  ],
+  "demo_instructions": "1. Visit demo URL\n2. Scan QR code\n3. Answer survey questions\n4. View aggregated results",
+  "prizes_eligible": [
+    "Best Privacy Application",
+    "Best Use of Nillion",
+    "Best UX"
+  ]
+}
