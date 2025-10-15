@@ -1,0 +1,29 @@
+{
+  "name": "frontend-organiser",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.11.1",
+  "dependencies": {
+    "@lit-protocol/auth-helpers": "7.3.1",
+    "@lit-protocol/constants": "7.3.1",
+    "@lit-protocol/contracts-sdk": "7.3.1",
+    "@lit-protocol/encryption": "7.3.1",
+    "@lit-protocol/lit-node-client": "^7.3.1",
+    "ethers": "^5.8.0",
+    "sass-embedded": "^1.93.2",
+    "viem": "^2.38.1",
+    "vite": "^7.1.9",
+    "vite-plugin-node-polyfills": "^0.24.0"
+  }
+}
