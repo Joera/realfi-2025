@@ -33,19 +33,26 @@
     "TypeScript"
   ],
   "links": {
-    "demo": "https://your-demo-url.com",
+    "demo": "https://s3ntiment.composible.io",
     "video": "https://youtube.com/your-video",
     "slides": "https://your-slides-url.com",
-    "github": "https://github.com/yourusername/s3ntiment"
+    "github": "https://github.com/joera/s3ntiment"
   },
   "bounties": [
-    "Nillion Privacy Challenge",
-    "Human Network Integration"
+    "Build RealFi",
+    "Privacy Meets Identity",
+    "Secure Onboarding to RealFi",
+    "Private Data Manager (PDM)",
+    "Combined Privacy + DeFi App",
+    "Privacy-Preserving AI"
   ],
   "demo_instructions": "1. Visit demo URL\n2. Scan QR code\n3. Answer survey questions\n4. View aggregated results",
   "prizes_eligible": [
-    "Best Privacy Application",
-    "Best Use of Nillion",
-    "Best UX"
+    "Build RealFi",
+    "Privacy Meets Identity",
+    "Secure Onboarding to RealFi",
+    "Private Data Manager (PDM)",
+    "Combined Privacy + DeFi App",
+    "Privacy-Preserving AI"
   ]
 }
