@@ -1,18 +1,18 @@
 # realfi-2025
 
-## VIDEO
+## Video
 
 https://s3ntiment.composible.io/video.mp4
 
-## SLIDES
+## Slides
 
 https://s3ntiment.composible.io/slides.pdf
 
-## DEMO
+## Demo
 
-Scan one of these QR codes in the qrs-to-demo folder. Please be aware the card can be used only once. If ued, try one of the others. Sorry, we can't hand them to you, personally. 
-Onboard, fill out survey
-Check results here: https://683432d9-95b2-450a-9a5e-79913a7cb6ba.nillionusercontent.com/api/survey-results/mina_v2",
+* Scan one of these QR codes in the qrs-to-demo folder. Please be aware the card can be used only once. If ued, try one of the others. Sorry, we can't hand them to you, personally. 
+* Onboard, fill out survey
+* Check results here: https://683432d9-95b2-450a-9a5e-79913a7cb6ba.nillionusercontent.com/api/survey-results/mina_v2",
 
 ## Info per Bounty: 
 
