@@ -111,8 +111,8 @@ const generateCardSecrets = async (batchId: string, batchSize: number, surveyId:
   return cards;
 }
 
-const batch_size = 12;
-const batch_id = "baarsjesweg_batch";
+const batch_size = 6;
+const batch_id = "debug";
 const surveyId = "0x934E20411C9E8E92946BD8786D7c3E5bC4DB1387-mina_v2"
 
 generateCardSecrets(batch_id, batch_size, surveyId)

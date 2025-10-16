@@ -48,8 +48,8 @@
   ],
   "links": {
     "demo": "https://s3ntiment.composible.io",
-    "video": "https://youtube.com/your-video",
-    "slides": "https://your-slides-url.com",
+    "video": "https://s3ntiment.composible.io/video.mp4",
+    "slides": "https://s3ntiment.composible.io/slides.pdf",
     "github": "https://github.com/joera/realfi-2025"
   },
   "bounties": [
