@@ -68,9 +68,7 @@ On the last day we aim to implement NillAI within NILCC to create a summary from
 Formatting the request: https://github.com/Joera/realfi-2025/blob/d179b3c15d50ed68e6b6d07e9efcd7fe0c3d5288/nilcc-backend/src/main.ts#L90
 NilAI Service: https://github.com/Joera/realfi-2025/blob/d179b3c15d50ed68e6b6d07e9efcd7fe0c3d5288/nilcc-backend/src/nillai.service.ts#L3
 
-### What's next?
 
-Harden security. See: 
 
 
 
