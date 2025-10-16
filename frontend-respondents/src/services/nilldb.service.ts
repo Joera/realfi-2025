@@ -93,10 +93,6 @@ export class NillionService {
                 answers: preparedAnswers
             };
 
-            console.log(userPrivateData);
-            console.log("builder", import.meta.env.VITE_NIL_BUILDER_DID)
-            console.log("collection", import.meta.env.VITE_S3_COLLECTION_ID)
-
             const uploadResults = await this.user.createData(delegationToken, {
                 owner: this.userKeypair.toDid().toString(),
                 acl: {
