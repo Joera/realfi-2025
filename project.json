@@ -60,7 +60,7 @@
     "Combined Privacy + DeFi App",
     "Privacy-Preserving AI"
   ],
-  "demo_instructions": "1. Visit demo URL\n2. Scan QR code\n3. Answer survey questions\n4. View aggregated results",
+  "demo_instructions": "Scan one of these QR codes: https://github.com/Joera/realfi-2025/tree/main/qrs-to-demo",
   "prizes_eligible": [
     "Build RealFi",
     "Privacy Meets Identity",

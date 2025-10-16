@@ -2,8 +2,8 @@
 
 import Navigo from 'navigo';
 import { LandingController } from './controllers/landing.ctrlr';
-import { AccountController } from './controllers/account.ctrlr';
-import { AboutController } from './controllers/about.ctrlr';
+// import { AccountController } from './controllers/account.ctrlr';
+// import { AboutController } from './controllers/about.ctrlr';
 
 const router = new Navigo('/');
 
@@ -16,16 +16,16 @@ export const initRouter = () => {
       currentController = new LandingController();
       currentController.render();
     })
-    .on('/account', () => {
-      if (currentController?.destroy) currentController.destroy();
-      currentController = new AccountController();
-      currentController.render();
-    })
-    .on('/about', () => {
-      if (currentController?.destroy) currentController.destroy();
-      currentController = new AboutController();
-      currentController.render();
-    })
+    // .on('/account', () => {
+    //   if (currentController?.destroy) currentController.destroy();
+    //   currentController = new AccountController();
+    //   currentController.render();
+    // })
+    // .on('/about', () => {
+    //   if (currentController?.destroy) currentController.destroy();
+    //   currentController = new AboutController();
+    //   currentController.render();
+    // })
     .notFound(() => {
       router.navigate('/');
     });

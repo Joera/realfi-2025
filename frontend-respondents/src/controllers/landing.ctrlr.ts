@@ -93,7 +93,7 @@ export class LandingController {
           return `
           <div class="onboarding-message returning">
             <h2>Sorry</h2>
-            <p>You need the link from a unique card or QR code to participate in the survey. RealFi Hack judges may find a few QR codes in the project materials. Please be aware that those codes are unique and may have been used by others.</p>
+            <p>You need the link from a unique card or QR code to participate in the survey. RealFi Hack judges may find a few QR codes in the project materials (github repo -> qrs-to-demo). Please be aware that those codes are unique and may have been used by someone else. Try until you find one that still works.</p>
           </div>
             
           `;
