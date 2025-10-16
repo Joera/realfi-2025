@@ -60,19 +60,24 @@ export class NillionService {
         });
     }
 
-    prepareAnswers (answers: any) {
-
-        return answers.map( (answer : any) => ({
-            questionId: answer.questionId,
-            questionText: answer.questionText, // Must include
-            questionType: answer.questionType, // Must include
-            answer: {
-            "%allot": Array.isArray(answer.answer) 
+    prepareAnswers(answers: any) {
+        
+        return answers.map((answer: any) => {
+            // Determine the answer value
+            const answerValue = Array.isArray(answer.answer) 
                 ? answer.answer.join(',')
-                : String(answer.answer)
-            }
-        }));
-
+                : String(answer.answer);
+            
+            // Only encrypt scale questions with %allot
+            return {
+                questionId: answer.questionId,
+                questionText: answer.questionText,
+                questionType: answer.questionType,
+                answer: answer.questionType === 'scale'
+                    ? { "%allot": answerValue }  // Encrypt scale ratings
+                    : answerValue                 // Plaintext for radio/checkbox
+            };
+        });
     }
 
     async store(answers: any, surveyId : string) {
@@ -88,9 +93,9 @@ export class NillionService {
                 answers: preparedAnswers
             };
 
-            // console.log(userPrivateData);
-            // console.log("builder", import.meta.env.VITE_NIL_BUILDER_DID)
-            // console.log("collection", import.meta.env.VITE_S3_COLLECTION_ID)
+            console.log(userPrivateData);
+            console.log("builder", import.meta.env.VITE_NIL_BUILDER_DID)
+            console.log("collection", import.meta.env.VITE_S3_COLLECTION_ID)
 
             const uploadResults = await this.user.createData(delegationToken, {
                 owner: this.userKeypair.toDid().toString(),

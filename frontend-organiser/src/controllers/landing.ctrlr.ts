@@ -6,6 +6,9 @@ import { createSessionSignatures } from '../lit.ctrlr.js';
 import { store } from '../services/store.service.js';
 import { reactive } from '../utils/reactive.js';
 
+const BACKEND = "http://localhost:8080"; 
+
+
 export class LandingController {
   private reactiveViews: any[] = [];
   evmChain: any;
@@ -71,26 +74,31 @@ export class LandingController {
     
     document.addEventListener('create-survey-form-submitted', async (event: any) => {
 
-        // console.log('form completed!');
-        // console.log('event:', event);
+        const capacityToken = import.meta.env.VITE_CAPACITY_TOKEN;
     
-        const { sessionSig, signerAddress } = await createSessionSignatures()
+        const { sessionSig, signerAddress } = await createSessionSignatures(capacityToken)
 
         const surveyName = event.detail.formattedInput.surveyName;
+        const surveyCid = event.detail.formattedInput.surveyCid;
 
         if(surveyName) {
 
-            console.log(surveyName)
+            console.log(surveyName, surveyCid)
 
-            await fetch('/api/create-survey', {
+            let res = await fetch(`${BACKEND}/api/create-survey`, {
                 method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json', 
+                },
                 body: JSON.stringify({ 
                     sessionSig, 
                     signerAddress,
                     surveyName,
-                    surveyCid: "bafy",
+                    surveyCid
                 })
             });
+
+            console.log(res) 
         }
     });
   }

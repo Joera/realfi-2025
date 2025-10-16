@@ -5,6 +5,7 @@ import { typograhyStyles } from '../shared-typograhy-styles.js'
 import { colourStyles } from '../shared-colour-styles.js'
 import { buttonStyles } from '../shared-button-styles'
 import { store } from '../services/store.service';
+import { fromPinata } from "../ipfs.factory";
 
 interface SurveyQuestion {
   id: string
@@ -30,33 +31,65 @@ interface SurveyConfig {
 }
 
 class Survey extends HTMLElement {
-  private config: SurveyConfig
+  private config?: SurveyConfig
+  private slug?: string
   private answers: SurveyAnswer[] = []
   private currentStep = 0
+  private initialized = false // Add flag
   previousDocument: any;
 
   constructor() {
     super()
     this.attachShadow({ mode: 'open' })
     this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, colourStyles, buttonStyles]
-    const configAttr = this.getAttribute('config')
-    this.config = configAttr ? JSON.parse(configAttr) : minaSurveyConfig
+    
+  } 
+
+  async init() {
+
+    const configAttr = this.getAttribute('config');
+    this.slug = this.getAttribute('slug') || undefined;
+    this.config = configAttr ? JSON.parse(await fromPinata(configAttr)) : minaSurveyConfig;
+    this.initialized = true // Set flag when dones
+  
   }
 
-  async connectedCallback() {
+  private renderLoading() {
+    if (!this.shadowRoot) return
+    
+    this.shadowRoot.innerHTML = `
+      <style>
+        .loading {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 200px;
+          font-size: 1.2rem;
+          color: #000;
+        }
+      </style>
+      <div class="loading">Loading survey...</div>
+    `
+  }
+
+  async connectedCallback(surveySlug: string) {
+
+    this.renderLoading()
+
+    await this.init();
+
     // Check if returning user and load previous answers
     const cardUsageState = store.ui.cardUsageState;
-    
     if (cardUsageState === 'returning') {
       console.log('🔄 Returning user - loading previous answers');
-      await this.loadPreviousAnswers();
+      await this.loadPreviousAnswers(surveySlug);
     }
     
     this.render()
     this.attachEventListeners()
   }
 
-  async loadPreviousAnswers() {
+  async loadPreviousAnswers(surveySlug: string) {
     try {
       const nillionService = store.getService('nillion');``
       
@@ -66,11 +99,11 @@ class Survey extends HTMLElement {
       }
 
       const userId = store.user.signerAddress || store.user.nullifier;
-      const surveyId = 'mina'; // Could make this configurable
+   
       
       console.log('Fetching previous answers for user:', userId);
       
-      const previousResult = await nillionService.getUserSurveyAnswers(surveyId);
+      const previousResult = await nillionService.getUserSurveyAnswers(surveySlug);
 
       // console.log("xxxx", previousResult)
       
@@ -127,14 +160,19 @@ class Survey extends HTMLElement {
     return value;
   }
 
-  get totalSteps(): number {
-    return this.config.questions.length
+  get totalSteps(): number | undefined {
+    return this.config?.questions.length
   }
 
   private render() {
     if (!this.shadowRoot) return
 
-    const currentQuestion = this.config.questions[this.currentStep]
+    if (!this.initialized || !this.config) {
+      this.renderLoading()
+      return
+    }
+
+    const currentQuestion = this.config?.questions[this.currentStep]
     const savedAnswer = currentQuestion ? this.answers.find(a => a.questionId === currentQuestion.id) : undefined;
 
     this.shadowRoot.innerHTML = `
@@ -348,7 +386,7 @@ class Survey extends HTMLElement {
       </style>
 
       <div class="survey-container">
-        ${this.currentStep < this.totalSteps ? `
+        ${this.currentStep < this.totalSteps! ? `
           <h1>${this.config.title}</h1>
           
           ${this.currentStep === 0 && this.config.description ? `
@@ -359,7 +397,7 @@ class Survey extends HTMLElement {
             Question ${this.currentStep + 1} of ${this.totalSteps}
           </div>
           <div class="progress-bar">
-            <div class="progress-fill" style="width: ${((this.currentStep + 1) / this.totalSteps) * 100}%"></div>
+            <div class="progress-fill" style="width: ${((this.currentStep + 1) / this.totalSteps!) * 100}%"></div>
           </div>
 
           <div class="question-container">
@@ -378,7 +416,7 @@ class Survey extends HTMLElement {
               Back
             </button>
             <button type="button" class="btn-primary" id="nextBtn">
-              ${this.currentStep === this.totalSteps - 1 ? 'Submit' : 'Next'}
+              ${this.currentStep === this.totalSteps! - 1 ? 'Submit' : 'Next'}
             </button>
           </div>
         ` : `
@@ -482,7 +520,7 @@ class Survey extends HTMLElement {
   }
 
   private handleNext() {
-    const currentQuestion = this.config.questions[this.currentStep]
+    const currentQuestion = this.config!.questions[this.currentStep]
     const answer = this.collectAnswer(currentQuestion)
 
     if (currentQuestion.required && !this.isAnswerValid(answer)) {
@@ -505,7 +543,7 @@ class Survey extends HTMLElement {
       this.answers.push(enrichedAnswer)
     }
 
-    if (this.currentStep < this.totalSteps - 1) {
+    if (this.currentStep < this.totalSteps! - 1) {
       this.currentStep++
       this.render()
       this.attachEventListeners()
@@ -560,7 +598,7 @@ class Survey extends HTMLElement {
   }
 
   private complete() {
-    this.currentStep = this.totalSteps
+    this.currentStep = this.totalSteps || 0
     this.render()
 
     const event = new CustomEvent('survey-complete', {

@@ -4,6 +4,8 @@ export interface CardData {
   nullifier: string
   batchId: string
   signature: string
+  surveyOwner: string
+  surveySlug: string
 }
 
 /**
@@ -20,9 +22,10 @@ export const parseCardURL = (): CardData | null => {
     const nullifier = params.get('n')
     const batchId = params.get('b') 
     const signature = params.get('sig')
+    const surveyId = params.get('s')
     
     // Validate all required parameters are present
-    if (!nullifier || !batchId || !signature) {
+    if (!nullifier || !batchId || !signature || !surveyId) {
       console.error('Missing required parameters:', {
         nullifier: !!nullifier,
         batchId: !!batchId,
@@ -34,7 +37,9 @@ export const parseCardURL = (): CardData | null => {
     return {
       nullifier: decodeURIComponent(nullifier),
       batchId: decodeURIComponent(batchId),
-      signature: decodeURIComponent(signature)
+      signature: decodeURIComponent(signature),
+      surveyOwner: decodeURIComponent(surveyId).split("-")[0],
+      surveySlug: decodeURIComponent(surveyId).split("-")[1]
     }
     
   } catch (error) {

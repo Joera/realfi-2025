@@ -44,11 +44,11 @@ function generateRandomNullifier() {
   return randomBytes.toString('base64url') // URL-safe base64
 }
 
-async function generateQRCodeSVG(cardData: CardData, outputDir: string = './qr-codes'): Promise<string> {
+async function generateQRCodeSVG(cardData: CardData, outputDir: string = './qr-codes', surveyId: string): Promise<string> {
   const { nullifier, batchId, signature } = cardData
   
   // Secure URL - only nullifier and batch in QR
-  const qrUrl = `${baseUrl}?n=${nullifier}&b=${batchId}&sig=${signature}`;
+  const qrUrl = `${baseUrl}?n=${nullifier}&b=${batchId}&sig=${signature}&s=${surveyId}`;
   console.log(qrUrl);
 
   // Generate filename
@@ -82,7 +82,7 @@ async function generateQRCodeSVG(cardData: CardData, outputDir: string = './qr-c
   }
 }
 
-const generateCardSecrets = async (batchId: string, batchSize: number) => {
+const generateCardSecrets = async (batchId: string, batchSize: number, surveyId: string) => {
   const cards: any[] = [];
   
   for (let i = 0; i < batchSize; i++) {
@@ -104,14 +104,15 @@ const generateCardSecrets = async (batchId: string, batchSize: number) => {
       signature: signature,
     };
   
-    await generateQRCodeSVG(card, './output/mina')
+    await generateQRCodeSVG(card, './output/mina', surveyId)
     cards.push(card)
   }
   
   return cards;
 }
 
-const batch_size = 36;
-const batch_id = "mina_10-okt";
+const batch_size = 12;
+const batch_id = "baarsjesweg_batch";
+const surveyId = "0x934E20411C9E8E92946BD8786D7c3E5bC4DB1387-mina_v2"
 
-generateCardSecrets(batch_id, batch_size)
+generateCardSecrets(batch_id, batch_size, surveyId)

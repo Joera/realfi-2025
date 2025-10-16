@@ -43,10 +43,9 @@ interface AppState {
     signerAddress: string | null;
     questions: number[];
     safeAddress: string | null;
-    // nillionAddress: string | null
   };
   ui: {
-    currentStep: 'onboarding' | 'wallet-creation' | 'survey';
+    currentStep: 'nocard' |'onboarding' | 'wallet-creation' | 'survey';
     cardUsageState?: CardUsageState;
   },
    services: {

@@ -12,8 +12,11 @@ import '../components/security-questions.js';
 import '../components/loading-spinner.js';
 import '../components/survey.js';
 import { NillionService } from '../services/nilldb.service';
+import { surveyStoreAbi } from '../abi';
+import { fromPinata } from '../ipfs.factory';
 
-const CARDVALIDATOR = "0x39b865Cbc7237888BC6FD58B9C256Eab39661f95"
+const CARDVALIDATOR = "0x39b865Cbc7237888BC6FD58B9C256Eab39661f95";
+const SURVEYSTORE = "0x1FaC59fBD1d4eb6EA268894F5AFE81E3219a28EC"
 
 // Card usage states
 export enum CardUsageState {
@@ -33,7 +36,6 @@ export interface CardUsageContext {
 export class LandingController {
   private reactiveViews: any[] = [];
   evmChain: any;
-  cosmos: any;
   nillion: any;
   documentId: any;
 
@@ -75,7 +77,7 @@ export class LandingController {
     };
   }
 
-  private renderTemplate() {
+  private renderTemplate(config: string | undefined, slug: string | undefined) {
     const app = document.querySelector('#app');
     if (!app) return;
 
@@ -87,6 +89,14 @@ export class LandingController {
       const { currentStep, cardUsageState } = store.ui;
 
       switch (currentStep) {
+        case 'nocard':
+          return `
+          <div class="onboarding-message returning">
+            <h2>Sorry</h2>
+            <p>You need the link from a unique card or QR code to participate in the survey. RealFi Hack judges may find a few QR codes in the project materials. Please be aware that those codes are unique and may have been used by others.</p>
+          </div>
+            
+          `;
         case 'onboarding':
           return `
             ${this.renderOnboardingMessage(cardUsageState)}
@@ -103,7 +113,7 @@ export class LandingController {
           `;
         
         case 'survey':
-          return `<survey-questions></survey-questions>`;
+          return `<survey-questions config=${config} slug=${slug}></survey-questions>`;
         
         default:
           return '';
@@ -118,6 +128,7 @@ export class LandingController {
 
   private renderOnboardingMessage(state: CardUsageState | undefined): string {
     switch (state) {
+      
       case CardUsageState.RETURNING_SAME_CARD:
         return `
           <div class="onboarding-message returning">
@@ -230,7 +241,8 @@ export class LandingController {
           }
           
           if (success) {
-            this.setSurveyListener();
+
+            this.setSurveyListener(card);
             await this.evmChain.connectToExistingSafe(evmSafeAddress);
             
             store.setUser({ safeAddress: evmSafeAddress });
@@ -247,18 +259,19 @@ export class LandingController {
   }
 
   async render() {
-    this.renderTemplate();
+
     
     const card: CardData | null = parseCardURL();
-    this.evmChain = new PermissionlessSafeService(84532);
-   
-    this.cosmos = new CosmosWalletService({
-      rpcEndpoint: import.meta.env.VITE_COSMOS_RPC_URL!,
-      prefix: "cosmos",
-      gasPrice: "0.025uatom"
-    });
 
     if (card) {
+
+      this.evmChain = new PermissionlessSafeService(84532);
+      const surveyInfo = await this.evmChain.genericRead(SURVEYSTORE, surveyStoreAbi, 'getSurvey',[card.surveyOwner, card.surveySlug]);
+      const surveyCid = surveyInfo[0]
+      const surveyDiD = surveyInfo[1]
+
+      this.renderTemplate(surveyCid, card.surveySlug);
+    
       console.log('📇 Card detected:', card);
 
       const cardIsUsed = await this.evmChain.genericRead(
@@ -305,6 +318,10 @@ export class LandingController {
           this.process(card, context);
           break;
       }
+    } else {
+
+      store.setUI({ currentStep: 'nocard' });
+      this.renderTemplate(undefined, undefined);
     }
   }
 
@@ -313,15 +330,15 @@ export class LandingController {
     this.reactiveViews = [];
   }
 
-  async setSurveyListener() {
+  async setSurveyListener(card: CardData) {
     document.addEventListener('survey-complete', async (event: any) => {
       console.log('Survey completed!');
       console.log('event:', event);
       
       if (event.detail.documentId != undefined) {
-        await this.nillion.update(event.detail.answers, "mina", event.detail.documentId);
+        await this.nillion.update(event.detail.answers, card.surveySlug, event.detail.documentId);
       } else {
-        await this.nillion.store(event.detail.answers, "mina");
+        await this.nillion.store(event.detail.answers, card.surveySlug);
       }
     });
   }

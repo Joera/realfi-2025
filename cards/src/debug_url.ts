@@ -45,7 +45,7 @@ function generateRandomNullifier() {
 }
 
 
-const generateCard = async (batchId: string) => {
+const generateCard = async (batchId: string, surveyId: string) => {
     
     
     const cards: any[] = [];
@@ -60,7 +60,7 @@ const generateCard = async (batchId: string) => {
       message: { raw: messageHash }
     })
 
-    console.log(`${baseUrl}?n=${nullifier}&b=${batchId}&sig=${signature}`);
+    console.log(`${baseUrl}?n=${nullifier}&b=${batchId}&sig=${signature}&s=${surveyId}`);
 
     return;
   
@@ -68,5 +68,6 @@ const generateCard = async (batchId: string) => {
 }
 
 const batch_id = "debug";
+const surveyId = "0x934E20411C9E8E92946BD8786D7c3E5bC4DB1387-mina_v2"
 
-generateCard(batch_id);
+generateCard(batch_id, surveyId);

@@ -1,20 +1,18 @@
 import { LitContracts } from "@lit-protocol/contracts-sdk";
 
-export const mintCapacityToken = async (ethersWallet: any, litNodeClient: any, SELECTED_LIT_NETWORK: any) : Promise<string> => {
-    
+export const mintCapacityToken = async (yellowStoneWallet: any, litNodeClient: any, SELECTED_LIT_NETWORK: any) : Promise<string> => {
+
+ 
     const litContracts = new LitContracts({
-        signer: ethersWallet,
+        signer: yellowStoneWallet,
         network: SELECTED_LIT_NETWORK,
     });
     await litContracts.connect();
 
-    console.log(SELECTED_LIT_NETWORK);
-    console.log(ethersWallet)
-
     const capacityTokenId = (
         await litContracts.mintCapacityCreditsNFT({
-        requestsPerKilosecond: 10,
-        daysUntilUTCMidnightExpiration: 7,
+          requestsPerKilosecond: 10,
+          daysUntilUTCMidnightExpiration: 7,
         })
     ).capacityTokenIdStr;
 
@@ -26,6 +24,8 @@ export const mintCapacityToken = async (ethersWallet: any, litNodeClient: any, S
 
 
 export const delegateCapacityToken = async (ethersWallet: any, litNodeClient: any, capacityTokenId: string) => {
+
+  console.log(capacityTokenId);
 
     const { capacityDelegationAuthSig } =
       await litNodeClient.createCapacityDelegationAuthSig({

@@ -109,9 +109,8 @@ class CreateSurveyForm extends HTMLElement {
 
         <form id="create-survey-form">
             <label for="surveyName">Survey Name:</label>
-                <input id="surveyName" name="surveyName" type="text" placeholder="Enter survey name" required />
-            
-
+            <input id="surveyName" name="surveyName" type="text" placeholder="Enter survey name" required />
+            <input id="surveyCid" name="surveyCid" type="text" placeholder="Enter cid of survey config" required />
             <button type="submit" class="btn-primary" >Create Survey</button>
         </form>
 
@@ -128,10 +127,13 @@ class CreateSurveyForm extends HTMLElement {
             const surveyNameInput = this.shadowRoot?.querySelector('#surveyName') as HTMLInputElement;
             const surveyName = surveyNameInput?.value;
 
+            const surveyCidInput = this.shadowRoot?.querySelector('#surveyCid') as HTMLInputElement;
+            const surveyCid = surveyCidInput?.value;
+
             // Emit custom event with data
             this.dispatchEvent(new CustomEvent('create-survey-form-submitted', {
             detail: {
-                formattedInput: { surveyName }
+                formattedInput: { surveyName, surveyCid }
             },
             bubbles: true, // important: allows it to bubble up to document or parent
             composed: true // allows it to cross shadow DOM boundaries
