@@ -63,7 +63,7 @@ Request aggregated results: https://github.com/Joera/realfi-2025/blob/d179b3c15d
 or curl https://9b718d9c-08a6-45b3-9300-4ba00315444b.nillionusercontent.com/api/survey-results/mina-v2 | jq
 
 #### Privacy-Preserving AI
-On the last day we aim to implement NillAI within NILCC to create a summary from the survey result, and/or summarize responses to open questions that have been submitted as plaintext. 
+We hve included NillAI within NILCC to create a summary from the survey result, and/or summarize responses to open questions that have been submitted as plaintext. 
 
 Formatting the request: https://github.com/Joera/realfi-2025/blob/d179b3c15d50ed68e6b6d07e9efcd7fe0c3d5288/nilcc-backend/src/main.ts#L90
 NilAI Service: https://github.com/Joera/realfi-2025/blob/d179b3c15d50ed68e6b6d07e9efcd7fe0c3d5288/nilcc-backend/src/nillai.service.ts#L3
