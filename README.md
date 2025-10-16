@@ -1,6 +1,20 @@
 # realfi-2025
 
+## VIDEO
 
+https://s3ntiment.composible.io/video.mp4
+
+## SLIDES
+
+https://s3ntiment.composible.io/slides.pdf
+
+## DEMO
+
+Scan one of these QR codes in the qrs-to-demo folder. Please be aware the card can be used only once. If ued, try one of the others. Sorry, we can't hand them to you, personally. 
+Onboard, fill out survey
+Check results here: https://683432d9-95b2-450a-9a5e-79913a7cb6ba.nillionusercontent.com/api/survey-results/mina_v2",
+
+## Info per Bounty: 
 
 #### Build RealFi
 S3ntiment uses Human Tech's OPRF and Nillion's blind computation for truly anonymous surveys. Scan a QR card, submit responses processed privately—only aggregated results are ever visible. Tested at a real event, proving privacy-first feedback can be easy in use, secure, and fraud-proof
