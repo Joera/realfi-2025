@@ -69,8 +69,3 @@ Formatting the request: https://github.com/Joera/realfi-2025/blob/d179b3c15d50ed
 NilAI Service: https://github.com/Joera/realfi-2025/blob/d179b3c15d50ed68e6b6d07e9efcd7fe0c3d5288/nilcc-backend/src/nillai.service.ts#L3
 
 
-
-
-
-
-The demo was run with a fixed 
