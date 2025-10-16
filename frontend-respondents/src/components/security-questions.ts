@@ -26,7 +26,7 @@ class SecurityQuestionsForm extends HTMLElement {
     { id: 'song', label: "Most overplayed song ever", type: 'text', placeholder: 'Its raining men' },
     { id: 'crush', label: "High school crush", type: 'text', placeholder: 'Lisanne' },
     { id: 'idol', label: "Teenage idol", type: 'text', placeholder: 'Billy Idol' },
-    { id: 'idol', label: "Secret pleasure TV show", type: 'text', placeholder: 'Love boat' },
+    { id: 'tv', label: "Secret pleasure TV show", type: 'text', placeholder: 'Love boat' },
 
     { id: 'vacation', label: 'Favorite vacation destination', type: 'text', placeholder: 'Bali' },
     { id: 'book', label: 'Favorite childhood book', type: 'text', placeholder: 'Harry Potter' },
