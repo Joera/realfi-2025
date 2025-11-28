@@ -7,7 +7,6 @@ import { createKey } from '../oprf.factory';
 import { PermissionlessSafeService } from '../services/permissionless.safe.service';
 import { decimalToHex } from '../utils.factory';
 import { cardValidatorAbi } from '../abi.factory';
-import { CosmosWalletService } from '../services/cosmos.service';
 import '../components/security-questions.js';
 import '../components/loading-spinner.js';
 import '../components/survey.js';

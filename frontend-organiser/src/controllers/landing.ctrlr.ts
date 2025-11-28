@@ -2,7 +2,9 @@
 
 
 import '../components/create-survey-form.js';
+import '../components/survey-config-form.js';
 import { createSessionSignatures } from '../lit.ctrlr.js';
+import { PinataService } from '../pinata.service.js';
 import { store } from '../services/store.service.js';
 import { reactive } from '../utils/reactive.js';
 
@@ -11,10 +13,15 @@ const BACKEND = "http://localhost:8080";
 
 export class LandingController {
   private reactiveViews: any[] = [];
-  evmChain: any;
-  cosmos: any;
-  nillion: any;
-  documentId: any;
+  pinata: any;
+
+  constructor() {
+
+    this.pinata = new PinataService(
+      import.meta.env.VITE_PINATA_KEY,
+      import.meta.env.VITE_PINATA_SECRET
+    )
+  }
 
   private renderTemplate() {
     const app = document.querySelector('#app');
@@ -31,7 +38,7 @@ export class LandingController {
         case 'register':
           return `
     
-            <create-survey-form></create-survey-form>
+            <survey-config-form></survey-config-form>
           `;
         
         default:
@@ -72,13 +79,16 @@ export class LandingController {
   async setSurveyListener() {
         
     
-    document.addEventListener('create-survey-form-submitted', async (event: any) => {
+    document.addEventListener('survey-config-generated', async (event: any) => {
 
         const capacityToken = import.meta.env.VITE_CAPACITY_TOKEN;
     
         const { sessionSig, signerAddress } = await createSessionSignatures(capacityToken)
 
-        const surveyName = event.detail.formattedInput.surveyName;
+        const surveyName = event.detail.config.title;
+
+        const res = await this.pinata.uploadJSON(event.detail.config);
+
         const surveyCid = event.detail.formattedInput.surveyCid;
 
         if(surveyName) {

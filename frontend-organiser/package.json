@@ -21,6 +21,7 @@
     "@lit-protocol/encryption": "7.3.1",
     "@lit-protocol/lit-node-client": "^7.3.1",
     "ethers": "^5.8.0",
+    "navigo": "^8.11.1",
     "sass-embedded": "^1.93.2",
     "viem": "^2.38.1",
     "vite": "^7.1.9",
