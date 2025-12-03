@@ -1,75 +1,76 @@
-import { LitActionResource, LitPKPResource, createSiweMessage, generateAuthSig } from "@lit-protocol/auth-helpers";
-import { LIT_ABILITY } from "@lit-protocol/constants";
-import { LitNodeClient } from "@lit-protocol/lit-node-client";
-import { LIT_NETWORK, LIT_RPC } from "@lit-protocol/constants";
-import { ethers, Wallet } from "ethers"; 
-import { delegateCapacityToken, mintCapacityToken } from "./capacity.js";
+import { nagaDev, nagaTest } from "@lit-protocol/networks";
+import { createLitClient } from "@lit-protocol/lit-client";
+import { privateKeyToAccount } from 'viem/accounts';
+import { ViemAccountAuthenticator } from '@lit-protocol/auth';
+import { createAuthManager, storagePlugins } from "@lit-protocol/auth";
 
-export const createSessionSignatures = async (capacityTokenId: string) => {
+const pkpInfo = {
+    ethAddress:  "0x9924a83B7F50d90d84168AAA35Bc026412727ce1",
+    pubkey: "0x04ca59c3465e1eb8d6787fdca6d9016ffec8d44333fce8f4d17f6ab46561d489cdeaa0ef85445883d04de265c4bc4605ed0361d62087b8bc4658f2269501f802d0",
+    tokenId:  "75713901035138599600471962197329332899902656329793128226708056407031104421993"
+}
 
 
-    const _LITNETWORK = LIT_NETWORK.DatilTest;
+export default class LITCtrlr {
 
-    const client = new LitNodeClient({
-        litNetwork: _LITNETWORK,
-        debug: true 
-    });
+    litClient: any;
+    account: any;
 
-    const litProvider = new ethers.providers.JsonRpcProvider(LIT_RPC.CHRONICLE_YELLOWSTONE);
-    const litSigner = new ethers.Wallet(
-        import.meta.env.VITE_ETHEREUM_PRIVATE_KEY,
-        new ethers.providers.JsonRpcProvider(LIT_RPC.CHRONICLE_YELLOWSTONE)
-    );
+    constructor() {}
 
-    
-    const mmProvider = new ethers.providers.Web3Provider(window.ethereum);
-    await mmProvider.send("eth_requestAccounts", []);
-    const mmSigner = mmProvider.getSigner();
-    const address = await mmSigner.getAddress();
-    console.log("address",address)
+    async init(private_key: string) {
 
-    const capacityDelegationAuthSig = await delegateCapacityToken(litSigner, client, capacityTokenId)
+        this.litClient = await createLitClient({
+            network: nagaTest,
+        });
 
-    const resourceAbilityRequests : any = [
-        {
-            resource: new LitPKPResource("*"),
-            ability: LIT_ABILITY.PKPSigning,
-          },
-          {
-            resource: new LitActionResource("*"),
-            ability: LIT_ABILITY.LitActionExecution,
-          },
-    ];
+        this.account = privateKeyToAccount(
+            private_key as `0x${string}`
+        );
 
-    const sigs = await client.getSessionSigs({
-        chain: "ethereum",
-        capabilityAuthSigs: [capacityDelegationAuthSig],
-        expiration: new Date(Date.now() + 1000 * 60 * 60).toISOString(), // 10 minutes
-        resourceAbilityRequests,
-        authNeededCallback: async ({
-            uri,
-            expiration,
-            resourceAbilityRequests,
-        }) => {
-            const toSign = await createSiweMessage({
-                uri,
-                expiration,
-                resources: resourceAbilityRequests,
-                walletAddress: await mmSigner.getAddress(),
-                nonce: await client.getLatestBlockhash(),
-                litNodeClient: client,
-            });
-            
-            return await generateAuthSig({
-                signer: mmSigner,
-                toSign,
-            });
-        },
-    });
+        return this.account.address;
 
-    return {
-        
-        sessionSig: sigs,
-        signerAddress: address
     }
+
+
+    async createSessionSignatures() {
+
+        if (this.account == undefined) throw 'lit client not ready';
+        
+        const authData = await ViemAccountAuthenticator.authenticate(this.account);
+    
+
+        const authManager = createAuthManager({
+            storage: storagePlugins.localStorage({
+                appName: "s3ntiment",
+                networkName: "naga-test",
+            }),
+        });
+
+        const authContext = await authManager.createPkpAuthContext({
+            authData: authData, 
+            pkpPublicKey: pkpInfo.pubkey,
+            authConfig: {
+                resources: [
+                ["pkp-signing", "*"],
+                ["lit-action-execution", "*"],
+                ],
+                expiration: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
+                statement: "",
+                domain: window.location.origin,
+            },
+            litClient: this.litClient,
+        });
+
+        return {
+            
+            sessionSig: authContext.authData,
+            signerAddress: this.account.address
+
+
+        }
+
+    }
+
+
 }

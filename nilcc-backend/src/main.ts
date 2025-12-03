@@ -8,7 +8,7 @@ import { Did, Keypair } from '@nillion/nuc';
 import { surveyResultsCollection } from './create_collection.js';
 
 import dotenv from 'dotenv';
-import { NilAIService } from './nillai.service.js';
+// import { NilAIService } from './nillai.service.js';
 dotenv.config();
 
 const app = express();
@@ -25,13 +25,13 @@ app.post('/api/create-survey', async (req, res) => {
 
   console.log(req.body)
 
-    const litSessionKeys = req.body.sessionSig;
+    const litSessionSig = req.body.sessionSig;
     const signerAddress = req.body.signerAddress;
     const surveySlug = req.body.surveyName
     const surveyCid = req.body.surveyCid;
 
     console.log("signer", signerAddress)
-    console.log("session", litSessionKeys)
+    console.log("session", litSessionSig)
                     
     // generate new NIL DID 
     const keypair = Keypair.generate();
@@ -41,6 +41,10 @@ app.post('/api/create-survey', async (req, res) => {
 
     // encrypt NIL DID private key with LIT UCL: only address that registered survey can access
     console.log('Private Key:', keypair.privateKey().toString());
+
+    /// we do not decrypt with lit key .. we decrypt the nill private key with lit 
+
+    // so who can do so? 
 
     // register survey on contract with name, cid, did + cipher 
 
@@ -74,10 +78,10 @@ app.get('/api/survey-results/:surveyId', async (req, res) => {
 app.post('/api/survey-results', async (req, res) => {
   try {
 
-    const authSig = req.body.authSig;
+    const authSig = req.body.sessionSig;
     const surveyId = req.body.surveyId;
 
-    // retrieve address from authSig created in frontend
+    // retrieve address from sessionSig created in frontend
 
     // retrieve surveyInfo from contract
 
@@ -87,10 +91,10 @@ app.post('/api/survey-results', async (req, res) => {
 
     // Create and run queries on encrypted data
     let response  = await nildb.tabulateSurveyResults(surveyId)
-    let summary = await nilai.ask("can you summarize: " + JSON.stringify(response))
+    // let summary = await nilai.ask("can you summarize: " + JSON.stringify(response))
     res.send({
       results: response,
-      ai_summary: summary
+      // ai_summary: summary
     })
 
 
@@ -156,7 +160,7 @@ async function startServer() {
   try {
     
     nildb = new NilDBService();
-    nilai = new NilAIService();
+    // nilai = new NilAIService();
     await nildb.init();
     
     app.listen(PORT, () => {

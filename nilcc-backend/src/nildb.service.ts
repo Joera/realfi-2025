@@ -58,7 +58,6 @@ export class NilDBService {
 
         const nilauth = await NilauthClient.from(NILAUTH_URL || "", payer);
 
-
         this.builder = await SecretVaultBuilderClient.from({
             keypair: this.keypair,
             urls: {

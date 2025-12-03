@@ -3,7 +3,7 @@
 
 import '../components/create-survey-form.js';
 import '../components/survey-config-form.js';
-import { createSessionSignatures } from '../lit.ctrlr.js';
+import LITCtrlr from '../lit.ctrlr.js';
 import { PinataService } from '../pinata.service.js';
 import { store } from '../services/store.service.js';
 import { reactive } from '../utils/reactive.js';
@@ -14,6 +14,7 @@ const BACKEND = "http://localhost:8080";
 export class LandingController {
   private reactiveViews: any[] = [];
   pinata: any;
+  lit: any;
 
   constructor() {
 
@@ -21,6 +22,8 @@ export class LandingController {
       import.meta.env.VITE_PINATA_KEY,
       import.meta.env.VITE_PINATA_SECRET
     )
+
+    this.lit = new LITCtrlr();
   }
 
   private renderTemplate() {
@@ -54,10 +57,13 @@ export class LandingController {
 
 
   async process() {
-    console.log('Processing');
+   
+    const signer = await this.lit.init(import.meta.env.VITE_ETHEREUM_PRIVATE_KEY); 
 
-    await customElements.whenDefined('create-survey-form');
-    const form = document.querySelector('create-survey-form');
+    console.log("initialized lit with ", signer)
+
+    await customElements.whenDefined('survey-config-form');
+    const form = document.querySelector('survey-config-form');
 
     if (form) {
 
@@ -81,19 +87,15 @@ export class LandingController {
     
     document.addEventListener('survey-config-generated', async (event: any) => {
 
-        const capacityToken = import.meta.env.VITE_CAPACITY_TOKEN;
-    
-        const { sessionSig, signerAddress } = await createSessionSignatures(capacityToken)
-
         const surveyName = event.detail.config.title;
 
-        const res = await this.pinata.uploadJSON(event.detail.config);
-
-        const surveyCid = event.detail.formattedInput.surveyCid;
+        const surveyCid = (await this.pinata.uploadJSON(event.detail.config)).IpfsHash;
 
         if(surveyName) {
 
             console.log(surveyName, surveyCid)
+
+            const { sessionSig, signerAddress } = await this.lit.createSessionSignatures() 
 
             let res = await fetch(`${BACKEND}/api/create-survey`, {
                 method: 'POST',
