@@ -8,6 +8,7 @@ import { Did, Keypair } from '@nillion/nuc';
 import { surveyResultsCollection } from './create_collection.js';
 
 import dotenv from 'dotenv';
+import { LitService } from './lit.service.js';
 // import { NilAIService } from './nillai.service.js';
 dotenv.config();
 
@@ -20,6 +21,9 @@ const collections = new Map();
 
 let nildb: any;
 let nilai: any;
+let lit = new LitService();
+
+await lit.init(); 
 
 app.post('/api/create-survey', async (req, res) => {
 
@@ -33,18 +37,14 @@ app.post('/api/create-survey', async (req, res) => {
     console.log("signer", signerAddress)
     console.log("session", litSessionSig)
                     
-    // generate new NIL DID 
     const keypair = Keypair.generate();
     const did = keypair.toDid().toString();
     console.log('New DID:', did);
-    
-
-    // encrypt NIL DID private key with LIT UCL: only address that registered survey can access
     console.log('Private Key:', keypair.privateKey().toString());
 
-    /// we do not decrypt with lit key .. we decrypt the nill private key with lit 
+    const encryptedData = await lit.encrypt(keypair.privateKey().toString(), surveySlug);
 
-    // so who can do so? 
+    console.log(encryptedData) 
 
     // register survey on contract with name, cid, did + cipher 
 
@@ -62,10 +62,10 @@ app.get('/api/survey-results/:surveyId', async (req, res) => {
 
     // Create and run queries on encrypted data
     let response  = await nildb.tabulateSurveyResults(surveyId)
-    let summary = await nilai.ask("can you summarize: " + JSON.stringify(response))
+    // let summary = await nilai.ask("can you summarize: " + JSON.stringify(response))
     res.send({
       results: response,
-      ai_summary: summary
+    //  ai_summary: summary
     })
 
 

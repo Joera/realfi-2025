@@ -10,9 +10,9 @@
     "start": "node dist/main.js"
   },
   "dependencies": {
-    "@cosmjs/amino": "^0.36.1",
-    "@cosmjs/crypto": "^0.36.1",
-    "@cosmjs/encoding": "^0.36.1",
+    "@lit-protocol/access-control-conditions": "^8.0.2",
+    "@lit-protocol/lit-client": "^8.2.3",
+    "@lit-protocol/networks": "^8.3.2",
     "@nillion/client-web": "^0.6.0",
     "@nillion/nilai-ts": "^0.2.0",
     "@nillion/nuc": "^0.1.1",
@@ -29,5 +29,10 @@
     "@types/node": "^20.10.0",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "@lit-protocol/networks": "8.3.2"
+    }
   }
 }
