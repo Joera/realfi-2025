@@ -190,6 +190,11 @@ class SurveyConfigForm extends HTMLElement {
                 
                 <label for="survey-description">Description:</label>
                 <textarea id="survey-description" placeholder="Enter survey description"></textarea>
+
+                <label>
+                    <input id="multisig" type="checkbox" />
+                    Create a multisig that owns the survey collectively
+                </label>
             </div>
 
             <h2>Questions</h2>
@@ -420,10 +425,12 @@ class SurveyConfigForm extends HTMLElement {
     private generateJSON() {
         const title = (this.shadowRoot?.querySelector('#survey-title') as HTMLInputElement)?.value
         const description = (this.shadowRoot?.querySelector('#survey-description') as HTMLTextAreaElement)?.value
+        const multisig = (this.shadowRoot?.querySelector('#multisig') as HTMLTextAreaElement)?.value
 
         const config = {
             title,
             description,
+            multisig,
             questions: this.questions
         }
 

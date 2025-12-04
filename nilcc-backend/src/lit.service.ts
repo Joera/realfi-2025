@@ -21,15 +21,15 @@ export class LitService {
 
     }
 
-    async encrypt(nilKey:string, surveyName: string) {
-        
+    accs(surveyId: string) {
+
         const rawCondition = {
             conditionType: 'evmBasic' as const,
             contractAddress: SURVEYSTORE,
             standardContractType:  '' as const,
             chain: 'base' as const,
             method: 'isOwner',
-            parameters: [':userAddress', surveyName],
+            parameters: [':userAddress', surveyId],
             returnValueTest: {
                 comparator: '=' as const,
                 value: 'true',
@@ -38,7 +38,7 @@ export class LitService {
                 name: 'isOwner',
                 inputs: [
                     { name: 'authSigAddress', type: 'address' },
-                    { name: 'surveyName', type: 'string' }
+                    { name: 'surveyId', type: 'string' }
                 ],
                 outputs: [{ name: '', type: 'bool' }],
                 stateMutability: 'view',
@@ -46,23 +46,33 @@ export class LitService {
             },
         };
 
-        const conditions = createAccBuilder()
+        return createAccBuilder()
         .unifiedAccs(rawCondition)
         .build();
 
 
+    }
+
+    async encrypt(nilKey:string, surveyName: string) {
+        
+
         return await this.client.encrypt({
             dataToEncrypt: nilKey,
-            unifiedAccessControlConditions: conditions,
+            unifiedAccessControlConditions: this.accs(surveyName),
             chain: "ethereum",
         });
 
     }
 
 
-    async decrypt (cyphertext: string, encryptedKey: string, sessionSig: string) {
+    async decrypt (surveyId: string, encryptedNilKey: string, sessionSig: string) {
 
-            // get encrypted Data 
+        return await this.client.decrypt({
+            data: encryptedNilKey,
+            unifiedAccessControlConditions: this.accs(surveyId),
+            authContext: sessionSig,
+            chain: "ethereum",
+        });
     }
 
     

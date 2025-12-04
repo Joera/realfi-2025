@@ -1,5 +1,4 @@
-import { randomUUID } from 'node:crypto';
-import { minaSurveyConfig } from './surveys/mina.js';
+
 
 const NILCHAIN_URL = "http://rpc.testnet.nilchain-rpc-proxy.nilogy.xyz";
 const NILAUTH_URL = "https://nilauth.sandbox.app-cluster.sandbox.nilogy.xyz";
@@ -11,8 +10,7 @@ import {
   Keypair,
   NilauthClient,
   PayerBuilder,
-  NucTokenBuilder,
-  Command,
+  NucTokenBuilder
 } from '@nillion/nuc';
 import {
     RunQueryRequest,
@@ -38,28 +36,42 @@ const COLLECTION = "e51a6f82-06b5-438f-915b-6a3c0a97cd86";
 
 export class NilDBService {
 
-    keypair: any;
-    did: any;
-    builder: any
+    builderKeypair: any;
+    builderDid: any;
+    builder: any; // pays for everyone 
+    ownerKeypair: any;
+    owner: any; // can read and or execute on survey responses 
+    ownerDid: any;
 
     constructor () {
 
-        this.keypair = Keypair.from(config.BUILDER_PRIVATE_KEY || "");
-        this.did = this.keypair.toDid().toString();
-        console.log('Builder DID:', this.did);
+      
+        this.builderKeypair = Keypair.from(config.BUILDER_PRIVATE_KEY || "");
+        this.builderDid = this.builderKeypair.toDid().toString();
+        console.log('Builder DID:', this.builderDid);
     }
 
-    async init() {
+    // async init() {
+
+    //     await this.initBuilder(); 
+
+        
+    
+    //     console.log('✅ Initialization complete');
+    // }
+
+
+    async initBuilder () {
 
         const payer = await new PayerBuilder()
-            .keypair(this.keypair)
+            .keypair(this.builderKeypair)
             .chainUrl(NILCHAIN_URL || "")
             .build();
 
         const nilauth = await NilauthClient.from(NILAUTH_URL || "", payer);
 
         this.builder = await SecretVaultBuilderClient.from({
-            keypair: this.keypair,
+            keypair: this.builderKeypair,
             urls: {
                 chain: NILCHAIN_URL || "",
                 auth: NILAUTH_URL || "",
@@ -87,7 +99,7 @@ export class NilDBService {
     // Try to register
         try {
             await this.builder.register({
-                did: this.did,
+                did: this.builderDid,
                 name: 'S3ntiment v1',
             });
             console.log('✅ Builder registered successfully');
@@ -115,9 +127,16 @@ export class NilDBService {
                 throw registerError;
             }
         }
-    
-        console.log('✅ Initialization complete');
     }
+
+    //  delegateToken (user_did: any) {
+
+    //     return NucTokenBuilder.extending(this.builder.rootToken)
+    //         .command(new Command(['nil', 'db', 'data', 'create']))
+    //         .audience(user_did)
+    //         .expiresAt(Math.floor(Date.now() / 1000) + 3600) // 1 hour
+    //         .build(this.builderKeypair.privateKey());
+    // }
 
     async createCollection (collection: any) {
 
@@ -137,7 +156,14 @@ export class NilDBService {
         }
     }
 
-    async tabulateSurveyResults(survey_id: string) {
+    async tabulateSurveyResults(survey_id: string, keypair : Keypair) {
+
+ 
+        let ownerDid = keypair.toDid().toString();
+        console.log('Owner DID:', ownerDid);
+
+        // moet ik hier nog initialiseren ???? 
+        // mm wordt sowieso anders .. want we gaan weer blind compute gebruiken 
 
         const records = await this.builder.findData({
             collection: COLLECTION,
@@ -463,7 +489,7 @@ export class NilDBService {
 
     async querySurvey (survey_id: string) {
 
-        console.log("builder", this.did)
+        // console.log("builder", this.did)
 
         const records = await this.builder.findData({
             collection: COLLECTION,
@@ -561,12 +587,5 @@ export class NilDBService {
 
 }
 
-    delegateToken (user_did: any) {
-
-        return NucTokenBuilder.extending(this.builder.rootToken)
-            .command(new Command(['nil', 'db', 'data', 'create']))
-            .audience(user_did)
-            .expiresAt(Math.floor(Date.now() / 1000) + 3600) // 1 hour
-            .build(this.keypair.privateKey());
-    }
+   
 }

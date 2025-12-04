@@ -7,6 +7,8 @@ const SURVEYSTORE = "0x1FaC59fBD1d4eb6EA268894F5AFE81E3219a28EC";
 
 export const register = async (surveyName: string, ipfsCid: string, didNil: string) => {
 
+    // do we force people to register a multisig to administer the survey ??? 
+
 
     // const accounts = await window.ethereum.request({ 
     //         method: 'eth_requestAccounts' 

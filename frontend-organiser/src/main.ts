@@ -1,6 +1,5 @@
 import './styles/main.scss';
 import { initRouter } from './router';
-import { createSessionSignatures } from './lit.ctrlr';
 
 const onPagePainted = () => {
 

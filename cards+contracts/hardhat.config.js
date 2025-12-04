@@ -22,17 +22,17 @@ export default {
   networks: {
     base: {
       url: process.env.BASE_RPC_URL || "https://mainnet.base.org",
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.ETH_PRIVATE_KEY],
       chainId: 8453,
     },
     baseSepolia: {
       url: process.env.BASE_SEPOLIA_RPC_URL || "https://sepolia.base.org",
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.ETH_PRIVATE_KEY],
       chainId: 84532,
     },
   },
   etherscan: {
-    apiKey: process.env.BASESCAN_API_KEY, // Single API key (v2 format)
+    apiKey: process.env.ETHERSCAN_API_KEY, // Single API key (v2 format)
     customChains: [
       {
         network: "base",

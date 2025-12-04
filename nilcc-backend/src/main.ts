@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import { randomUUID } from 'crypto';
-// import Did from '@nillion/client-web';
 import { NilDBService } from './nildb.service.js';
 import { Did, Keypair } from '@nillion/nuc';
 
@@ -9,6 +8,7 @@ import { surveyResultsCollection } from './create_collection.js';
 
 import dotenv from 'dotenv';
 import { LitService } from './lit.service.js';
+import { getSurvey } from './contract.factory.js';
 // import { NilAIService } from './nillai.service.js';
 dotenv.config();
 
@@ -44,84 +44,92 @@ app.post('/api/create-survey', async (req, res) => {
 
     const encryptedData = await lit.encrypt(keypair.privateKey().toString(), surveySlug);
 
-    console.log(encryptedData) 
+    const collection = {}; 
 
-    // register survey on contract with name, cid, did + cipher 
+    // create custom collection !!! so we can actually use blind compute
+
+    //     Per survey een eigen collection → isolatie tussen surveys
+    // Specifiek schema met %share velden → blind compute mogelijk
+    // Survey owner als collection owner → jij (builder) hoeft geen read access
+    // we willen toch een builder // die betaalt maar kan verder niks 
 
     res.send({
-      signer: signerAddress
+      nilDid: did,
+      encryptedNilKey: encryptedData,
+      collection: collection 
     })
 
 
 });
 
 // Get survey results by surveyId // usinng general nil did as in demo 
-app.get('/api/survey-results/:surveyId', async (req, res) => {
-  try {
-    const { surveyId } = req.params;
+// app.get('/api/survey-results/:surveyId', async (req, res) => {
+//   try {
+//     const { surveyId } = req.params;
 
-    // Create and run queries on encrypted data
-    let response  = await nildb.tabulateSurveyResults(surveyId)
-    // let summary = await nilai.ask("can you summarize: " + JSON.stringify(response))
-    res.send({
-      results: response,
-    //  ai_summary: summary
-    })
+//     // Create and run queries on encrypted data
+//     let response  = await nildb.tabulateSurveyResults(surveyId)
+//     // let summary = await nilai.ask("can you summarize: " + JSON.stringify(response))
+//     res.send({
+//       results: response,
+//     //  ai_summary: summary
+//     })
 
 
-  } catch (error: any) {
-    console.log(error)
-  }
-});
+//   } catch (error: any) {
+//     console.log(error)
+//   }
+// });
 
 // Get survey results by surveyId
 app.post('/api/survey-results', async (req, res) => {
   try {
+    const sessionSig = req.body.sessionSig;
+    const surveyId = req.body.surveyName;
+    const ownerAddress = req.body.ownerAddress;
 
-    const authSig = req.body.sessionSig;
-    const surveyId = req.body.surveyId;
+    // get ownerAddress from sessionSig ? 
 
-    // retrieve address from sessionSig created in frontend
-
-    // retrieve surveyInfo from contract
-
-    // decrypt key using authSig .. qualifies when address has registered the survey 
-
-    // initiate nil did and nildb builder
-
-    // Create and run queries on encrypted data
-    let response  = await nildb.tabulateSurveyResults(surveyId)
-    // let summary = await nilai.ask("can you summarize: " + JSON.stringify(response))
-    res.send({
-      results: response,
-      // ai_summary: summary
-    })
-
+    // 1. Haal survey data op van contract
+    const survey = await getSurvey(ownerAddress, surveyId);
+    
+    // 2. Decrypt Nillion key via Lit (met authSig)
+    const nilKey = await lit.decrypt(surveyId, survey.encryptedNilKey, sessionSig);
+    
+    // 3. Maak nilDB instantie met die key
+    const keypair = Keypair.from(nilKey);
+    // const surveyNildb = new NilDBService(keypair);
+    // await surveyNildb.initOWner();
+    
+    // 4. Query results
+    const response = await nildb.tabulateSurveyResults(surveyId, keypair);
+    
+    res.send({ results: response });
 
   } catch (error: any) {
-    console.log(error)
+    console.log(error);
+    res.status(500).send({ error: error.message });
   }
 });
-
 
 
 
 
 // Generate delegate token for a user
-app.post('/api/delegate-token', async (req, res) => {
+// app.post('/api/delegate-token', async (req, res) => {
 
-    // check with smart contract? 
-    // signature + nullifier 
+//     // check with smart contract? 
+//     // signature + nullifier 
 
-    console.log(req.body)
+//     console.log(req.body)
   
-    const didString = req.body.did;
-    const publicKeyHex = didString.replace('did:nil:', '');
-    const did = Did.fromHex(publicKeyHex);
-    const token = nildb.delegateToken(did);
-    console.log(token);
-    res.send(JSON.stringify(token));
-});
+//     const didString = req.body.did;
+//     const publicKeyHex = didString.replace('did:nil:', '');
+//     const did = Did.fromHex(publicKeyHex);
+//     const token = nildb.delegateToken(did);
+//     console.log(token);
+//     res.send(JSON.stringify(token));
+// });
 
 
 // app.post('/api/create', async (req, res) => {
@@ -139,14 +147,14 @@ app.post('/api/delegate-token', async (req, res) => {
 //     res.send(JSON.stringify(token));
 // });
 
-app.post('/api/collection', async (req, res) => {
+// app.post('/api/collection', async (req, res) => {
 
-    const uid = randomUUID();
-    console.log(uid);
-    const collection = surveyResultsCollection(uid);
-    const token = await nildb.createCollection(collection);
-    res.send(JSON.stringify(uid));
-});
+//     const uid = randomUUID();
+//     console.log(uid);
+//     const collection = surveyResultsCollection(uid);
+//     const token = await nildb.createCollection(collection);
+//     res.send(JSON.stringify(uid));
+// });
 
 
 
@@ -161,7 +169,7 @@ async function startServer() {
     
     nildb = new NilDBService();
     // nilai = new NilAIService();
-    await nildb.init();
+    await nildb.initBuilder();
     
     app.listen(PORT, () => {
         console.log("server running at " + PORT)
