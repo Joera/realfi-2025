@@ -7,16 +7,18 @@ const BUILDER_PRIVATE_KEY = "c657ed5e26de39fe82b4fc006f68892234aed6f634fc7aba4ff
 
 // Import Nillion SDK components
 import {
-  Keypair,
-  NilauthClient,
+  Builder,
+  Signer,
+  Did,
   PayerBuilder,
-  NucTokenBuilder
+  NilauthClient,  // ← toevoegen
 } from '@nillion/nuc';
+
 import {
-    RunQueryRequest,
   SecretVaultBuilderClient,
   SecretVaultUserClient,
 } from '@nillion/secretvaults';
+import { KeyExportOptions } from 'crypto';
 
 // Configuration
 const config = {
@@ -36,47 +38,36 @@ const COLLECTION = "e51a6f82-06b5-438f-915b-6a3c0a97cd86";
 
 export class NilDBService {
 
-    builderKeypair: any;
-    builderDid: any;
-    builder: any; // pays for everyone 
-    ownerKeypair: any;
-    owner: any; // can read and or execute on survey responses 
-    ownerDid: any;
+    builderSigner: Signer;
+    builderDid: Did | undefined;
+    builder: any;
+  
 
     constructor () {
-
-      
-        this.builderKeypair = Keypair.from(config.BUILDER_PRIVATE_KEY || "");
-        this.builderDid = this.builderKeypair.toDid().toString();
-        console.log('Builder DID:', this.builderDid);
+        this.builderSigner = Signer.fromPrivateKey(config.BUILDER_PRIVATE_KEY || "");
     }
-
-    // async init() {
-
-    //     await this.initBuilder(); 
-
-        
-    
-    //     console.log('✅ Initialization complete');
-    // }
 
 
     async initBuilder () {
 
-        const payer = await new PayerBuilder()
-            .keypair(this.builderKeypair)
-            .chainUrl(NILCHAIN_URL || "")
+        this.builderDid = await this.builderSigner.getDid();
+        // console.log('Builder DID:', this.builderDid);
+
+        const payer = await PayerBuilder
+            .fromPrivateKey(config.BUILDER_PRIVATE_KEY || "")
+            .chainUrl(NILCHAIN_URL)
             .build();
 
-        const nilauth = await NilauthClient.from(NILAUTH_URL || "", payer);
+         const nilauthClient = await NilauthClient.create({
+            baseUrl: NILAUTH_URL,
+            payer: payer,
+        });
+
 
         this.builder = await SecretVaultBuilderClient.from({
-            keypair: this.builderKeypair,
-            urls: {
-                chain: NILCHAIN_URL || "",
-                auth: NILAUTH_URL || "",
-                dbs: NILDB_NODES.split(","),
-            },
+            signer: this.builderSigner,  // was: keypair
+            nilauthClient: nilauthClient,
+            dbs: NILDB_NODES.split(","),
         });
 
         // Refresh token using existing subscription
@@ -84,59 +75,68 @@ export class NilDBService {
             await this.builder.refreshRootToken();
             console.log('✅ Root token refreshed');
         } catch (tokenError) {
-            console.log('⚠️ Token refresh failed, will attempt to continue');
+            console.log('⚠️ Token refresh failed:', tokenError);  // ← log de hele error
+            console.log('Error message:', tokenError.message);
+            console.log('Error cause:', tokenError.cause);
         }
 
-            // Try to read existing profile first
-        try {
-            const existingProfile = await this.builder.readProfile();
-            console.log('✅ Builder already registered:', existingProfile.data.name);
-            return; // Already registered, we're done!
-        } catch (profileError: any) {
-            console.log('⚠️ Could not read profile, attempting to register...');
-        }
+        const status = await nilauthClient.subscriptionStatus(
+            this.builderDid, 
+            'nildb'
+        );
+        console.log('Subscription status:', status);
 
     // Try to register
-        try {
-            await this.builder.register({
-                did: this.builderDid,
-                name: 'S3ntiment v1',
-            });
-            console.log('✅ Builder registered successfully');
-        } catch (registerError: any) {
-            // console.log('Full error:', JSON.stringify(registerError, null, 2));
+        // try {
+        //     await this.builder.register({
+        //         did: this.builderDid,
+        //         name: 'S3ntiment v1',
+        //     });
+        //     console.log('✅ Builder registered successfully');
+        // } catch (registerError: any) {
+        //     // console.log('Full error:', JSON.stringify(registerError, null, 2));
             
-            // Check if it's a duplicate key error (E11000 is MongoDB duplicate key error)
-            let isDuplicate = false;
+        //     // Check if it's a duplicate key error (E11000 is MongoDB duplicate key error)
+        //     let isDuplicate = false;
             
-            if (Array.isArray(registerError)) {
-                isDuplicate = registerError.some((err: any) => {
-                    const errorStr = JSON.stringify(err);
-                    return errorStr.includes('E11000') || 
-                        errorStr.includes('duplicate key') ||
-                        errorStr.includes('11000');
-                });
-            }
+        //     if (Array.isArray(registerError)) {
+        //         isDuplicate = registerError.some((err: any) => {
+        //             const errorStr = JSON.stringify(err);
+        //             return errorStr.includes('E11000') || 
+        //                 errorStr.includes('duplicate key') ||
+        //                 errorStr.includes('11000');
+        //         });
+        //     }
 
-            if (isDuplicate) {
-                console.log('✅ Builder already registered (duplicate key detected)');
-                // Don't throw - this is expected and fine
-            } else {
-                // If it's not a duplicate error, throw it
-                console.error('❌ Registration failed with unexpected error');
-                throw registerError;
-            }
-        }
+        //     if (isDuplicate) {
+        //         console.log('✅ Builder already registered (duplicate key detected)');
+        //         // Don't throw - this is expected and fine
+        //     } else {
+        //         // If it's not a duplicate error, throw it
+        //         console.error('❌ Registration failed with unexpected error');
+        //         throw registerError;
+        //     }
+        // }
     }
 
-    //  delegateToken (user_did: any) {
+    async createSurveyOwner(surveyOwner: Signer) {
 
-    //     return NucTokenBuilder.extending(this.builder.rootToken)
-    //         .command(new Command(['nil', 'db', 'data', 'create']))
-    //         .audience(user_did)
-    //         .expiresAt(Math.floor(Date.now() / 1000) + 3600) // 1 hour
-    //         .build(this.builderKeypair.privateKey());
-    // }
+        return await SecretVaultUserClient.from({
+            baseUrls: config.NILDB_NODES,
+            signer: surveyOwner,
+            blindfold: { operation: 'store' },
+        });
+    }
+
+
+    async delegateToSurveyOwner(ownerDid: Did) {
+        const delegation = await Builder.delegationFrom(this.builder.rootToken)
+            .audience(ownerDid)
+            .expiresIn(3600 * 1000)
+            .sign(this.builderSigner);
+            
+        return delegation;
+    }
 
     async createCollection (collection: any) {
 
@@ -156,7 +156,7 @@ export class NilDBService {
         }
     }
 
-    async tabulateSurveyResults(survey_id: string, keypair : Keypair) {
+    async tabulateSurveyResults(survey_id: string, keypair : any) {
 
  
         let ownerDid = keypair.toDid().toString();

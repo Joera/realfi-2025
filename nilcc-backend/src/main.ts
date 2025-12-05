@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { randomUUID } from 'crypto';
 import { NilDBService } from './nildb.service.js';
-import { Did, Keypair } from '@nillion/nuc';
+import { Did, Signer } from '@nillion/nuc';
 
 import { surveyResultsCollection } from './create_collection.js';
 
@@ -10,6 +10,10 @@ import dotenv from 'dotenv';
 import { LitService } from './lit.service.js';
 import { getSurvey } from './contract.factory.js';
 // import { NilAIService } from './nillai.service.js';
+
+import { secp256k1 } from '@noble/curves/secp256k1.js';
+import { bytesToHex } from '@noble/hashes/utils.js';
+
 dotenv.config();
 
 const app = express();
@@ -22,6 +26,11 @@ const collections = new Map();
 let nildb: any;
 let nilai: any;
 let lit = new LitService();
+
+// import * as nuc from '@nillion/nuc';
+// console.log('NUC exports:', Object.keys(nuc));
+// import * as secretvaults from '@nillion/secretvaults';
+// console.log('Secretvaults exports:', Object.keys(secretvaults));
 
 await lit.init(); 
 
@@ -36,25 +45,36 @@ app.post('/api/create-survey', async (req, res) => {
 
     console.log("signer", signerAddress)
     console.log("session", litSessionSig)
-                    
-    const keypair = Keypair.generate();
-    const did = keypair.toDid().toString();
-    console.log('New DID:', did);
-    console.log('Private Key:', keypair.privateKey().toString());
 
-    const encryptedData = await lit.encrypt(keypair.privateKey().toString(), surveySlug);
+    const privateKeyBytes = secp256k1.utils.randomSecretKey();
+    const privateKeyHex = bytesToHex(privateKeyBytes);
+    const surveyOwner = Signer.fromPrivateKey(privateKeyHex, 'key');
+    const surveyOwnerDid = await surveyOwner.getDid();
 
-    const collection = {}; 
+
+    const encryptedData = await lit.encrypt(
+      privateKeyHex, 
+      surveySlug
+    );
+``
+    // Builder delegeert collection creation aan owner
+    const delegation = nildb.delegateCollectionCreation(surveyOwnerDid);
+
+    const ownerClient = await nildb.createSurveyOwner(surveyOwner)
 
     // create custom collection !!! so we can actually use blind compute
-
-    //     Per survey een eigen collection → isolatie tussen surveys
+    // Per survey een eigen collection → isolatie tussen surveys
     // Specifiek schema met %share velden → blind compute mogelijk
+    const collection = await ownerClient.createCollection(delegation, {
+    // schema hier...
+    });
+
+
     // Survey owner als collection owner → jij (builder) hoeft geen read access
     // we willen toch een builder // die betaalt maar kan verder niks 
 
     res.send({
-      nilDid: did,
+      nilDid: surveyOwnerDid.toString(),
       encryptedNilKey: encryptedData,
       collection: collection 
     })
@@ -82,35 +102,35 @@ app.post('/api/create-survey', async (req, res) => {
 // });
 
 // Get survey results by surveyId
-app.post('/api/survey-results', async (req, res) => {
-  try {
-    const sessionSig = req.body.sessionSig;
-    const surveyId = req.body.surveyName;
-    const ownerAddress = req.body.ownerAddress;
+// app.post('/api/survey-results', async (req, res) => {
+//   try {
+//     const sessionSig = req.body.sessionSig;
+//     const surveyId = req.body.surveyName;
+//     const ownerAddress = req.body.ownerAddress;
 
-    // get ownerAddress from sessionSig ? 
+//     // get ownerAddress from sessionSig ? 
 
-    // 1. Haal survey data op van contract
-    const survey = await getSurvey(ownerAddress, surveyId);
+//     // 1. Haal survey data op van contract
+//     const survey = await getSurvey(ownerAddress, surveyId);
     
-    // 2. Decrypt Nillion key via Lit (met authSig)
-    const nilKey = await lit.decrypt(surveyId, survey.encryptedNilKey, sessionSig);
+//     // 2. Decrypt Nillion key via Lit (met authSig)
+//     const nilKey = await lit.decrypt(surveyId, survey.encryptedNilKey, sessionSig);
     
-    // 3. Maak nilDB instantie met die key
-    const keypair = Keypair.from(nilKey);
-    // const surveyNildb = new NilDBService(keypair);
-    // await surveyNildb.initOWner();
+//     // 3. Maak nilDB instantie met die key
+//     const keypair = Keypair.from(nilKey);
+//     // const surveyNildb = new NilDBService(keypair);
+//     // await surveyNildb.initOWner();
     
-    // 4. Query results
-    const response = await nildb.tabulateSurveyResults(surveyId, keypair);
+//     // 4. Query results
+//     const response = await nildb.tabulateSurveyResults(surveyId, keypair);
     
-    res.send({ results: response });
+//     res.send({ results: response });
 
-  } catch (error: any) {
-    console.log(error);
-    res.status(500).send({ error: error.message });
-  }
-});
+//   } catch (error: any) {
+//     console.log(error);
+//     res.status(500).send({ error: error.message });
+//   }
+// });
 
 
 

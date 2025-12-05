@@ -3,7 +3,7 @@ import { createLitClient } from "@lit-protocol/lit-client";
 import { createAccBuilder } from "@lit-protocol/access-control-conditions";
 
 
-const SURVEYSTORE = "xx"
+const SURVEYSTORE = "0x6Ab10D4705041408b2ED049F12cc0606B735dF0e"
 
 export class LitService {
 
@@ -22,36 +22,39 @@ export class LitService {
     }
 
     accs(surveyId: string) {
+    const rawCondition: any = {
+        conditionType: "evmContract",
+        chain: "base",
+        contractAddress: SURVEYSTORE,
+        functionName: "isOwner",
 
-        const rawCondition = {
-            conditionType: 'evmBasic' as const,
-            contractAddress: SURVEYSTORE,
-            standardContractType:  '' as const,
-            chain: 'base' as const,
-            method: 'isOwner',
-            parameters: [':userAddress', surveyId],
-            returnValueTest: {
-                comparator: '=' as const,
-                value: 'true',
-            },
-            functionAbi: {
-                name: 'isOwner',
-                inputs: [
-                    { name: 'authSigAddress', type: 'address' },
-                    { name: 'surveyId', type: 'string' }
-                ],
-                outputs: [{ name: '', type: 'bool' }],
-                stateMutability: 'view',
-                type: 'function'
-            },
-        };
+        functionParams: [":userAddress", surveyId],
 
-        return createAccBuilder()
+        functionAbi: {
+        name: "isOwner",
+        inputs: [
+            { name: "authSigAddress", type: "address" },
+            { name: "surveyId", type: "string" }
+        ],
+        outputs: [
+            { name: "", type: "bool" }
+        ],
+        stateMutability: "view",
+        type: "function"
+        },
+
+        returnValueTest: {
+        key: "",
+        comparator: "=",
+        value: "true"
+        }
+    };
+
+    return createAccBuilder()
         .unifiedAccs(rawCondition)
         .build();
-
-
     }
+
 
     async encrypt(nilKey:string, surveyName: string) {
         

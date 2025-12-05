@@ -17,6 +17,8 @@
     "@nillion/nilai-ts": "^0.2.0",
     "@nillion/nuc": "^1.1.0",
     "@nillion/secretvaults": "^1.0.0",
+    "@noble/curves": "^2.0.1",
+    "@noble/hashes": "^2.0.1",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.18.2",
@@ -33,7 +35,8 @@
   },
   "pnpm": {
     "overrides": {
-      "@lit-protocol/networks": "8.3.2"
+      "@lit-protocol/networks": "8.3.2",
+      "@nillion/nuc": "1.1.1"
     }
   }
 }
