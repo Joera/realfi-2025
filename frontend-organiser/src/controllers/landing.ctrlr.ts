@@ -1,7 +1,6 @@
 // src/controllers/landing.controller.ts
 
 
-// import '../components/create-survey-form.js';
 import '../components/survey-config-form.js';
 import LITCtrlr from '../lit.ctrlr.js';
 import { PinataService } from '../pinata.service.js';
@@ -100,10 +99,8 @@ export class LandingController {
 
         if(surveySlug) {
 
-            // console.log(surveySlug)
-
             const { sessionSig, signerAddress } = await this.lit.createSessionSignatures() 
-
+                                                                 
             let res: any  = await fetch(`${BACKEND}/api/create-survey`, {
                 method: 'POST',
                 headers: {
@@ -112,27 +109,20 @@ export class LandingController {
                 body: JSON.stringify({ 
                     sessionSig, 
                     signerAddress,
-                    surveySlug
+                    surveySlug,
+                    surveyConfig: event.detail.config
                 })
             });
 
             const info = await res.json();
-            // console.log(info);
 
-            const config = {
-              survey: event.detail.config,
-              nilDid: info.nilDid,
-              encryptedNilKey: info.encryptedNilKey,
-              collectionId: info.collection,
-              owner: signerAddress,
-            }
+            console.log(info)
 
-            const surveyCid = (await this.pinata.uploadJSON(config)).IpfsHash;
-            console.log(surveyCid)
+            // check if survey title hwas used before ! 
 
             const contract = "0x844CB8a1C250782c4D9d62454B4443e240c8FEE7"
             const abi = [{"inputs":[{"internalType":"string","name":"surveyId","type":"string"},{"internalType":"string","name":"ipfsCid","type":"string"}],"name":"createSurvey","outputs":[],"stateMutability":"nonpayable","type":"function"}]
-            const args = [surveySlug, surveyCid.toString()]
+            const args = [surveySlug, info.surveyCid.toString()]
 
 
 

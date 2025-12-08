@@ -6,29 +6,9 @@ import { colourStyles } from '../shared-colour-styles.js'
 import { buttonStyles } from '../shared-button-styles'
 import { store } from '../services/store.service';
 import { fromPinata } from "../ipfs.factory";
+import { SurveyAnswer, SurveyConfig, SurveyQuestion } from "../types";
 
-interface SurveyQuestion {
-  id: string
-  question: string
-  type: 'radio' | 'checkbox' | 'text' | 'scale'
-  options?: string[]
-  scaleRange?: { min: number; max: number; minLabel: string; maxLabel: string }
-  required?: boolean
-}
 
-interface SurveyAnswer {
-  questionId: string
-  questionText: string
-  questionType: 'radio' | 'checkbox' | 'text' | 'scale'
-  answer: string | string[] | number
-  scaleRange?: { min: number; max: number; minLabel: string; maxLabel: string }
-}
-
-interface SurveyConfig {
-  title: string
-  description?: string
-  questions: SurveyQuestion[]
-}
 
 class Survey extends HTMLElement {
   private config?: SurveyConfig

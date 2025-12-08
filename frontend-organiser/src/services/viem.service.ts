@@ -18,6 +18,9 @@ export class ViemService {
         console.log(this.chainId);
         console.log("rpc", getRPCUrl(this.chainId))
 
+        console.log(this.chainId)
+        console.log( getViemChainById(this.chainId))
+
         this.walletClient = createWalletClient({
             account,
             chain: getViemChainById(this.chainId),
@@ -39,7 +42,9 @@ export class ViemService {
         ) {
 
 
-        console.log("args", args)
+        // lijkt weer dat geval met te hoge tx kosten want denkt aan mainnet ipv base 
+
+
         const hash = await this.walletClient.writeContract({
             address,
             abi,
@@ -47,10 +52,10 @@ export class ViemService {
             args
         });
 
-        console.log('Tx hash:', hash);
+        // console.log('Tx hash:', hash);
 
         const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
-        console.log('Tx confirmed in block:', receipt.blockNumber);
+        // console.log('Tx confirmed in block:', receipt.blockNumber);
 
         return receipt;
     }
