@@ -21,47 +21,51 @@ export class LitService {
 
     }
 
-    accs(surveyId: string) {
-    const rawCondition: any = {
-        conditionType: "evmContract",
-        chain: "base",
-        contractAddress: SURVEYSTORE,
-        functionName: "isOwner",
+    accs(surveySlug: string) {
 
-        functionParams: [":userAddress", surveyId],
+        const rawCondition: any = {
+            chain: "base",
+            contractAddress: SURVEYSTORE,
+            functionName: "isOwner",
 
-        functionAbi: {
-        name: "isOwner",
-        inputs: [
-            { name: "authSigAddress", type: "address" },
-            { name: "surveyId", type: "string" }
-        ],
-        outputs: [
-            { name: "", type: "bool" }
-        ],
-        stateMutability: "view",
-        type: "function"
-        },
+            functionParams: [":userAddress", surveySlug],
 
-        returnValueTest: {
-        key: "",
-        comparator: "=",
-        value: "true"
-        }
-    };
+            functionAbi: {
+            name: "isOwner",
+            inputs: [
+                { name: "authSigAddress", type: "address" },
+                { name: "surveyId", type: "string" }
+            ],
+            outputs: [
+                { name: "", type: "bool" }
+            ],
+            stateMutability: "view",
+            type: "function"
+            },
 
-    return createAccBuilder()
-        .unifiedAccs(rawCondition)
-        .build();
-    }
+            returnValueTest: {
+                key: "",
+                comparator: "=",
+                value: "true"
+            }
+        };
+
+    // return createAccBuilder()
+    //     .unifiedAccs(rawCondition)
+    //     .build();
+
+    console.log(rawCondition)
+
+
+    return [rawCondition]
+}
 
 
     async encrypt(nilKey:string, surveyName: string) {
         
-
         return await this.client.encrypt({
             dataToEncrypt: nilKey,
-            unifiedAccessControlConditions: this.accs(surveyName),
+            evmContractConditions: this.accs(surveyName),
             chain: "ethereum",
         });
 
@@ -72,7 +76,7 @@ export class LitService {
 
         return await this.client.decrypt({
             data: encryptedNilKey,
-            unifiedAccessControlConditions: this.accs(surveyId),
+            evmContractConditions: this.accs(surveyId),
             authContext: sessionSig,
             chain: "ethereum",
         });

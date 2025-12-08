@@ -19,6 +19,7 @@ import {
   SecretVaultUserClient,
 } from '@nillion/secretvaults';
 import { KeyExportOptions } from 'crypto';
+import { surveyCollectionSchema } from './collection.factory';
 
 // Configuration
 const config = {
@@ -62,7 +63,6 @@ export class NilDBService {
             baseUrl: NILAUTH_URL,
             payer: payer,
         });
-
 
         this.builder = await SecretVaultBuilderClient.from({
             signer: this.builderSigner,  // was: keypair
@@ -138,21 +138,18 @@ export class NilDBService {
         return delegation;
     }
 
-    async createCollection (collection: any) {
+    async createSurveyCollection(surveySlug: string) {
 
-        try {
-            const createResults = await this.builder.createCollection(collection);
-            console.log(createResults);
-            console.log(
-                '✅ Owned collection created on',
-                Object.keys(createResults).length,
-                'nodes'
-            );
+        const schema = surveyCollectionSchema(surveySlug);
+
+        try { 
+
+            const result = await this.builder.createCollection(schema);
+            console.log('Collection created:', result);
+            return result;
         } catch (error) {
-
-            console.log(error)
-            console.error('❌ Collection creation failed:', error.message);
-            // Handle testnet infrastructure issues gracefully
+            console.log(JSON.stringify(error));
+            return undefined;
         }
     }
 

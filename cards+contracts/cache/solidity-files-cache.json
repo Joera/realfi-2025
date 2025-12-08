@@ -1,8 +1,8 @@
 {
   "_format": "hh-sol-cache-2",
   "files": {
-    "/home/joera/Documents/realfi-2025/cards+contracts/contracts/card-validator.sol": {
-      "lastModificationDate": 1764323469716,
+    "/home/joera/Documents/s3ntiment/cards+contracts/contracts/card-validator.sol": {
+      "lastModificationDate": 1759505651554,
       "contentHash": "0380efbe9a4346f6ea567a9d95e2004e",
       "sourceName": "contracts/card-validator.sol",
       "solcConfig": {
@@ -38,9 +38,9 @@
         "CardValidator"
       ]
     },
-    "/home/joera/Documents/realfi-2025/cards+contracts/contracts/survey-store.sol": {
-      "lastModificationDate": 1764844880649,
-      "contentHash": "0f20d68a253605aa058b54550cab9295",
+    "/home/joera/Documents/s3ntiment/cards+contracts/contracts/survey-store.sol": {
+      "lastModificationDate": 1764964641462,
+      "contentHash": "6bf8a4834d1239558e1cc67396674a76",
       "sourceName": "contracts/survey-store.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -73,45 +73,6 @@
       ],
       "artifacts": [
         "SurveyStore"
-      ]
-    },
-    "/home/joera/Documents/realfi-2025/cards+contracts/contracts/survey-adapter.sol": {
-      "lastModificationDate": 1764946586166,
-      "contentHash": "46c8962ee543e0b8bafea1ed4dc658b1",
-      "sourceName": "contracts/survey-adapter.sol",
-      "solcConfig": {
-        "version": "0.8.24",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "viaIR": true,
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./survey-store.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "SurveyAdapter"
       ]
     }
   }

@@ -13,6 +13,7 @@ import { getSurvey } from './contract.factory.js';
 
 import { secp256k1 } from '@noble/curves/secp256k1.js';
 import { bytesToHex } from '@noble/hashes/utils.js';
+import { surveyCollectionSchema } from './collection.factory.js';
 
 dotenv.config();
 
@@ -40,7 +41,7 @@ app.post('/api/create-survey', async (req, res) => {
 
     const litSessionSig = req.body.sessionSig;
     const signerAddress = req.body.signerAddress;
-    const surveySlug = req.body.surveyName
+    const surveySlug = req.body.surveySlug
     const surveyCid = req.body.surveyCid;
 
     console.log("signer", signerAddress)
@@ -51,32 +52,39 @@ app.post('/api/create-survey', async (req, res) => {
     const surveyOwner = Signer.fromPrivateKey(privateKeyHex, 'key');
     const surveyOwnerDid = await surveyOwner.getDid();
 
-
     const encryptedData = await lit.encrypt(
       privateKeyHex, 
       surveySlug
     );
-``
+
+    console.log(encryptedData)
+
     // Builder delegeert collection creation aan owner
-    const delegation = nildb.delegateCollectionCreation(surveyOwnerDid);
+    //const delegation = nildb.delegateToSurveyOwner(surveyOwnerDid);
+    // const ownerClient = await nildb.createSurveyOwner(surveyOwner);
+    // console.log('ownerClient methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(ownerClient)));
 
-    const ownerClient = await nildb.createSurveyOwner(surveyOwner)
 
+    const collection = await nildb.createSurveyCollection(surveySlug);
+
+    console.log(surveyOwnerDid);
+    console.log(Object.keys(surveyOwnerDid));
+    
     // create custom collection !!! so we can actually use blind compute
     // Per survey een eigen collection → isolatie tussen surveys
     // Specifiek schema met %share velden → blind compute mogelijk
-    const collection = await ownerClient.createCollection(delegation, {
-    // schema hier...
-    });
+    // const collection = await ownerClient.createCollection(delegation, {
+    // // schema hier...
+    // });
 
 
     // Survey owner als collection owner → jij (builder) hoeft geen read access
     // we willen toch een builder // die betaalt maar kan verder niks 
 
     res.send({
-      nilDid: surveyOwnerDid.toString(),
+      nilDid: surveyOwnerDid.didString, 
       encryptedNilKey: encryptedData,
-      collection: collection 
+      collection: collection // why 3 different ?? 
     })
 
 

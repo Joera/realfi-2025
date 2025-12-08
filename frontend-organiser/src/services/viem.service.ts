@@ -15,6 +15,9 @@ export class ViemService {
 
         const account = privateKeyToAccount(import.meta.env.VITE_ETHEREUM_PRIVATE_KEY as `0x${string}`);
 
+        console.log(this.chainId);
+        console.log("rpc", getRPCUrl(this.chainId))
+
         this.walletClient = createWalletClient({
             account,
             chain: getViemChainById(this.chainId),
@@ -29,11 +32,14 @@ export class ViemService {
     }
 
     async genericTx(
-        address,
-        abi,
-        functionName,
-        args
+        address: string,
+        abi: any,
+        functionName: string,
+        args: any[]
         ) {
+
+
+        console.log("args", args)
         const hash = await this.walletClient.writeContract({
             address,
             abi,

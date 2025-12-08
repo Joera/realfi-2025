@@ -1,7 +1,7 @@
 // src/controllers/landing.controller.ts
 
 
-import '../components/create-survey-form.js';
+// import '../components/create-survey-form.js';
 import '../components/survey-config-form.js';
 import LITCtrlr from '../lit.ctrlr.js';
 import { PinataService } from '../pinata.service.js';
@@ -94,16 +94,16 @@ export class LandingController {
     
     document.addEventListener('survey-config-generated', async (event: any) => {
 
-        const surveySlug = slugify(event.detail.config.title);
+      // console.log(event.detail.config)
 
-        const surveyCid = (await this.pinata.uploadJSON(event.detail.config)).IpfsHash;
+        const surveySlug = slugify(event.detail.config.title);
 
         if(surveySlug) {
 
-            console.log(surveySlug, surveyCid)
+            // console.log(surveySlug)
 
             const { sessionSig, signerAddress } = await this.lit.createSessionSignatures() 
-
+``
             let res: any  = await fetch(`${BACKEND}/api/create-survey`, {
                 method: 'POST',
                 headers: {
@@ -112,33 +112,44 @@ export class LandingController {
                 body: JSON.stringify({ 
                     sessionSig, 
                     signerAddress,
-                    surveySlug,
-                    surveyCid
+                    surveySlug
                 })
             });
 
-            console.log(res) 
+            const info = await res.json();
+            // console.log(info);
 
-            const { nilDid, encryptedNilKey} = res; 
-            const contract = "0x6Ab10D4705041408b2ED049F12cc0606B735dF0e";
-            const abi = [{"inputs":[{"internalType":"string","name":"surveyId","type":"string"},{"internalType":"string","name":"ipfsCid","type":"string"},{"internalType":"string","name":"didNil","type":"string"},{"internalType":"string","name":"encryptedNilKey","type":"string"}],"name":"createSurvey","outputs":[],"stateMutability":"nonpayable","type":"function"}]
-
-            const args = [surveySlug, surveyCid, nilDid, encryptedNilKey]
-
-            if (event.detail.config.multisig) {
-
-              await this.safe.connectToFreshSafe('s3ntiment_survey_' + surveySlug);
-              await this.safe.updateSigner(import.meta.env.VITE_ETHEREUM_PRIVATE_KEY)
-           
-              const tx = await this.safe.genericTx(contract, abi, 'createSurvey', args, false, false )
-
-              console.log(tx)
-
-            } else {
-
-              const receipt = this.viem.genericTx(contract, abi, 'createSurvey', args)
-              console.log(receipt)
+            const config = {
+              survey: event.detail.config,
+              nilDid: info.nilDid,
+              encryptedNilKey: info.encryptedNilKey,
+              collectionId: info.collection,
+              owner: signerAddress,
             }
+
+            const surveyCid = (await this.pinata.uploadJSON(config)).IpfsHash;
+            console.log(surveyCid)
+
+            const contract = "0x844CB8a1C250782c4D9d62454B4443e240c8FEE7"
+            const abi = [{"inputs":[{"internalType":"string","name":"surveyId","type":"string"},{"internalType":"string","name":"ipfsCid","type":"string"}],"name":"createSurvey","outputs":[],"stateMutability":"nonpayable","type":"function"}]
+            const args = [surveySlug, surveyCid.toString()]
+
+
+
+            // if (event.detail.config.multisig) {
+
+              // await this.safe.connectToFreshSafe('s3ntiment_survey_' + surveySlug);
+              // await this.safe.updateSigner(import.meta.env.VITE_ETHEREUM_PRIVATE_KEY)
+           
+              // const tx = await this.safe.genericTx(contract, abi, 'createSurvey', args, false, false )
+
+              // console.log(tx)
+
+            // } else {
+
+            const receipt = await this.viem.genericTx(contract, abi, 'createSurvey', args)
+            console.log(receipt)
+            // }
             
 
             // hoe ingewikkeld is het om consensus te krijgen voor inzien resultaten??
