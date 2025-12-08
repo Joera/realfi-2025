@@ -103,7 +103,7 @@ export class LandingController {
             // console.log(surveySlug)
 
             const { sessionSig, signerAddress } = await this.lit.createSessionSignatures() 
-``
+
             let res: any  = await fetch(`${BACKEND}/api/create-survey`, {
                 method: 'POST',
                 headers: {
