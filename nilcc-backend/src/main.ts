@@ -4,28 +4,32 @@ import { randomUUID } from 'crypto';
 import { NilDBService } from './nildb.service.js';
 import { Did, Signer } from '@nillion/nuc';
 
-import { surveyResultsCollection } from './create_collection.js';
+import { createSurveyCollectionSchema } from './create_collection.js';
 
 import dotenv from 'dotenv';
 import { LitService } from './lit.service.js';
-import { getSurvey } from './contract.factory.js';
 // import { NilAIService } from './nillai.service.js';
 
 import { secp256k1 } from '@noble/curves/secp256k1.js';
 import { bytesToHex } from '@noble/hashes/utils.js';
+import { fromPinata } from './ipfs.factory.js';
+import { PinataService } from './pinata.service.js';
 
 dotenv.config();
+
+
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Store collection IDs (in production, use a real database)
-const collections = new Map();
+const PINATA_KEY = process.env.PINATA_KEY || "";
+const PINATA_SECRET = process.env.PINATA_SECRET || "";
 
 let nildb: any;
 let nilai: any;
 let lit = new LitService();
+let pinata = new PinataService(PINATA_KEY, PINATA_SECRET);
 
 // import * as nuc from '@nillion/nuc';
 // console.log('NUC exports:', Object.keys(nuc));
@@ -41,7 +45,7 @@ app.post('/api/create-survey', async (req, res) => {
     const litSessionSig = req.body.sessionSig;
     const signerAddress = req.body.signerAddress;
     const surveySlug = req.body.surveyName
-    const surveyCid = req.body.surveyCid;
+    const surveyConfig = req.body.surveyConfig;
 
     console.log("signer", signerAddress)
     console.log("session", litSessionSig)
@@ -51,32 +55,37 @@ app.post('/api/create-survey', async (req, res) => {
     const surveyOwner = Signer.fromPrivateKey(privateKeyHex, 'key');
     const surveyOwnerDid = await surveyOwner.getDid();
 
-
     const encryptedData = await lit.encrypt(
       privateKeyHex, 
       surveySlug
     );
-``
+
     // Builder delegeert collection creation aan owner
     const delegation = nildb.delegateCollectionCreation(surveyOwnerDid);
+    const ownerClient = await nildb.createSurveyOwner(surveyOwner);
 
-    const ownerClient = await nildb.createSurveyOwner(surveyOwner)
+    const encryptedSurveyConfig = await lit.encrypt(
+      privateKeyHex, 
+      surveySlug
+    );
 
-    // create custom collection !!! so we can actually use blind compute
-    // Per survey een eigen collection → isolatie tussen surveys
-    // Specifiek schema met %share velden → blind compute mogelijk
-    const collection = await ownerClient.createCollection(delegation, {
-    // schema hier...
-    });
+    const schema = createSurveyCollectionSchema(surveySlug, surveyConfig)
+    const collection = await ownerClient.createCollection(delegation, { schema });
 
+    const config = {
 
-    // Survey owner als collection owner → jij (builder) hoeft geen read access
-    // we willen toch een builder // die betaalt maar kan verder niks 
-
-    res.send({
       nilDid: surveyOwnerDid.toString(),
       encryptedNilKey: encryptedData,
-      collection: collection 
+      collectioniD: schema._id,
+      surveyConfig: encryptedSurveyConfig
+
+    }
+
+
+    const surveyCid = await pinata.uploadJSON(config);
+
+    res.send({
+       surveyCid
     })
 
 

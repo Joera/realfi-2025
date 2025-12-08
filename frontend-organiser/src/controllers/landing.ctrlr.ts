@@ -1,7 +1,6 @@
 // src/controllers/landing.controller.ts
 
 
-import '../components/create-survey-form.js';
 import '../components/survey-config-form.js';
 import LITCtrlr from '../lit.ctrlr.js';
 import { PinataService } from '../pinata.service.js';
@@ -96,11 +95,14 @@ export class LandingController {
 
         const surveySlug = slugify(event.detail.config.title);
 
-        const surveyCid = (await this.pinata.uploadJSON(event.detail.config)).IpfsHash;
+        // encrypt de vragen 
+        // maar aan wie ?  de builder? 
+
+       
 
         if(surveySlug) {
 
-            console.log(surveySlug, surveyCid)
+            console.log(surveySlug)
 
             const { sessionSig, signerAddress } = await this.lit.createSessionSignatures() 
 
@@ -113,13 +115,17 @@ export class LandingController {
                     sessionSig, 
                     signerAddress,
                     surveySlug,
-                    surveyCid
+                    surveyConfig: event.detail.config
                 })
             });
 
             console.log(res) 
 
             const { nilDid, encryptedNilKey} = res; 
+
+            const surveyCid = (await this.pinata.uploadJSON(event.detail.config)).IpfsHash;
+
+
             const contract = "0x6Ab10D4705041408b2ED049F12cc0606B735dF0e";
             const abi = [{"inputs":[{"internalType":"string","name":"surveyId","type":"string"},{"internalType":"string","name":"ipfsCid","type":"string"},{"internalType":"string","name":"didNil","type":"string"},{"internalType":"string","name":"encryptedNilKey","type":"string"}],"name":"createSurvey","outputs":[],"stateMutability":"nonpayable","type":"function"}]
 

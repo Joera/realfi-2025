@@ -1,9 +1,6 @@
 
 
-const NILCHAIN_URL = "http://rpc.testnet.nilchain-rpc-proxy.nilogy.xyz";
-const NILAUTH_URL = "https://nilauth.sandbox.app-cluster.sandbox.nilogy.xyz";
-const NILDB_NODES = "https://nildb-stg-n1.nillion.network,https://nildb-stg-n2.nillion.network,https://nildb-stg-n3.nillion.network";
-const BUILDER_PRIVATE_KEY = "c657ed5e26de39fe82b4fc006f68892234aed6f634fc7aba4ff6d9241eca488e";
+
 
 // Import Nillion SDK components
 import {
@@ -18,14 +15,20 @@ import {
   SecretVaultBuilderClient,
   SecretVaultUserClient,
 } from '@nillion/secretvaults';
-import { KeyExportOptions } from 'crypto';
+
+
+
+const NILCHAIN_URL = "http://rpc.testnet.nilchain-rpc-proxy.nilogy.xyz";
+const NILAUTH_URL = "https://nilauth.sandbox.app-cluster.sandbox.nilogy.xyz";
+const NILDB_NODES = "https://nildb-stg-n1.nillion.network,https://nildb-stg-n2.nillion.network,https://nildb-stg-n3.nillion.network";
+
 
 // Configuration
 const config = {
   NILCHAIN_URL: NILCHAIN_URL,
   NILAUTH_URL: NILAUTH_URL,
   NILDB_NODES: NILDB_NODES!.split(','),
-  BUILDER_PRIVATE_KEY: BUILDER_PRIVATE_KEY,
+
 };
 
 // Validate configuration
@@ -34,17 +37,18 @@ const config = {
 //   process.exit(1);
 // }
 
-const COLLECTION = "e51a6f82-06b5-438f-915b-6a3c0a97cd86";
 
 export class NilDBService {
 
+    builderKey: string;
     builderSigner: Signer;
     builderDid: Did | undefined;
     builder: any;
   
 
     constructor () {
-        this.builderSigner = Signer.fromPrivateKey(config.BUILDER_PRIVATE_KEY || "");
+        this.builderKey = process.env.BUILDER_PRIVATE_KEY || "";
+        this.builderSigner = Signer.fromPrivateKey(this.builderKey);
     }
 
 
@@ -54,7 +58,7 @@ export class NilDBService {
         // console.log('Builder DID:', this.builderDid);
 
         const payer = await PayerBuilder
-            .fromPrivateKey(config.BUILDER_PRIVATE_KEY || "")
+            .fromPrivateKey(this.builderKey)
             .chainUrl(NILCHAIN_URL)
             .build();
 
@@ -158,6 +162,16 @@ export class NilDBService {
 
     async tabulateSurveyResults(survey_id: string, keypair : any) {
 
+        // const radioSum = await blindfold.sum(responses.map(r => r.question_1765188018511));
+
+        // // SUM per checkbox optie → hoeveel kozen "rice"
+        // const riceCount = await blindfold.sum(responses.map(r => r.question_1765188080959_0));
+        // const pastaCount = await blindfold.sum(responses.map(r => r.question_1765188080959_1));
+
+        // // SUM scale → bereken gemiddelde client-side
+        // const scaleSum = await blindfold.sum(responses.map(r => r.question_1765188127232));
+        // const scaleAvg = scaleSum / responseCount;
+
  
         let ownerDid = keypair.toDid().toString();
         console.log('Owner DID:', ownerDid);
@@ -165,73 +179,73 @@ export class NilDBService {
         // moet ik hier nog initialiseren ???? 
         // mm wordt sowieso anders .. want we gaan weer blind compute gebruiken 
 
-        const records = await this.builder.findData({
-            collection: COLLECTION,
-            filter: { surveyId: survey_id },
-        });
+        // const records = await this.builder.findData({
+        //     collection: COLLECTION,
+        //     filter: { surveyId: survey_id },
+        // });
 
-        console.log(`Processing ${records.data.length} responses`);
+        // console.log(`Processing ${records.data.length} responses`);
 
-        // Group answers by question
-        const questionMap = new Map();
+        // // Group answers by question
+        // const questionMap = new Map();
 
-        records.data.forEach((record: any) => {
-            record.answers.forEach((answer: any) => {
-                const questionId = answer.questionId;
+        // records.data.forEach((record: any) => {
+        //     record.answers.forEach((answer: any) => {
+        //         const questionId = answer.questionId;
 
-                if (!questionMap.has(questionId)) {
-                    questionMap.set(questionId, {
-                        question: answer.questionText,
-                        type: answer.questionType,
-                        responses: []
-                    });
-                }
+        //         if (!questionMap.has(questionId)) {
+        //             questionMap.set(questionId, {
+        //                 question: answer.questionText,
+        //                 type: answer.questionType,
+        //                 responses: []
+        //             });
+        //         }
 
-                // Extract the actual answer value from %share
-                let answerValue = answer.answer;
+        //         // Extract the actual answer value from %share
+        //         let answerValue = answer.answer;
 
-                if (answerValue && typeof answerValue === 'object' && '%share' in answerValue) {
-                    answerValue = answerValue['%share'];
-                }
+        //         if (answerValue && typeof answerValue === 'object' && '%share' in answerValue) {
+        //             answerValue = answerValue['%share'];
+        //         }
 
-                // For checkbox, split comma-separated values
-                const values = typeof answerValue === 'string' && answerValue.includes(',')
-                    ? answerValue.split(',').map(v => v.trim())
-                    : [answerValue];
+        //         // For checkbox, split comma-separated values
+        //         const values = typeof answerValue === 'string' && answerValue.includes(',')
+        //             ? answerValue.split(',').map(v => v.trim())
+        //             : [answerValue];
 
-                questionMap.get(questionId).responses.push(...values);
-            });
-        });
+        //         questionMap.get(questionId).responses.push(...values);
+        //     });
+        // });
 
-        // Tabulate results for each question
-        const tabulated = Array.from(questionMap.entries()).map(([questionId, data]) => {
-            // Count frequency of each answer
-            const frequency = data.responses.reduce((acc: any, value: any) => {
-                const key = String(value);
-                acc[key] = (acc[key] || 0) + 1;
-                return acc;
-            }, {});
+        // // Tabulate results for each question
+        // const tabulated = Array.from(questionMap.entries()).map(([questionId, data]) => {
+        //     // Count frequency of each answer
+        //     const frequency = data.responses.reduce((acc: any, value: any) => {
+        //         const key = String(value);
+        //         acc[key] = (acc[key] || 0) + 1;
+        //         return acc;
+        //     }, {});
 
-            // Calculate percentages
-            const totalResponses = records.data.length;
-            const results = Object.entries(frequency)
-                .map(([answer, count]) => ({
-                    answer,
-                    count,
-                    percentage: Math.round((count as number) / totalResponses * 100)
-                }))
-                .sort((a: any, b: any) => b.count - a.count);
+        //     // Calculate percentages
+        //     const totalResponses = records.data.length;
+        //     const results = Object.entries(frequency)
+        //         .map(([answer, count]) => ({
+        //             answer,
+        //             count,
+        //             percentage: Math.round((count as number) / totalResponses * 100)
+        //         }))
+        //         .sort((a: any, b: any) => b.count - a.count);
 
-            return {
-                question: data.question,
-                type: data.type,
-                totalResponses,
-                results
-            };
-        });
+        //     return {
+        //         question: data.question,
+        //         type: data.type,
+        //         totalResponses,
+        //         results
+        //     };
+        // });
 
-        console.log('Tabulation complete');
-        return tabulated;
+        // console.log('Tabulation complete');
+        // return tabulated;
 
         // console.log(`Tabulating results for survey: ${survey_id}`);
         
@@ -487,17 +501,7 @@ export class NilDBService {
     // }
         
 
-    async querySurvey (survey_id: string) {
-
-        // console.log("builder", this.did)
-
-        const records = await this.builder.findData({
-            collection: COLLECTION,
-            filter: {}, // Empty filter returns all records
-        });
-
-       console.log("records", records.data)
-
+   
       
 //         // const query = {
 //         //     _id: randomUUID(),
@@ -526,66 +530,6 @@ export class NilDBService {
 //     ]
 //   };
 
-//   console.log('Creating query with:', JSON.stringify(query, null, 2));
-
-//   try {
-//     const createResult = await this.builder.createQuery(query);
-//     console.log('Query created successfully:', createResult);
-//   } catch (error) {
-//     console.error('Query creation failed');
-//     console.error('Error message:', error.message);
-//     console.error('Error cause:', JSON.stringify(error.cause, null, 2));
-//     console.error('Error body:', JSON.stringify(error.cause?.body, null, 2));
-//     throw error;
-//   }
-
-//   // Run the query
-//   const runResponse = await this.builder.runQuery({
-//     _id: queryId,
-//     variables: {}
-//   } as RunQueryRequest);
-
-//   console.log('Run response:', runResponse);
-
-//   // Extract run IDs from each node
-//   const runIds = Object.fromEntries(
-//     Object.entries(runResponse)
-//       .filter(([_, r]: [any, any]) => r?.data)
-//       .map(([nodeId, r]: [any, any]) => [nodeId, r.data])
-//   );
-
-//   console.log('Run IDs:', runIds);
-
-//   // Poll for results
-//   for (let i = 0; i < 10; i++) {
-//     await new Promise((resolve) => setTimeout(resolve, i < 3 ? 1000 : 3000));
-
-//     const resultsResponse = await this.builder.readQueryRunResults(runIds);
-    
-//     console.log(`Poll ${i + 1}:`, JSON.stringify(resultsResponse, null, 2));
-
-//     const allResponses = Object.values(resultsResponse).filter((r: any) => r?.data);
-    
-//     const completed : any = allResponses.filter((r: any) => r.data.status === 'complete');
-//     const pending = allResponses.some((r: any) => r.data.status === 'pending');
-//     const errors: any[] = allResponses.filter((r: any) => r.data.status === 'error');
-
-//     if (errors.length > 0) {
-//       console.error('Query execution errors:', JSON.stringify(errors, null, 2));
-//       throw new Error('Query failed: ' + JSON.stringify(errors[0].data.errors));
-//     }
-
-//     if (completed.length > 0 && !pending) {
-//       const results = completed[0].data.result;
-//       console.log('Query completed successfully:', results);
-//       return results;
-//     }
-//   }
-  
-//   throw new Error('Query timeout after 10 attempts');
-
-
-}
 
    
 }
