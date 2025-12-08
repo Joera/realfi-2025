@@ -1,8 +1,3 @@
-
-
-
-
-// Import Nillion SDK components
 import {
   Builder,
   Signer,
@@ -15,6 +10,7 @@ import {
   SecretVaultBuilderClient,
   SecretVaultUserClient,
 } from '@nillion/secretvaults';
+import { SurveyConfig } from './types';
 
 
 
@@ -28,7 +24,6 @@ const config = {
   NILCHAIN_URL: NILCHAIN_URL,
   NILAUTH_URL: NILAUTH_URL,
   NILDB_NODES: NILDB_NODES!.split(','),
-
 };
 
 // Validate configuration
@@ -67,7 +62,6 @@ export class NilDBService {
             payer: payer,
         });
 
-
         this.builder = await SecretVaultBuilderClient.from({
             signer: this.builderSigner,  // was: keypair
             nilauthClient: nilauthClient,
@@ -90,37 +84,6 @@ export class NilDBService {
         );
         console.log('Subscription status:', status);
 
-    // Try to register
-        // try {
-        //     await this.builder.register({
-        //         did: this.builderDid,
-        //         name: 'S3ntiment v1',
-        //     });
-        //     console.log('✅ Builder registered successfully');
-        // } catch (registerError: any) {
-        //     // console.log('Full error:', JSON.stringify(registerError, null, 2));
-            
-        //     // Check if it's a duplicate key error (E11000 is MongoDB duplicate key error)
-        //     let isDuplicate = false;
-            
-        //     if (Array.isArray(registerError)) {
-        //         isDuplicate = registerError.some((err: any) => {
-        //             const errorStr = JSON.stringify(err);
-        //             return errorStr.includes('E11000') || 
-        //                 errorStr.includes('duplicate key') ||
-        //                 errorStr.includes('11000');
-        //         });
-        //     }
-
-        //     if (isDuplicate) {
-        //         console.log('✅ Builder already registered (duplicate key detected)');
-        //         // Don't throw - this is expected and fine
-        //     } else {
-        //         // If it's not a duplicate error, throw it
-        //         console.error('❌ Registration failed with unexpected error');
-        //         throw registerError;
-        //     }
-        // }
     }
 
     async createSurveyOwner(surveyOwner: Signer) {
@@ -133,32 +96,28 @@ export class NilDBService {
     }
 
 
-    async delegateToSurveyOwner(ownerDid: Did) {
-        const delegation = await Builder.delegationFrom(this.builder.rootToken)
-            .audience(ownerDid)
-            .expiresIn(3600 * 1000)
-            .sign(this.builderSigner);
+    // async delegateToSurveyOwner(ownerDid: Did) {
+    //     const delegation = await Builder.delegationFrom(this.builder.rootToken)
+    //         .audience(ownerDid)
+    //         .expiresIn(3600 * 1000)
+    //         .sign(this.builderSigner);
             
-        return delegation;
-    }
+    //     return delegation;
+    // }
 
-    async createCollection (collection: any) {
+    async createSurveyCollection(schema: any) {
 
-        try {
-            const createResults = await this.builder.createCollection(collection);
-            console.log(createResults);
-            console.log(
-                '✅ Owned collection created on',
-                Object.keys(createResults).length,
-                'nodes'
-            );
-        } catch (error) {
-
-            console.log(error)
-            console.error('❌ Collection creation failed:', error.message);
-            // Handle testnet infrastructure issues gracefully
+        try { 
+            const result = await this.builder.createCollection(schema);
+            console.log("Collection created", schema._id)
+            return result
+        } catch (error: any) {
+            console.log(JSON.stringify(error));
+            return undefined
         }
     }
+
+
 
     async tabulateSurveyResults(survey_id: string, keypair : any) {
 

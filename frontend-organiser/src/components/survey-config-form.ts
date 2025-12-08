@@ -427,6 +427,8 @@ class SurveyConfigForm extends HTMLElement {
         const description = (this.shadowRoot?.querySelector('#survey-description') as HTMLTextAreaElement)?.value
         const multisig = (this.shadowRoot?.querySelector('#multisig') as HTMLTextAreaElement)?.value
 
+        console.log(multisig);
+
         const config = {
             title,
             description,

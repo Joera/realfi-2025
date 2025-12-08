@@ -44,7 +44,7 @@ app.post('/api/create-survey', async (req, res) => {
 
     const litSessionSig = req.body.sessionSig;
     const signerAddress = req.body.signerAddress;
-    const surveySlug = req.body.surveyName
+    const surveySlug = req.body.surveySlug;
     const surveyConfig = req.body.surveyConfig;
 
     console.log("signer", signerAddress)
@@ -61,8 +61,8 @@ app.post('/api/create-survey', async (req, res) => {
     );
 
     // Builder delegeert collection creation aan owner
-    const delegation = nildb.delegateCollectionCreation(surveyOwnerDid);
-    const ownerClient = await nildb.createSurveyOwner(surveyOwner);
+    // const delegation = nildb.delegateCollectionCreation(surveyOwnerDid);
+    // const ownerClient = await nildb.createSurveyOwner(surveyOwner);
 
     const encryptedSurveyConfig = await lit.encrypt(
       privateKeyHex, 
@@ -70,7 +70,7 @@ app.post('/api/create-survey', async (req, res) => {
     );
 
     const schema = createSurveyCollectionSchema(surveySlug, surveyConfig)
-    const collection = await ownerClient.createCollection(delegation, { schema });
+    await nildb.createSurveyCollection(schema)
 
     const config = {
 
@@ -82,7 +82,7 @@ app.post('/api/create-survey', async (req, res) => {
     }
 
 
-    const surveyCid = await pinata.uploadJSON(config);
+    const surveyCid = (await pinata.uploadJSON(config)).IpfsHash;
 
     res.send({
        surveyCid

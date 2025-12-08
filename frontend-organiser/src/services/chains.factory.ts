@@ -26,7 +26,7 @@ export const getChainId = (chain: string) => {
       case 'mainnet':
           return 1;
       case 'base':
-          return 8543;
+          return 8453;
       default:
           return 1;
     }
@@ -60,6 +60,8 @@ export const getRPCUrl = (chainId: number): string => {
       break;
 
   }
+
+  console.log(rpc)
 
   return rpc;
 };
