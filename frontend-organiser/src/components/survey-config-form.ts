@@ -202,6 +202,11 @@ class SurveyConfigForm extends HTMLElement {
 
             <button class="btn-primary" id="add-question">Add Question</button>
 
+            <div>
+                <label for="batch-size">Nr of invitations:</label>
+                <input id="batch-size" type="text" placeholder="Enter number" required />
+            </div>
+
             <div class="form-actions">
                 <button class="btn-primary" id="create-survey">Create survey</button>
             </div>
@@ -426,14 +431,16 @@ class SurveyConfigForm extends HTMLElement {
         const title = (this.shadowRoot?.querySelector('#survey-title') as HTMLInputElement)?.value
         const description = (this.shadowRoot?.querySelector('#survey-description') as HTMLTextAreaElement)?.value
         const multisig = (this.shadowRoot?.querySelector('#multisig') as HTMLTextAreaElement)?.value
+        const batchSize = (this.shadowRoot?.querySelector('#batch-size') as HTMLTextAreaElement)?.value
 
-        console.log(multisig);
+        console.log(multisig, batchSize);
 
         const config = {
             title,
             description,
             multisig,
-            questions: this.questions
+            batchSize,
+            questions: this.questions,
         }
 
         const jsonOutput = this.shadowRoot?.querySelector('#json-output') as HTMLElement

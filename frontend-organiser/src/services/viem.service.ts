@@ -34,6 +34,14 @@ export class ViemService {
 
     }
 
+    async signMessage(
+        messageHash: string
+    ) {
+        return await this.walletClient.signMessage({
+            message: { raw: messageHash }
+        })
+    }
+
     async genericTx(
         address: string,
         abi: any,

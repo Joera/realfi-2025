@@ -22,7 +22,7 @@ async function main() {
 
   try {
     console.log("Getting contract factory...");
-    const SurveyStore = await hre.ethers.getContractFactory("SurveyStore");
+    const SurveyStore = await hre.ethers.getContractFactory("S3ntimentSurveyStore");
     
     console.log("Deploying contract...");
     const surveyStore = await SurveyStore.deploy();
@@ -58,9 +58,6 @@ async function main() {
     
     console.log("✅ Contract bytecode confirmed (", code.length, "bytes)");
 
-    console.log("\n🧪 Testing contract interaction...");
-    const exists = await surveyStore.surveyExists(deployer.address, "test");
-    console.log("✅ Contract is functional! Test query returned:", exists);
 
     console.log("\nWaiting for 5 block confirmations for verification...");
     await deployTx.wait(5);

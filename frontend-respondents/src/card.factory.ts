@@ -1,3 +1,4 @@
+import { hashMessage, keccak256, recoverAddress, recoverMessageAddress, toHex, verifyMessage } from "viem"
 
 
 export interface CardData {
@@ -5,14 +6,14 @@ export interface CardData {
   batchId: string
   signature: string
   surveyOwner: string
-  surveySlug: string
+  surveyId: string
 }
 
 /**
  * Parse card data from URL query parameters
  * Expected format: https://s3ntiment.eth.link?s=secret&b=batchId&sig=signature
  */
-export const parseCardURL = (): CardData | null => {
+export const parseCardURL = async (): Promise<CardData | null> => {
   try {
     // Get current URL
     const url = new URL(window.location.href)
@@ -33,13 +34,22 @@ export const parseCardURL = (): CardData | null => {
       })
       return null
     }
-    
+
+    const msg: string = `${decodeURIComponent(nullifier)}|${decodeURIComponent(batchId)}`;
+    const msgHash = keccak256(toHex(msg));
+    const s: any = decodeURIComponent(signature) as `0x${string}` 
+
+    const recoveredAddress = await recoverMessageAddress({
+      message: { raw: msgHash },
+      signature: s
+    });
+
     return {
       nullifier: decodeURIComponent(nullifier),
       batchId: decodeURIComponent(batchId),
       signature: decodeURIComponent(signature),
-      surveyOwner: decodeURIComponent(surveyId).split("-")[0],
-      surveySlug: decodeURIComponent(surveyId).split("-")[1]
+      surveyOwner: recoveredAddress,
+      surveyId: decodeURIComponent(surveyId)
     }
     
   } catch (error) {

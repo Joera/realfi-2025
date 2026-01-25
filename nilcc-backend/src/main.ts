@@ -14,6 +14,7 @@ import { secp256k1 } from '@noble/curves/secp256k1.js';
 import { bytesToHex } from '@noble/hashes/utils.js';
 import { fromPinata } from './ipfs.factory.js';
 import { PinataService } from './pinata.service.js';
+import { accsForSurveyOwner, accsForUser } from './accs.js';
 
 dotenv.config();
 
@@ -44,7 +45,7 @@ app.post('/api/create-survey', async (req, res) => {
 
     const litSessionSig = req.body.sessionSig;
     const signerAddress = req.body.signerAddress;
-    const surveySlug = req.body.surveySlug;
+    const surveyId = req.body.surveyId;
     const surveyConfig = req.body.surveyConfig;
 
     console.log("signer", signerAddress)
@@ -57,7 +58,8 @@ app.post('/api/create-survey', async (req, res) => {
 
     const encryptedData = await lit.encrypt(
       privateKeyHex, 
-      surveySlug
+      surveyId,
+      accsForSurveyOwner(surveyId)
     );
 
     // Builder delegeert collection creation aan owner
@@ -66,15 +68,16 @@ app.post('/api/create-survey', async (req, res) => {
 
     const encryptedSurveyConfig = await lit.encrypt(
       privateKeyHex, 
-      surveySlug
+      surveyId,
+      accsForUser() 
     );
 
-    const schema = createSurveyCollectionSchema(surveySlug, surveyConfig)
+    const schema = createSurveyCollectionSchema(surveyId, surveyConfig)
     await nildb.createSurveyCollection(schema)
 
     const config = {
 
-      nilDid: surveyOwnerDid.toString(),
+      nilDid: surveyOwnerDid,
       encryptedNilKey: encryptedData,
       collectioniD: schema._id,
       surveyConfig: encryptedSurveyConfig

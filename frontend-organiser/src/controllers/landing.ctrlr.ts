@@ -1,16 +1,20 @@
 // src/controllers/landing.controller.ts
 
 
+import { bytesToHex } from 'viem';
 import '../components/survey-config-form.js';
 import LITCtrlr from '../lit.ctrlr.js';
 import { PinataService } from '../pinata.service.js';
+import { generateCardSecrets } from '../services/invitation.factory.js';
 import { PermissionlessSafeService } from '../services/permissionless.safe.service.js';
 import { store } from '../services/store.service.js';
 import { ViemService } from '../services/viem.service.js';
+import { randomBytes } from '../utils/random.js';
 import { reactive } from '../utils/reactive.js';
 import slugify  from 'slugify';
 
 const BACKEND = "http://localhost:8080"; 
+const SURVEYSTORE = "0x4CAfD69E3D7a9c37beCbFaF3D3D5C542F7b5fF6c"
 
 
 export class LandingController {
@@ -46,7 +50,6 @@ export class LandingController {
       switch (currentStep) {
         case 'register':
           return `
-    
             <survey-config-form></survey-config-form>
           `;
         
@@ -95,34 +98,33 @@ export class LandingController {
 
       // console.log(event.detail.config)
 
-        const surveySlug = slugify(event.detail.config.title);
+      const randomHex = bytesToHex(randomBytes(4));
+      const surveyId = `${this.viem.walletClient.account.address.slice(0, 8)}${Date.now()}${randomHex}`; 
 
-        if(surveySlug) {
+      const { sessionSig, signerAddress } = await this.lit.createSessionSignatures() 
+                                                              
+      let res: any  = await fetch(`${BACKEND}/api/create-survey`, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json', 
+          },
+          body: JSON.stringify({ 
+              sessionSig, 
+              signerAddress,
+              surveyId,
+              surveyConfig: event.detail.config
+          })
+      });
 
-            const { sessionSig, signerAddress } = await this.lit.createSessionSignatures() 
-                                                                 
-            let res: any  = await fetch(`${BACKEND}/api/create-survey`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json', 
-                },
-                body: JSON.stringify({ 
-                    sessionSig, 
-                    signerAddress,
-                    surveySlug,
-                    surveyConfig: event.detail.config
-                })
-            });
+      const info = await res.json();
 
-            const info = await res.json();
+      console.log(info)
 
-            console.log(info)
+      // check if combination owner + survey title was used before ! 
 
-            // check if survey title hwas used before ! 
-
-            const contract = "0x844CB8a1C250782c4D9d62454B4443e240c8FEE7"
-            const abi = [{"inputs":[{"internalType":"string","name":"surveyId","type":"string"},{"internalType":"string","name":"ipfsCid","type":"string"}],"name":"createSurvey","outputs":[],"stateMutability":"nonpayable","type":"function"}]
-            const args = [surveySlug, info.surveyCid.toString()]
+     
+      const abi = [{"inputs":[{"internalType":"string","name":"surveyId","type":"string"},{"internalType":"string","name":"ipfsCid","type":"string"}],"name":"createSurvey","outputs":[],"stateMutability":"nonpayable","type":"function"}]
+      const args = [surveyId, info.surveyCid.toString()]
 
 
 
@@ -137,8 +139,19 @@ export class LandingController {
 
             // } else {
 
-            const receipt = await this.viem.genericTx(contract, abi, 'createSurvey', args)
-            console.log(receipt)
+      const receipt = await this.viem.genericTx(SURVEYSTORE, abi, 'createSurvey', args)
+      console.log(receipt)
+
+      const batchId = "original";
+      // create qr codes 
+      await generateCardSecrets(this.viem, batchId, event.detail.config.batchSize, surveyId);
+
+      const test = await generateCardSecrets(this.viem, "test", 1, surveyId);
+
+          // include one qr code for testing .. excluded from not counted , no nullifier , batchid =test 
+      console.log(test)
+
+
             // }
             
 
@@ -148,7 +161,7 @@ export class LandingController {
             // fund nilKey, pkp ? 
 
             // how to keep track of my surveys ? zonder frontend 
-        }
+
     });
   }
 }

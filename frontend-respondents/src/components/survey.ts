@@ -6,7 +6,9 @@ import { colourStyles } from '../shared-colour-styles.js'
 import { buttonStyles } from '../shared-button-styles'
 import { store } from '../services/store.service';
 import { fromPinata } from "../ipfs.factory";
-import { SurveyAnswer, SurveyConfig, SurveyQuestion } from "../types";
+import { SurveyAnswer, SurveyConfig, SurveyConfigRaw, SurveyQuestion } from "../types";
+import LITCtrlr from "../services/lit.ctrlr";
+import { CardData } from "../card.factory";
 
 
 
@@ -16,22 +18,35 @@ class Survey extends HTMLElement {
   private answers: SurveyAnswer[] = []
   private currentStep = 0
   private initialized = false // Add flag
+  lit: any
   previousDocument: any;
 
   constructor() {
     super()
     this.attachShadow({ mode: 'open' })
     this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, colourStyles, buttonStyles]
+    this.lit = new LITCtrlr();
     
   } 
 
-  async init() {
+  async init(card: CardData) {
+
+    this.lit.init(pk)
 
     const configAttr = this.getAttribute('config');
     this.slug = this.getAttribute('slug') || undefined;
-    this.config = configAttr ? JSON.parse(await fromPinata(configAttr)) : minaSurveyConfig;
-    this.initialized = true // Set flag when dones
+    const configRaw: SurveyConfigRaw = configAttr ? JSON.parse(await fromPinata(configAttr)) : minaSurveyConfig;
+    console.log(configRaw);
+
+    const accs = this.canDecryptConfig(card.nullifier, card.batchId) 
+    this.lit.decrypt()
+    
+    this.initialized = true // Set flag when done
   
+  }
+
+  private canDecryptConfig(nullifier: string, batchId: string) {
+    
   }
 
   private renderLoading() {

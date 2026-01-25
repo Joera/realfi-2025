@@ -39,8 +39,8 @@
       ]
     },
     "/home/joera/Documents/s3ntiment/cards+contracts/contracts/survey-store.sol": {
-      "lastModificationDate": 1764964641462,
-      "contentHash": "6bf8a4834d1239558e1cc67396674a76",
+      "lastModificationDate": 1765831911239,
+      "contentHash": "26e1a4b3e685f63cf531f9c47342919b",
       "sourceName": "contracts/survey-store.sol",
       "solcConfig": {
         "version": "0.8.24",
@@ -72,7 +72,7 @@
         "^0.8.0"
       ],
       "artifacts": [
-        "SurveyStore"
+        "S3ntimentSurveyStore"
       ]
     }
   }

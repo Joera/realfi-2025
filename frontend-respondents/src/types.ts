@@ -15,6 +15,19 @@ export interface SurveyAnswer {
   scaleRange?: { min: number; max: number; minLabel: string; maxLabel: string }
 }
 
+export interface LitEncrypted {
+  ciphertext: string
+  dataToEncryptHash: string
+  metadata: any
+}
+
+export interface SurveyConfigRaw {
+  nilDid: any,
+  encryptedNilKey : LitEncrypted,
+  collectioniD: string
+  surveyConfig: LitEncrypted
+}
+
 export interface SurveyConfig {
   title: string
   description?: string

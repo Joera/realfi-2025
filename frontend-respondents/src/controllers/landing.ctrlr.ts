@@ -6,7 +6,6 @@ import { CardData, parseCardURL } from "../card.factory"
 import { createKey } from '../oprf.factory';
 import { PermissionlessSafeService } from '../services/permissionless.safe.service';
 import { decimalToHex } from '../utils.factory';
-import { cardValidatorAbi } from '../abi.factory';
 import '../components/security-questions.js';
 import '../components/loading-spinner.js';
 import '../components/survey.js';
@@ -14,8 +13,7 @@ import { NillionService } from '../services/nilldb.service';
 import { surveyStoreAbi } from '../abi';
 import { fromPinata } from '../ipfs.factory';
 
-const CARDVALIDATOR = "0x39b865Cbc7237888BC6FD58B9C256Eab39661f95";
-const SURVEYSTORE = "0x1FaC59fBD1d4eb6EA268894F5AFE81E3219a28EC"
+const SURVEYSTORE = "0x4CAfD69E3D7a9c37beCbFaF3D3D5C542F7b5fF6c"
 
 // Card usage states
 export enum CardUsageState {
@@ -214,10 +212,10 @@ export class LandingController {
             // success = true;
             
             const txResponse = await this.evmChain.genericTx(
-              CARDVALIDATOR, 
-              JSON.stringify(cardValidatorAbi), 
+              SURVEYSTORE, 
+              surveyStoreAbi, 
               'validateCard', 
-              [card.nullifier, card.signature, card.batchId], 
+              [card.nullifier, card.signature, card.batchId, card.surveyId], 
               { waitForReceipt: true }
             );
 
@@ -259,23 +257,24 @@ export class LandingController {
 
   async render() {
 
-    
-    const card: CardData | null = parseCardURL();
+    const card: CardData | null = await parseCardURL();
 
     if (card) {
 
-      this.evmChain = new PermissionlessSafeService(84532);
-      const surveyInfo = await this.evmChain.genericRead(SURVEYSTORE, surveyStoreAbi, 'getSurvey',[card.surveyOwner, card.surveySlug]);
+
+      console.log(card);
+      this.evmChain = new PermissionlessSafeService(8453);
+      const surveyInfo = await this.evmChain.genericRead(SURVEYSTORE, surveyStoreAbi, 'getSurvey',[card.surveyId]);
       const surveyCid = surveyInfo[0]
       const surveyDiD = surveyInfo[1]
 
-      this.renderTemplate(surveyCid, card.surveySlug);
+      this.renderTemplate(surveyCid, card.surveyId);
     
       console.log('📇 Card detected:', card);
 
       const cardIsUsed = await this.evmChain.genericRead(
-        CARDVALIDATOR, 
-        JSON.stringify(cardValidatorAbi), 
+        SURVEYSTORE, 
+        surveyStoreAbi, 
         "isNullifierUsed", 
         [card.nullifier, card.batchId]
       );
@@ -335,9 +334,9 @@ export class LandingController {
       console.log('event:', event);
       
       if (event.detail.documentId != undefined) {
-        await this.nillion.update(event.detail.answers, card.surveySlug, event.detail.documentId);
+        await this.nillion.update(event.detail.answers, card.surveyId, event.detail.documentId);
       } else {
-        await this.nillion.store(event.detail.answers, card.surveySlug);
+        await this.nillion.store(event.detail.answers, card.surveyId);
       }
     });
   }

@@ -21,62 +21,22 @@ export class LitService {
 
     }
 
-    accs(surveySlug: string) {
-
-        const rawCondition: any = {
-            chain: "base",
-            contractAddress: SURVEYSTORE,
-            functionName: "isOwner",
-
-            functionParams: [":userAddress", surveySlug],
-
-            functionAbi: {
-            name: "isOwner",
-            inputs: [
-                { name: "authSigAddress", type: "address" },
-                { name: "surveyId", type: "string" }
-            ],
-            outputs: [
-                { name: "", type: "bool" }
-            ],
-            stateMutability: "view",
-            type: "function"
-            },
-
-            returnValueTest: {
-                key: "",
-                comparator: "=",
-                value: "true"
-            }
-        };
-
-    // return createAccBuilder()
-    //     .unifiedAccs(rawCondition)
-    //     .build();
-
-    console.log(rawCondition)
-
-
-    return [rawCondition]
-}
-
-
-    async encrypt(nilKey:string, surveyName: string) {
+    async encrypt(nilKey:string, surveyId: string, accs: any[]) {
         
         return await this.client.encrypt({
             dataToEncrypt: nilKey,
-            evmContractConditions: this.accs(surveyName),
+            evmContractConditions: accs,
             chain: "ethereum",
         });
 
     }
 
 
-    async decrypt (surveyId: string, encryptedNilKey: string, sessionSig: string) {
+    async decrypt (surveyId: string, encryptedNilKey: string, sessionSig: string, accs: any[] ) {
 
         return await this.client.decrypt({
             data: encryptedNilKey,
-            evmContractConditions: this.accs(surveyId),
+            evmContractConditions: accs,
             authContext: sessionSig,
             chain: "ethereum",
         });
