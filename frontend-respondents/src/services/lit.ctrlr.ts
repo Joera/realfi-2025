@@ -29,6 +29,7 @@ export default class LITCtrlr {
         );
 
         return this.account.address;
+
     }
 
 
@@ -38,6 +39,7 @@ export default class LITCtrlr {
         
         const authData = await ViemAccountAuthenticator.authenticate(this.account);
     
+
         const authManager = createAuthManager({
             storage: storagePlugins.localStorage({
                 appName: "s3ntiment",
@@ -66,4 +68,16 @@ export default class LITCtrlr {
             signerAddress: this.account.address
         }
     }
+
+    async decrypt (encryptedData: string, sessionSig: string, accs: any[] ) {
+
+        return await this.litClient.decrypt({
+            data: encryptedData,
+            evmContractConditions: accs,
+            authContext: sessionSig,
+            chain: "ethereum",
+        });
+    }
+
+
 }

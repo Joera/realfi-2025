@@ -261,7 +261,6 @@ export class LandingController {
 
     if (card) {
 
-
       console.log(card);
       this.evmChain = new PermissionlessSafeService(8453);
       const surveyInfo = await this.evmChain.genericRead(SURVEYSTORE, surveyStoreAbi, 'getSurvey',[card.surveyId]);

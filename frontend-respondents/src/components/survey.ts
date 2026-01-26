@@ -31,7 +31,7 @@ class Survey extends HTMLElement {
 
   async init(card: CardData) {
 
-    this.lit.init(pk)
+    // this.lit.init(pk)
 
     const configAttr = this.getAttribute('config');
     this.slug = this.getAttribute('slug') || undefined;
