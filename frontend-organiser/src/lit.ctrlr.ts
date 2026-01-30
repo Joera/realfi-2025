@@ -1,14 +1,7 @@
-import { nagaDev, nagaTest } from "@lit-protocol/networks";
+import { nagaTest } from "@lit-protocol/networks";
 import { createLitClient } from "@lit-protocol/lit-client";
 import { privateKeyToAccount } from 'viem/accounts';
-import { ViemAccountAuthenticator } from '@lit-protocol/auth';
 import { createAuthManager, storagePlugins } from "@lit-protocol/auth";
-
-const pkpInfo = {
-    ethAddress:  "0x9924a83B7F50d90d84168AAA35Bc026412727ce1",
-    pubkey: "0x04ca59c3465e1eb8d6787fdca6d9016ffec8d44333fce8f4d17f6ab46561d489cdeaa0ef85445883d04de265c4bc4605ed0361d62087b8bc4658f2269501f802d0",
-    tokenId:  "75713901035138599600471962197329332899902656329793128226708056407031104421993"
-}
 
 
 export default class LITCtrlr {
@@ -28,16 +21,15 @@ export default class LITCtrlr {
             private_key as `0x${string}`
         );
 
+        console.log(this.account);
+
         return this.account.address;
     }
 
 
     async createSessionSignatures() {
+        if (!this.account) throw 'lit client not ready';
 
-        if (this.account == undefined) throw 'lit client not ready';
-        
-        const authData = await ViemAccountAuthenticator.authenticate(this.account);
-    
         const authManager = createAuthManager({
             storage: storagePlugins.localStorage({
                 appName: "s3ntiment",
@@ -45,24 +37,23 @@ export default class LITCtrlr {
             }),
         });
 
-        const authContext = await authManager.createPkpAuthContext({
-            authData: authData, 
-            pkpPublicKey: pkpInfo.pubkey,
+        const authContext = await authManager.createEoaAuthContext({
+            litClient: this.litClient,
+            config: {
+                account: this.account, // ← The Viem account goes here
+            },
             authConfig: {
                 resources: [
-                ["pkp-signing", "*"],
-                ["lit-action-execution", "*"],
+                    ["lit-action-execution", "*"],
                 ],
                 expiration: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
-                statement: "",
                 domain: window.location.origin,
+                statement: "", // Optional but good to include
             },
-            litClient: this.litClient,
         });
 
         return {
-            
-            sessionSig: authContext.authData,
+            sessionSigs: authContext.authData,
             signerAddress: this.account.address
         }
     }

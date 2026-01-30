@@ -42,14 +42,16 @@ export class NillionService {
     nilauth: any;
     builderDid: any;
  
-    constructor (private_key: string) { 
+    constructor () { 
+
+        
+    }
+
+    async init(private_key: string) {
 
         this.userKeypair = Keypair.from(private_key);
         const userDid = this.userKeypair.toDid().toString();
         console.log('User DID:', userDid);
-    }
-
-    async init() {
 
         this.user = await SecretVaultUserClient.from({
             baseUrls: config.NILDB_NODES,

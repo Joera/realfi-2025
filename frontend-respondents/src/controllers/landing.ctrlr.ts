@@ -12,6 +12,7 @@ import '../components/survey.js';
 import { NillionService } from '../services/nilldb.service';
 import { surveyStoreAbi } from '../abi';
 import { fromPinata } from '../ipfs.factory';
+import { IServices } from '../services/container';
 
 const SURVEYSTORE = "0x4CAfD69E3D7a9c37beCbFaF3D3D5C542F7b5fF6c"
 
@@ -33,8 +34,14 @@ export interface CardUsageContext {
 export class LandingController {
   private reactiveViews: any[] = [];
   evmChain: any;
-  nillion: any;
+  // nillion: any;
   documentId: any;
+  services: IServices
+
+  constructor(services: IServices) {
+
+    this.services = services;
+  }
 
   private detectCardUsageState(card: CardData, cardIsUsed: boolean): CardUsageContext {
     const storedNullifier = store.user.nullifier;
@@ -82,8 +89,12 @@ export class LandingController {
       <div id="landing-content"></div>
     `;
 
+    console.log("yo")
+
     const view = reactive('#landing-content', () => {
       const { currentStep, cardUsageState } = store.ui;
+
+      console.log(currentStep);
 
       switch (currentStep) {
         case 'nocard':
@@ -197,9 +208,9 @@ export class LandingController {
           store.setUser({ signerAddress });
           store.persistUser();
           
-          this.nillion = new NillionService(hexKey.slice(2)); 
-          await this.nillion.init();
-          store.setService('nillion', this.nillion); // Store it
+          // this.nillion = new NillionService(); 
+          await this.services.nillion.init(hexKey.slice(2));
+          store.setService('nillion', this.services.nillion); // Store it // necessary ??? 
           
           const evmSafeAddress = await this.evmChain.connectToFreshSafe(
             store.user.batchId || card.batchId
@@ -263,9 +274,9 @@ export class LandingController {
 
       console.log(card);
       this.evmChain = new PermissionlessSafeService(8453);
-      const surveyInfo = await this.evmChain.genericRead(SURVEYSTORE, surveyStoreAbi, 'getSurvey',[card.surveyId]);
-      const surveyCid = surveyInfo[0]
-      const surveyDiD = surveyInfo[1]
+      // const surveyInfo = await this.evmChain.genericRead(SURVEYSTORE, surveyStoreAbi, 'getSurvey',[card.surveyId]);
+      const surveyCid = "" // surveyInfo[0]
+      // const surveyDiD = surveyInfo[1]
 
       this.renderTemplate(surveyCid, card.surveyId);
     
@@ -333,9 +344,9 @@ export class LandingController {
       console.log('event:', event);
       
       if (event.detail.documentId != undefined) {
-        await this.nillion.update(event.detail.answers, card.surveyId, event.detail.documentId);
+        await this.services.nillion.update(event.detail.answers, card.surveyId, event.detail.documentId);
       } else {
-        await this.nillion.store(event.detail.answers, card.surveyId);
+        await this.services.nillion.store(event.detail.answers, card.surveyId);
       }
     });
   }

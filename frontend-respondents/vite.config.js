@@ -1,7 +1,10 @@
 // vite.config.js
 import { defineConfig } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import { fileURLToPath } from 'url';
+import path from 'path';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   root: '.',
@@ -16,12 +19,13 @@ export default defineConfig({
         main: './index.html'
       }
     },
-    // Copy WASM files to output
-    assetsInlineLimit: 0 // Don't inline WASM files
+    assetsInlineLimit: 0,
+    commonjsOptions: {
+      transformMixedEsModules: true
+    }
   },
   plugins: [
     nodePolyfills({
-      // Enable polyfills for specific globals and modules
       globals: {
         Buffer: true,
         global: true,
@@ -32,10 +36,16 @@ export default defineConfig({
   resolve: {
     alias: {
       buffer: 'buffer',
+      'libsodium-wrappers-sumo': path.resolve(
+        __dirname,
+        'node_modules/.pnpm/libsodium-wrappers-sumo@0.7.16/node_modules/libsodium-wrappers-sumo/dist/modules-sumo/libsodium-wrappers.js'
+      )
     },
   },
   optimizeDeps: {
+    include: ['libsodium-wrappers-sumo'],
     esbuildOptions: {
+      target: 'esnext',
       define: {
         global: 'globalThis',
       },

@@ -1,5 +1,7 @@
 import './styles/main.scss';
 import { initRouter } from './router';
+import { getServices } from './services/container';
+
 
 const onPagePainted = () => {
 
@@ -14,7 +16,16 @@ const onPagePainted = () => {
 
 const main = async () => {
   // Initialize router
-  initRouter();
+
+  const services = getServices();
+  await services.initialize();
+  
+  // Verify initialization
+  if (!services.isInitialized()) {
+    throw new Error('Failed to initialize services');
+  }
+  
+  initRouter(services);
 }
 
 if (document.readyState === 'loading') {

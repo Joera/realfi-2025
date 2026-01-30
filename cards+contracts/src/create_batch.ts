@@ -18,7 +18,11 @@ interface CardData {
 // Load environment variables
 dotenv.config()
 
-const pk = process.env.PRIVATE_KEY ? "0x" + process.env.PRIVATE_KEY as `0x${string}`: "0x"
+if (!process.env.ETH_PRIVATE_KEY) {
+  throw new Error("PRIVATE_KEY environment variable is required");
+}
+
+const pk = `0x${process.env.ETH_PRIVATE_KEY}` as `0x${string}`;
 
 // Create account from private key
 const account = privateKeyToAccount(pk);

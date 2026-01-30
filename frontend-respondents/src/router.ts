@@ -2,6 +2,7 @@
 
 import Navigo from 'navigo';
 import { LandingController } from './controllers/landing.ctrlr';
+import { IServices } from './services/container';
 // import { AccountController } from './controllers/account.ctrlr';
 // import { AboutController } from './controllers/about.ctrlr';
 
@@ -9,11 +10,11 @@ const router = new Navigo('/');
 
 let currentController: any = null;
 
-export const initRouter = () => {
+export const initRouter = (services: IServices) => {
   router
     .on('/', () => {
       if (currentController?.destroy) currentController.destroy();
-      currentController = new LandingController();
+      currentController = new LandingController(services);
       currentController.render();
     })
     // .on('/account', () => {

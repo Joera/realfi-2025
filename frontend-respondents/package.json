@@ -26,6 +26,7 @@
     "@cosmjs/proto-signing": "^0.36.2",
     "@cosmjs/stargate": "^0.36.2",
     "@holonym-foundation/mishtiwasm": "^0.3.2",
+    "@human.tech/waap-sdk": "^1.0.3",
     "@lit-protocol/auth": "^8.2.2",
     "@lit-protocol/lit-client": "^8.3.0",
     "@lit-protocol/networks": "^8.4.0",

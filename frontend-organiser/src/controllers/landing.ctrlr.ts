@@ -27,7 +27,9 @@ export class LandingController {
   constructor() {
 
     this.pinata = new PinataService(
+      // @ts-ignore
       import.meta.env.VITE_PINATA_KEY,
+      // @ts-ignore
       import.meta.env.VITE_PINATA_SECRET
     )
 
@@ -67,6 +69,7 @@ export class LandingController {
 
   async process() {
    
+    // @ts-ignore
     const signer = await this.lit.init(import.meta.env.VITE_ETHEREUM_PRIVATE_KEY); 
 
     console.log("initialized lit with ", signer)
@@ -101,7 +104,9 @@ export class LandingController {
       const randomHex = bytesToHex(randomBytes(4));
       const surveyId = `${this.viem.walletClient.account.address.slice(0, 8)}${Date.now()}${randomHex}`; 
 
-      const { sessionSig, signerAddress } = await this.lit.createSessionSignatures() 
+      const { sessionSig, signerAddress } = await this.lit.createSessionSignatures();
+
+      console.log(sessionSig)
                                                               
       let res: any  = await fetch(`${BACKEND}/api/create-survey`, {
           method: 'POST',
