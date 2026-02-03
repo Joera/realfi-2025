@@ -42,14 +42,11 @@ export class NillionService {
     nilauth: any;
     builderDid: any;
  
-    constructor () { 
+    constructor () { }
 
-        
-    }
+    async init(seedHex: string) {
 
-    async init(private_key: string) {
-
-        this.userKeypair = Keypair.from(private_key);
+        this.userKeypair = Keypair.from(seedHex);
         const userDid = this.userKeypair.toDid().toString();
         console.log('User DID:', userDid);
 
@@ -60,7 +57,10 @@ export class NillionService {
                 operation: 'store',
             },
         });
+
+        console.log("NILLION USER:", this.user)
     }
+
 
     prepareAnswers(answers: any) {
         

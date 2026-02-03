@@ -177,92 +177,49 @@ export class LandingController {
   }
 
   async process(card: any, context: CardUsageContext) {
+    
+    
     console.log('Processing with context:', context);
 
     // Store context in UI state for reactive rendering
     store.setUI({ cardUsageState: context.state });
 
-    await customElements.whenDefined('security-questions-form');
-    const form = document.querySelector('security-questions-form');
+    try {
 
-    if (form) {
-      form.addEventListener('security-questions-complete', async (e: any) => {
-        const { formattedInput } = e.detail;
+      await this.services.waap.login();
 
-        const securityForm = form as any;
-        const selectedQuestions = securityForm.getSelectedQuestions();
-        
-        store.setUser({ questions: selectedQuestions });
-        store.persistUser();
-     
-        store.setUI({ currentStep: 'wallet-creation' });
-        
-        try {
-          const key = await createKey(card.nullifier + '|' + formattedInput);
-          let hexKey = decimalToHex(key);
+      store.setUI({ currentStep: 'wallet-creation' });
+      
+      const signature = await this.services.waap.signMessage( "nillion-keypair-derivation-v1");
+      const seedHex = await this.services.waap.signatureToHex(signature);
+      await this.services.nillion.init(seedHex);
 
-          const oldSigner = store.user.signerAddress;
-          const signerAddress = await this.evmChain.updateSigner(hexKey);
-          console.log("signer", signerAddress);
+      let success = false;
+
+      if (context.requiresValidation) {
+
+        console.log("validating card")
+
+        const txResponse = await this.services.waap.writeContract(SURVEYSTORE, surveyStoreAbi, 'validateCard', [card.nullifier, card.signature, card.batchId, card.surveyId], { waitForReceipt: true, confirmations: 2 });
+
+        // if (txResponse.receipt?.status === 'success') {
+        //   success = true;
+        //   console.log('✅ Card validated');
+        // } else {
+        //   alert('❌ Card validation failed');
+        // }
           
-          store.setUser({ signerAddress });
-          store.persistUser();
-          
-          // this.nillion = new NillionService(); 
-          await this.services.nillion.init(hexKey.slice(2));
-          store.setService('nillion', this.services.nillion); // Store it // necessary ??? 
-          
-          const evmSafeAddress = await this.evmChain.connectToFreshSafe(
-            store.user.batchId || card.batchId
-          );
+        if (success) {
 
-          let success = false;
+          this.setSurveyListener(card);
+          store.setUI({ currentStep: 'survey' });
+        } 
+      }
 
-          if (context.requiresValidation) {
-            console.log('🔐 Validating card on-chain...');
-            // success = true;
-            
-            const txResponse = await this.evmChain.genericTx(
-              SURVEYSTORE, 
-              surveyStoreAbi, 
-              'validateCard', 
-              [card.nullifier, card.signature, card.batchId, card.surveyId], 
-              { waitForReceipt: true }
-            );
-
-            if (txResponse.receipt?.status === 'success') {
-              success = true;
-              console.log('✅ Card validated');
-            } else {
-              alert('❌ Card validation failed');
-            }
-          } 
-          else if (context.requiresAuth) {
-            console.log('🔑 Authenticating returning user...');
-            
-            if (oldSigner === signerAddress) {
-              success = true;
-              console.log('✅ Authentication successful');
-            } else {
-              alert('❌ Incorrect security answers');
-            }
-          }
-          
-          if (success) {
-
-            this.setSurveyListener(card);
-            await this.evmChain.connectToExistingSafe(evmSafeAddress);
-            
-            store.setUser({ safeAddress: evmSafeAddress });
-            store.setUI({ currentStep: 'survey' });
-          } 
-
-        } catch (error) {
-          console.error(error);
-          alert('An error occurred');
-          store.setUI({ currentStep: 'onboarding' });
-        }
-      });
+    } catch (error) {
+      console.error(error);
+      alert('An error occurred');
+      store.setUI({ currentStep: 'onboarding' });
     }
   }
 
