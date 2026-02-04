@@ -433,13 +433,15 @@ class SurveyConfigForm extends HTMLElement {
         const multisig = (this.shadowRoot?.querySelector('#multisig') as HTMLTextAreaElement)?.value
         const batchSize = (this.shadowRoot?.querySelector('#batch-size') as HTMLTextAreaElement)?.value
 
-        console.log(multisig, batchSize);
+        const errors = this.validateQuestions();
+        if (errors.length > 0) {
+            alert(`Please fix:\n${errors.join('\n')}`);
+            return;
+        }
 
         const config = {
             title,
             description,
-            multisig,
-            batchSize,
             questions: this.questions,
         }
 
@@ -450,11 +452,28 @@ class SurveyConfigForm extends HTMLElement {
         }
 
         this.dispatchEvent(new CustomEvent('survey-config-generated', {
-            detail: { config },
+            detail: { config, multisig, batchSize },
             bubbles: true,
             composed: true
         }))
     }
+
+    private validateQuestions(): string[] {
+    const errors: string[] = [];
+    
+    this.questions.forEach((q, i) => {
+        if (!q.question.trim()) {
+            errors.push(`Question ${i + 1}: Question text is required`);
+        }
+        
+        if ((q.type === 'radio' || q.type === 'checkbox') && 
+            (!q.options || q.options.filter(o => o.trim()).length === 0)) {
+            errors.push(`Question ${i + 1}: At least one option required`);
+        }
+    });
+    
+    return errors;
+}
 }
 
 customElements.define('survey-config-form', SurveyConfigForm)

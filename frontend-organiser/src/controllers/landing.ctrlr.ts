@@ -133,7 +133,7 @@ export class LandingController {
 
 
 
-            // if (event.detail.config.multisig) {
+            // if (event.detail.multisig) {
 
               // await this.safe.connectToFreshSafe('s3ntiment_survey_' + surveySlug);
               // await this.safe.updateSigner(import.meta.env.VITE_ETHEREUM_PRIVATE_KEY)
@@ -149,7 +149,7 @@ export class LandingController {
 
       const batchId = "original";
       // create qr codes 
-      await generateCardSecrets(this.viem, batchId, event.detail.config.batchSize, surveyId);
+      await generateCardSecrets(this.viem, batchId, event.detail.batchSize, surveyId);
 
       const test = await generateCardSecrets(this.viem, "test", 1, surveyId);
 

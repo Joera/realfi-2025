@@ -51,9 +51,9 @@ const initConfig = {
 
 export class WaapService { 
 
-    private walletClient: WalletClient | null = null;
-    private publicClient: any | null = null;
-    private address: `0x${string}` | null = null;
+    public walletClient: WalletClient | null = null;
+    public publicClient: any | null = null;
+    public address: `0x${string}` | null = null;
 
     constructor() {
 
@@ -183,6 +183,31 @@ export class WaapService {
         }
 
         return result;
+    }
+
+    async readContract<T = any>(
+        contractAddress: `0x${string}`, 
+        abi: any, 
+        functionName: string, 
+        args: any[] = []
+    ): Promise<T> {
+        if (!this.publicClient) {
+            throw new Error('Public client not initialized');
+        }
+
+        try {
+            const result = await this.publicClient.readContract({
+                address: contractAddress,
+                abi,
+                functionName,
+                args,
+            });
+
+            return result as T;
+        } catch (error) {
+            console.error('Error reading contract:', error);
+            throw error;
+        }
     }
 }
 

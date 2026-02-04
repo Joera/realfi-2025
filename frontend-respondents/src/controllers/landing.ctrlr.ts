@@ -3,13 +3,10 @@
 import { store } from '../services/store.service';
 import { reactive } from '../utils/reactive';
 import { CardData, parseCardURL } from "../card.factory"
-import { createKey } from '../oprf.factory';
-import { PermissionlessSafeService } from '../services/permissionless.safe.service';
 import { decimalToHex } from '../utils.factory';
 import '../components/security-questions.js';
 import '../components/loading-spinner.js';
 import '../components/survey.js';
-import { NillionService } from '../services/nilldb.service';
 import { surveyStoreAbi } from '../abi';
 import { fromPinata } from '../ipfs.factory';
 import { IServices } from '../services/container';
@@ -33,8 +30,6 @@ export interface CardUsageContext {
 
 export class LandingController {
   private reactiveViews: any[] = [];
-  evmChain: any;
-  // nillion: any;
   documentId: any;
   services: IServices
 
@@ -189,11 +184,7 @@ export class LandingController {
       await this.services.waap.login();
 
       store.setUI({ currentStep: 'wallet-creation' });
-      
-      const signature = await this.services.waap.signMessage( "nillion-keypair-derivation-v1");
-      const seedHex = await this.services.waap.signatureToHex(signature);
-      await this.services.nillion.init(seedHex);
-
+    
       let success = false;
 
       if (context.requiresValidation) {
@@ -230,16 +221,16 @@ export class LandingController {
     if (card) {
 
       console.log(card);
-      this.evmChain = new PermissionlessSafeService(8453);
-      // const surveyInfo = await this.evmChain.genericRead(SURVEYSTORE, surveyStoreAbi, 'getSurvey',[card.surveyId]);
-      const surveyCid = "" // surveyInfo[0]
+
+      // const surveyInfo = await this.services.waap.readContract(SURVEYSTORE, surveyStoreAbi, 'getSurvey',[card.surveyId]);
+      const surveyCid = ""; // surveyInfo[0]
       // const surveyDiD = surveyInfo[1]
 
       this.renderTemplate(surveyCid, card.surveyId);
     
       console.log('📇 Card detected:', card);
 
-      const cardIsUsed = await this.evmChain.genericRead(
+      const cardIsUsed = await this.services.waap.readContract(
         SURVEYSTORE, 
         surveyStoreAbi, 
         "isNullifierUsed", 
@@ -301,6 +292,31 @@ export class LandingController {
       console.log('event:', event);
       
       if (event.detail.documentId != undefined) {
+
+
+        const signature = await this.services.waap.walletClient!.signTypedData({
+            account: this.services.waap.address || '0x',
+            domain: {
+                name: 'S3ntiment',
+                version: '1',
+                chainId: 8453, // Base
+                verifyingContract: '0x0000000000000000000000000000000000000000' // Dummy address
+            },
+            types: {
+                NillionAuth: [
+                    { name: 'action', type: 'string' }
+                ]
+            },
+            primaryType: 'NillionAuth',
+            message: {
+                action: 'Connect to blind computer for private responses'
+            }
+        });
+              
+
+        const seedHex = await this.services.waap.signatureToHex(signature);
+        await this.services.nillion.init(seedHex);
+
         await this.services.nillion.update(event.detail.answers, card.surveyId, event.detail.documentId);
       } else {
         await this.services.nillion.store(event.detail.answers, card.surveyId);
