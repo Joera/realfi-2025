@@ -103,19 +103,15 @@ export class LandingController {
 
       const randomHex = bytesToHex(randomBytes(4));
       const surveyId = `${this.viem.walletClient.account.address.slice(0, 8)}${Date.now()}${randomHex}`; 
-
-      const { sessionSig, signerAddress } = await this.lit.createSessionSignatures();
-
-      console.log(sessionSig)
-                                                              
+                           
       let res: any  = await fetch(`${BACKEND}/api/create-survey`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json', 
           },
           body: JSON.stringify({ 
-              sessionSig, 
-              signerAddress,
+              authContext: await this.lit.createAuthContext(),
+              signerAddress: this.lit.getAddress(),
               surveyId,
               surveyConfig: event.detail.config
           })

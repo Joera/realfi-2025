@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import { randomUUID } from 'crypto';
 import { NilDBService } from './nildb.service.js';
 import { Did, Signer } from '@nillion/nuc';
 
@@ -17,8 +16,6 @@ import { PinataService } from './pinata.service.js';
 import { accsForSurveyOwner, accsForUser } from './accs.js';
 
 dotenv.config();
-
-
 
 const app = express();
 app.use(cors());
@@ -43,33 +40,31 @@ app.post('/api/create-survey', async (req, res) => {
 
   console.log(req.body)
 
-    const litSessionSig = req.body.sessionSig;
+    const authContext = req.body.authContext;
     const signerAddress = req.body.signerAddress;
     const surveyId = req.body.surveyId;
     const surveyConfig = req.body.surveyConfig;
 
     console.log("signer", signerAddress)
-    console.log("session", litSessionSig)
+    console.log("authContext", authContext)
 
     const privateKeyBytes = secp256k1.utils.randomSecretKey();
     const privateKeyHex = bytesToHex(privateKeyBytes);
     const surveyOwner = Signer.fromPrivateKey(privateKeyHex, 'key');
     const surveyOwnerDid = await surveyOwner.getDid();
 
-    const encryptedData = await lit.encrypt(
-      privateKeyHex, 
-      surveyId,
-      accsForSurveyOwner(surveyId)
+    const encryptedSurveyConfig = await lit.encrypt(
+      surveyConfig, 
+      accsForUser()
     );
 
     // Builder delegeert collection creation aan owner
     // const delegation = nildb.delegateCollectionCreation(surveyOwnerDid);
     // const ownerClient = await nildb.createSurveyOwner(surveyOwner);
 
-    const encryptedSurveyConfig = await lit.encrypt(
+    const encryptedKey = await lit.encrypt(
       privateKeyHex, 
-      surveyId,
-      accsForUser() 
+      accsForSurveyOwner(surveyId) 
     );
 
     const schema = createSurveyCollectionSchema(surveyId, surveyConfig)
@@ -78,12 +73,11 @@ app.post('/api/create-survey', async (req, res) => {
     const config = {
 
       nilDid: surveyOwnerDid,
-      encryptedNilKey: encryptedData,
+      encryptedNilKey: encryptedKey,
       collectioniD: schema._id,
       surveyConfig: encryptedSurveyConfig
 
     }
-
 
     const surveyCid = (await pinata.uploadJSON(config)).IpfsHash;
 

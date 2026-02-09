@@ -64,7 +64,7 @@ export default class LITCtrlr {
 
         return {
             
-            sessionSig: authContext.authData,
+            sessionSig: authData,
             signerAddress: this.account.address
         }
     }

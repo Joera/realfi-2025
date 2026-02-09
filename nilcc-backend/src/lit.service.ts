@@ -21,7 +21,7 @@ export class LitService {
 
     }
 
-    async encrypt(nilKey:string, surveyId: string, accs: any[]) {
+    async encrypt(nilKey:string, accs: any[]) {
         
         return await this.client.encrypt({
             dataToEncrypt: nilKey,
@@ -32,12 +32,12 @@ export class LitService {
     }
 
 
-    async decrypt (surveyId: string, encryptedNilKey: string, sessionSig: string, accs: any[] ) {
+    async decrypt (encryptedNilKey: string, authContext: string, accs: any[] ) {
 
         return await this.client.decrypt({
             data: encryptedNilKey,
             evmContractConditions: accs,
-            authContext: sessionSig,
+            authContext,
             chain: "ethereum",
         });
     }

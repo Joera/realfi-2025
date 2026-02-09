@@ -26,8 +26,13 @@ export default class LITCtrlr {
         return this.account.address;
     }
 
+    getAddress() {
 
-    async createSessionSignatures() {
+        return this.account.address;
+    }
+
+
+    async createAuthContext() {
         if (!this.account) throw 'lit client not ready';
 
         const authManager = createAuthManager({
@@ -37,7 +42,7 @@ export default class LITCtrlr {
             }),
         });
 
-        const authContext = await authManager.createEoaAuthContext({
+        return await authManager.createEoaAuthContext({
             litClient: this.litClient,
             config: {
                 account: this.account, // ← The Viem account goes here
@@ -51,10 +56,5 @@ export default class LITCtrlr {
                 statement: "", // Optional but good to include
             },
         });
-
-        return {
-            sessionSigs: authContext.authData,
-            signerAddress: this.account.address
-        }
     }
 }

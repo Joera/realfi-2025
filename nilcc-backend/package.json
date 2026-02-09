@@ -14,9 +14,10 @@
     "@lit-protocol/lit-client": "^8.2.3",
     "@lit-protocol/networks": "^8.3.2",
     "@nillion/client-web": "^0.6.0",
-    "@nillion/nilai-ts": "^0.2.0",
-    "@nillion/nuc": "1.1.1",
-    "@nillion/secretvaults": "^1.1.0",
+    "@nillion/nilai-ts": "^0.3.0",
+    "@nillion/nilauth-client": "^2.0.0",
+    "@nillion/nuc": "^2.0.0",
+    "@nillion/secretvaults": "^2.0.0",
     "@noble/curves": "^2.0.1",
     "@noble/hashes": "^2.0.1",
     "cors": "^2.8.5",
@@ -33,10 +34,7 @@
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   },
-  "pnpm": {
-    "overrides": {
-      "@lit-protocol/networks": "8.3.2",
-      "@nillion/nuc": "1.1.1"
-    }
+  "overrides": {
+    "libsodium-wrappers-sumo": "0.7.13"
   }
 }

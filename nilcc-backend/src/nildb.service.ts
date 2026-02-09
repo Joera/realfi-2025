@@ -1,9 +1,8 @@
+import { NilauthClient } from "@nillion/nilauth-client";
 import {
   Builder,
   Signer,
   Did,
-  PayerBuilder,
-  NilauthClient,  // ← toevoegen
 } from '@nillion/nuc';
 
 import {
@@ -50,39 +49,51 @@ export class NilDBService {
     async initBuilder () {
 
         this.builderDid = await this.builderSigner.getDid();
-        // console.log('Builder DID:', this.builderDid);
+        console.log('Builder DID:', this.builderDid.didString);
 
-        const payer = await PayerBuilder
-            .fromPrivateKey(this.builderKey)
-            .chainUrl(NILCHAIN_URL)
-            .build();
+        // const payer = await PayerBuilder
+        //     .fromPrivateKey(this.builderKey)
+        //     .chainUrl(NILCHAIN_URL)
+        //     .build();
 
          const nilauthClient = await NilauthClient.create({
             baseUrl: NILAUTH_URL,
-            payer: payer,
+            chainId: 11155111
         });
 
-        this.builder = await SecretVaultBuilderClient.from({
-            signer: this.builderSigner,  // was: keypair
-            nilauthClient: nilauthClient,
-            dbs: NILDB_NODES.split(","),
-        });
+         const _status = await nilauthClient.subscriptionStatus(
+            this.builderDid,  // Your builder's DID
+            'nildb'           // The blind module
+        );
+
+        const cost = await nilauthClient.subscriptionCost('nildb');
+        console.log('💰 Cost check:', cost);
+
+        const health = await nilauthClient.health();
+        console.log('🏥 Health:', health);
+
+        console.log(_status)
+
+        // this.builder = await SecretVaultBuilderClient.from({
+        //     signer: this.builderSigner,  
+        //     dbs: NILDB_NODES.split(","),
+        // });
 
         // Refresh token using existing subscription
-        try {
-            await this.builder.refreshRootToken();
-            console.log('✅ Root token refreshed');
-        } catch (tokenError) {
-            console.log('⚠️ Token refresh failed:', tokenError);  // ← log de hele error
-            console.log('Error message:', tokenError.message);
-            console.log('Error cause:', tokenError.cause);
-        }
+        // try {
+        //     await this.builder.refreshRootToken();
+        //     console.log('✅ Root token refreshed');
+        // } catch (tokenError) {
+        //     console.log('⚠️ Token refresh failed:', tokenError);  // ← log de hele error
+        //     console.log('Error message:', tokenError.message);
+        //     console.log('Error cause:', tokenError.cause);
+        // }
 
-        const status = await nilauthClient.subscriptionStatus(
-            this.builderDid, 
-            'nildb'
-        );
-        console.log('Subscription status:', status);
+        // const status = await nilauthClient.subscriptionStatus(
+        //     this.builderDid, 
+        //     'nildb'
+        // );
+        // console.log('Subscription status:', status);
 
     }
 
