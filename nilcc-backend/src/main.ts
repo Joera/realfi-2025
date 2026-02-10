@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { NilDBService } from './nildb.service.js';
-import { Did, Signer } from '@nillion/nuc';
+import { Codec, Did, Signer } from '@nillion/nuc';
 
 import { createSurveyCollectionSchema } from './create_collection.js';
 
@@ -14,6 +14,8 @@ import { bytesToHex } from '@noble/hashes/utils.js';
 import { fromPinata } from './ipfs.factory.js';
 import { PinataService } from './pinata.service.js';
 import { accsForSurveyOwner, accsForUser } from './accs.js';
+import { SurveyController } from './survey.ctrlr.js';
+import { ViemService } from './viem.service.js';
 
 dotenv.config();
 
@@ -24,10 +26,12 @@ app.use(express.json());
 const PINATA_KEY = process.env.PINATA_KEY || "";
 const PINATA_SECRET = process.env.PINATA_SECRET || "";
 
+let viem = new ViemService();
 let nildb: any;
 let nilai: any;
 let lit = new LitService();
 let pinata = new PinataService(PINATA_KEY, PINATA_SECRET);
+let survey: any;
 
 // import * as nuc from '@nillion/nuc';
 // console.log('NUC exports:', Object.keys(nuc));
@@ -39,54 +43,27 @@ await lit.init();
 app.post('/api/create-survey', async (req, res) => {
 
   console.log(req.body)
-
-    const authContext = req.body.authContext;
-    const signerAddress = req.body.signerAddress;
-    const surveyId = req.body.surveyId;
-    const surveyConfig = req.body.surveyConfig;
-
-    console.log("signer", signerAddress)
-    console.log("authContext", authContext)
-
-    const privateKeyBytes = secp256k1.utils.randomSecretKey();
-    const privateKeyHex = bytesToHex(privateKeyBytes);
-    const surveyOwner = Signer.fromPrivateKey(privateKeyHex, 'key');
-    const surveyOwnerDid = await surveyOwner.getDid();
-
-    const encryptedSurveyConfig = await lit.encrypt(
-      surveyConfig, 
-      accsForUser()
-    );
-
-    // Builder delegeert collection creation aan owner
-    // const delegation = nildb.delegateCollectionCreation(surveyOwnerDid);
-    // const ownerClient = await nildb.createSurveyOwner(surveyOwner);
-
-    const encryptedKey = await lit.encrypt(
-      privateKeyHex, 
-      accsForSurveyOwner(surveyId) 
-    );
-
-    const schema = createSurveyCollectionSchema(surveyId, surveyConfig)
-    await nildb.createSurveyCollection(schema)
-
-    const config = {
-
-      nilDid: surveyOwnerDid,
-      encryptedNilKey: encryptedKey,
-      collectioniD: schema._id,
-      surveyConfig: encryptedSurveyConfig
-
-    }
-
-    const surveyCid = (await pinata.uploadJSON(config)).IpfsHash;
-
-    res.send({
-       surveyCid
-    })
-
+  const surveyCid = survey.create(req.body);
+  res.send({ surveyCid });
 
 });
+
+app.post('/api/request-delegation', async (req, res) => {
+
+
+    const delegation = survey.requestDelegation(req.body)
+
+    // 1. Fetch survey from contract
+    // const survey = await surveyContract.getSurvey(collectionId);
+    
+
+    // 4. Return serialized delegation
+    res.json({
+        delegation: Codec.serializeBase64Url(delegation),
+        expiresAt: Date.now() + (30 * 24 * 3600 * 1000)
+    });
+});
+
 
 // Get survey results by surveyId // usinng general nil did as in demo 
 // app.get('/api/survey-results/:surveyId', async (req, res) => {
@@ -196,6 +173,8 @@ async function startServer() {
     nildb = new NilDBService();
     // nilai = new NilAIService();
     await nildb.initBuilder();
+
+    survey = new SurveyController(nildb, lit, pinata, viem);
     
     app.listen(PORT, () => {
         console.log("server running at " + PORT)

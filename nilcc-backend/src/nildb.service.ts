@@ -3,19 +3,22 @@ import {
   Builder,
   Signer,
   Did,
+  Command,
 } from '@nillion/nuc';
 
 import {
   SecretVaultBuilderClient,
   SecretVaultUserClient,
+  NucCmd
 } from '@nillion/secretvaults';
 import { SurveyConfig } from './types';
-
+import { randomUUID } from "crypto";
 
 
 const NILCHAIN_URL = "http://rpc.testnet.nilchain-rpc-proxy.nilogy.xyz";
-const NILAUTH_URL = "https://nilauth.sandbox.app-cluster.sandbox.nilogy.xyz";
+const NILAUTH_URL = "https://nilauth-1bc3.staging.nillion.network"; // "https://nilauth.sandbox.app-cluster.sandbox.nilogy.xyz";
 const NILDB_NODES = "https://nildb-stg-n1.nillion.network,https://nildb-stg-n2.nillion.network,https://nildb-stg-n3.nillion.network";
+const CHAINID = 11155111;
 
 
 // Configuration
@@ -23,6 +26,7 @@ const config = {
   NILCHAIN_URL: NILCHAIN_URL,
   NILAUTH_URL: NILAUTH_URL,
   NILDB_NODES: NILDB_NODES!.split(','),
+  CHAINID: CHAINID
 };
 
 // Validate configuration
@@ -37,7 +41,8 @@ export class NilDBService {
     builderKey: string;
     builderSigner: Signer;
     builderDid: Did | undefined;
-    builder: any;
+    builderClient: any;
+    nildbTokens: any;
   
 
     constructor () {
@@ -48,63 +53,52 @@ export class NilDBService {
 
     async initBuilder () {
 
+    
         this.builderDid = await this.builderSigner.getDid();
         console.log('Builder DID:', this.builderDid.didString);
 
-        // const payer = await PayerBuilder
-        //     .fromPrivateKey(this.builderKey)
-        //     .chainUrl(NILCHAIN_URL)
-        //     .build();
-
          const nilauthClient = await NilauthClient.create({
-            baseUrl: NILAUTH_URL,
-            chainId: 11155111
+            baseUrl: config.NILAUTH_URL,
+            chainId: config.CHAINID,
         });
+        console.log("✅ Nilauth client created");
 
-         const _status = await nilauthClient.subscriptionStatus(
+        const status = await nilauthClient.subscriptionStatus(
             this.builderDid,  // Your builder's DID
             'nildb'           // The blind module
         );
 
-        const cost = await nilauthClient.subscriptionCost('nildb');
-        console.log('💰 Cost check:', cost);
+        console.log("subscription", status)
 
-        const health = await nilauthClient.health();
-        console.log('🏥 Health:', health);
-
-        console.log(_status)
-
-        // this.builder = await SecretVaultBuilderClient.from({
-        //     signer: this.builderSigner,  
-        //     dbs: NILDB_NODES.split(","),
-        // });
-
-        // Refresh token using existing subscription
-        // try {
-        //     await this.builder.refreshRootToken();
-        //     console.log('✅ Root token refreshed');
-        // } catch (tokenError) {
-        //     console.log('⚠️ Token refresh failed:', tokenError);  // ← log de hele error
-        //     console.log('Error message:', tokenError.message);
-        //     console.log('Error cause:', tokenError.cause);
-        // }
-
-        // const status = await nilauthClient.subscriptionStatus(
-        //     this.builderDid, 
-        //     'nildb'
-        // );
-        // console.log('Subscription status:', status);
-
-    }
-
-    async createSurveyOwner(surveyOwner: Signer) {
-
-        return await SecretVaultUserClient.from({
-            baseUrls: config.NILDB_NODES,
-            signer: surveyOwner,
-            blindfold: { operation: 'store' },
+        this.builderClient = await SecretVaultBuilderClient.from({
+            signer: this.builderSigner,
+            nilauthClient,
+            dbs: config.NILDB_NODES,
+            blindfold: { operation: "store" },  // Enable encryption for %allot fields
         });
+
+        await this.builderClient.refreshRootToken();
+        const rootToken = this.builderClient.rootToken;  // This is already the envelope object ✅
+
+        // Create invocation tokens for each node
+        this.nildbTokens = {};
+        for (const node of this.builderClient.nodes) {
+            this.nildbTokens[node.id.didString] = await Builder.invocationFrom(rootToken)  // Use rootToken directly
+                .audience(node.id)
+                .command(NucCmd.nil.db.root)
+                .expiresIn(86400)  // Note: expiresIn is in SECONDS, not milliseconds
+                .signAndSerialize(this.builderSigner);
+        }
     }
+
+    // async createSurveyOwner(surveyOwner: Signer) {
+
+    //     return await SecretVaultUserClient.from({
+    //         baseUrls: config.NILDB_NODES,
+    //         signer: surveyOwner,
+    //         blindfold: { operation: 'store' },
+    //     });
+    // }
 
 
     // async delegateToSurveyOwner(ownerDid: Did) {
@@ -116,18 +110,30 @@ export class NilDBService {
     //     return delegation;
     // }
 
-    async createSurveyCollection(schema: any) {
+    async createSurveyCollection(schema: any, surveyOwnerDid: any) {
 
-        try { 
-            const result = await this.builder.createCollection(schema);
-            console.log("Collection created", schema._id)
-            return result
-        } catch (error: any) {
-            console.log(JSON.stringify(error));
-            return undefined
-        }
+        const collectionId = randomUUID();
+        await this.builderClient.createCollection({
+            _id: collectionId,
+            owner: surveyOwnerDid,  // ← Owned by survey owner, not builder
+            schema,
+        });
+
+        return collectionId;
     }
 
+    async getDelegation(surveyOwnerDid: any, collectionId: string) {
+
+        return await Builder.delegation()
+            .audience(surveyOwnerDid)
+            .command("/nil/db/data/read")
+            .policy([
+                ["==", ".command", "/nil/db/data/read"],
+                ["==", ".args.collection", collectionId]  // Constrain via policy instead
+            ])
+            .expiresIn(365 * 24 * 3600)
+            .sign(this.builderSigner);
+    }
 
 
     async tabulateSurveyResults(survey_id: string, keypair : any) {

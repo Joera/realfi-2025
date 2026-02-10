@@ -84,6 +84,22 @@ export class PinataService {
         return result
     }
 
+    async get(cid: string) {
+
+        const ipfsApiUrl = `${this.getGatewayUrl(cid)}`;
+        const response = await fetch(ipfsApiUrl);
+        if (!response.ok) {
+            throw new Error(
+            `IPFS retrieval failed: ${response.status} ${response.statusText}`,
+            );
+        }
+
+        const result = await response.text();
+
+        console.log(result)
+        return result;
+    }
+
     /**
      * Get the gateway URL for an IPFS hash
      * @param cid IPFS hash (CID)
