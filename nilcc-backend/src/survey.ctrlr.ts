@@ -1,6 +1,6 @@
 import { Builder, Codec, Signer } from "@nillion/nuc";
 import { secp256k1 } from "@noble/curves/secp256k1.js";
-import { bytesToHex, verifyMessage } from "viem";
+import { bytesToHex, recoverMessageAddress, Signature, verifyMessage } from "viem";
 import { accsForUser, accsForSurveyOwner } from "./accs";
 import { createSurveyCollectionSchema } from "./create_collection";
 import { SurveyConfig } from "./types";
@@ -64,11 +64,9 @@ export class SurveyController {
 
         const { 
             surveyId,
-            collectionId, 
             requestorDid,
-            signature,      // Signature proving ownership
-            message,        // Signed message
-            safeAddress     // Optional: if using Safe multisig
+            signature,     
+            message  
         } = body;
 
 
@@ -119,10 +117,10 @@ export class SurveyController {
         surveyOwnerAddress: string,
         requestorDid: string,
         message: string,
-        signature: string
+        signature: Signature
     ): Promise<boolean> {
         // Verify signature matches survey owner
-        const verified = await verifyMessage(message, signature);
+        const recoveredAddress = await recoverMessageAddress({ message, signature });
         
         if (recoveredAddress.toLowerCase() !== surveyOwnerAddress.toLowerCase()) {
             return false;
@@ -139,7 +137,7 @@ export class SurveyController {
         surveyOwnerAddress: string,
         requestorDid: string,
         message: string,
-        signature: string
+        signature:  Signature
     ): Promise<boolean> {
         // Verify Safe address matches survey owner
         if (safeAddress.toLowerCase() !== surveyOwnerAddress.toLowerCase()) {
@@ -147,17 +145,17 @@ export class SurveyController {
         }
 
         // Recover signer from signature
-        const signerAddress = verifyMessage(message, signature);
-
-        // Check if signer is owner of the Safe
-        const safe = await Safe.init({
-            provider: ethProvider,
-            safeAddress: safeAddress,
-        });
+        // const signerAddress = await recoverMessageAddress({ message, signature });
+        
+        // // Check if signer is owner of the Safe
+        // const safe = await Safe.init({
+        //     provider: ethProvider,
+        //     safeAddress: safeAddress,
+        // });
 
         const owners = await safe.getOwners();
         const isSigner = owners.some(
-            owner => owner.toLowerCase() === signerAddress.toLowerCase()
+            (owner: any) => owner.toLowerCase() === signerAddress.toLowerCase()
         );
 
         // Verify message format

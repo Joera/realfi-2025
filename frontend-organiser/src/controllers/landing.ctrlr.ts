@@ -103,6 +103,19 @@ export class LandingController {
 
       const randomHex = bytesToHex(randomBytes(4));
       const surveyId = `${this.viem.walletClient.account.address.slice(0, 8)}${Date.now()}${randomHex}`; 
+
+      let delegation: any  = await fetch(`${BACKEND}/api/request-delegation`, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json', 
+          },
+          body: JSON.stringify({ 
+              surveyId,
+              requestorDid,
+              signature,     
+              message  
+          })
+      });
                            
       let res: any  = await fetch(`${BACKEND}/api/create-survey`, {
           method: 'POST',
