@@ -87,7 +87,7 @@ class SurveyQuestions extends HTMLElement {
     private attachListeners() {
        
         this.shadowRoot?.querySelector('#back-btn')?.addEventListener('click', () => {
-            router.navigate('/results');
+            router.navigate('/surveys');
         });
 
         // document.querySelectorAll('.tab').forEach(tab => {

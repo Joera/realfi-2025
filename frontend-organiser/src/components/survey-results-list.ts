@@ -108,7 +108,7 @@ class SurveyResultsList extends HTMLElement {
             const surveyId = (e.currentTarget as HTMLElement).dataset.surveyId;
             console.log("clicked", surveyId)
             // Navigate using Navigo
-            router.navigate(`/result/${surveyId}`);
+            router.navigate(`/survey/${surveyId}`);
         });
     });
 }

@@ -9,7 +9,7 @@ buttonStyles.replaceSync(`
         }
 
         button {
-          flex: 1;
+
           padding: 0.75rem 1.5rem;
           border: none;
           border-radius: 6px;
@@ -17,6 +17,7 @@ buttonStyles.replaceSync(`
           font-weight: 500;
           cursor: pointer;
           transition: background-color 0.2s;
+
         }
 
         button:disabled {

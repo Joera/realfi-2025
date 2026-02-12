@@ -11,6 +11,12 @@ declare global {
     }
 }
 
+interface LoginResult {
+    walletClient: WalletClient;
+    address: `0x${string}`;
+}
+
+
 interface TxOptions {
     deploy?: boolean;
     waitForReceipt?: boolean;
@@ -38,15 +44,19 @@ interface InternalTransaction {
 }
 
 const initConfig = {
-  config: {
-    allowedSocials: [],
-    authenticationMethods: ['email', 'phone'] as AuthenticationMethod[],
-    styles: { darkMode: false },
-  },
-  useStaging: false,
-  walletConnectProjectId: "<PROJECT_ID>", // Required if 'wallet' in authenticationMethods
-  referralCode: "", // Optional
-};
+    config: {
+        allowedSocials: [],
+        authenticationMethods: ['email', 'phone'] as AuthenticationMethod[],
+        styles: { darkMode: false },
+    },
+    project: {
+        name: 'S3ntiment',
+        logo: ''
+    },
+    useStaging: false,
+    walletConnectProjectId: "c60a06bf03cd6b4972e1b7d3c0b738ff", 
+    referralCode: "", 
+}
 
 
 export class WaapService { 
@@ -72,21 +82,23 @@ export class WaapService {
         });
     }
 
-    async login() {
+    async login() : Promise<LoginResult> {
 
         try {
-            // Open the WaaP login modal
+          
             const loginType = await window.waap.login();
-            // loginType: 'human' | 'walletconnect' | 'injected' | null
-            
-            // Get the user's wallet addresses
-            const accounts :any = await window.waap.request({ method: 'eth_requestAccounts' }); // { method: 'eth_requestAccounts' }
+  
+            const accounts:any = await window.waap.request({ method: 'eth_requestAccounts' }); 
             this.address = accounts[0];         
             this.walletClient = createWalletClient({
                 account: this.address as `0x${string}`,
-                chain: base, // or your chain
+                chain: base, 
                 transport: custom(window.waap)
             });
+
+            if (!this.address) {
+                throw new Error('Failed to get wallet address');
+            }
             
             return { 
                 walletClient: this.walletClient, 
@@ -95,6 +107,7 @@ export class WaapService {
  
         } catch (error) {
             console.error(error)
+            throw error
         }
 
     }

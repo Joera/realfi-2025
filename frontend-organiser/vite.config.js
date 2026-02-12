@@ -1,7 +1,10 @@
 // vite.config.js
 import { defineConfig } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import { fileURLToPath } from 'url';
+import path from 'path';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   root: '.',
@@ -16,12 +19,13 @@ export default defineConfig({
         main: './index.html'
       }
     },
-    // Copy WASM files to output
-    assetsInlineLimit: 0 // Don't inline WASM files
+    assetsInlineLimit: 0,
+    commonjsOptions: {
+      transformMixedEsModules: true
+    }
   },
   plugins: [
     nodePolyfills({
-      // Enable polyfills for specific globals and modules
       globals: {
         Buffer: true,
         global: true,
@@ -35,7 +39,9 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
+    include: [],
     esbuildOptions: {
+      target: 'esnext',
       define: {
         global: 'globalThis',
       },

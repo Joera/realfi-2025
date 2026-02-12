@@ -4,7 +4,7 @@ import Navigo from 'navigo';
 import { LandingController } from './controllers/landing.ctrlr';
 import { IServices } from './services/container';
 // import { AccountController } from './controllers/account.ctrlr';
-// import { AboutController } from './controllers/about.ctrlr';
+import { AboutController } from './controllers/about.ctrlr';
 
 const router = new Navigo('/');
 
@@ -22,11 +22,11 @@ export const initRouter = (services: IServices) => {
     //   currentController = new AccountController();
     //   currentController.render();
     // })
-    // .on('/about', () => {
-    //   if (currentController?.destroy) currentController.destroy();
-    //   currentController = new AboutController();
-    //   currentController.render();
-    // })
+    .on('/about', () => {
+      if (currentController?.destroy) currentController.destroy();
+      currentController = new AboutController();
+      currentController.render();
+    })
     .notFound(() => {
       router.navigate('/');
     });

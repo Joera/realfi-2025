@@ -6,6 +6,7 @@ import { LandingController } from './controllers/landing.ctrlr';
 import { IServices } from './services/container';
 import { ResultsController } from './controllers/results.ctrlr';
 import { ResultController } from './controllers/result.ctrlr';
+import { NewSurveyController } from './controllers/new.ctrlr.ts';
 
 const router = new Navigo('/');
 
@@ -18,18 +19,23 @@ export const initRouter = (services: IServices) => {
       currentController = new LandingController(services);
       currentController.render();
     })
-    .on('/results', () => {
+    .on('/new', () => {
+      if (currentController?.destroy) currentController.destroy();
+      currentController = new NewSurveyController(services);
+      currentController.render();
+    })
+    .on('/surveys', () => {
       if (currentController?.destroy) currentController.destroy();
       currentController = new ResultsController(services);
       currentController.render();
     })
-    .on('/result/:surveyId', function(match) {
+    .on('/survey/:surveyId', function(match) {
       if (currentController?.destroy) currentController.destroy();
       
       const surveyId = match?.params?.surveyId || match?.data?.surveyId || '';
 
       if (!surveyId) {
-        router.navigate('/results');
+        router.navigate('/surveys');
         return;
       }
       
