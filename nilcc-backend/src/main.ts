@@ -1,21 +1,21 @@
 import express from 'express';
 import cors from 'cors';
-import { NilDBService } from './nildb.service.js';
+import { NilDBService } from './services/nildb.service.js';
 import { Codec, Did, Signer } from '@nillion/nuc';
 
 import { createSurveyCollectionSchema } from './create_collection.js';
 
 import dotenv from 'dotenv';
-import { LitService } from './lit.service.js';
+import { LitService } from './services/lit.service.js';
 // import { NilAIService } from './nillai.service.js';
 
 // import { secp256k1 } from '@noble/curves/secp256k1.js';
 // import { bytesToHex } from '@noble/hashes/utils.js';
 // import { fromPinata } from './ipfs.factory.js';
-import { PinataService } from './pinata.service.js';
+import { PinataService } from './services/pinata.service.js';
 // import { accsForSurveyOwner, accsForUser } from './accs.js';
 import { SurveyController } from './survey.ctrlr.js';
-import { ViemService } from './viem.service.js';
+import { ViemService } from './services/viem.service.js';
 
 dotenv.config();
 

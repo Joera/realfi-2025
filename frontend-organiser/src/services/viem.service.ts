@@ -1,10 +1,11 @@
 import { createPublicClient, createWalletClient, http } from "viem";
 import { getChainId, getRPCUrl, getViemChainById } from "./chains.factory";
 import { privateKeyToAccount } from "viem/accounts";
-
+import { SURVEY_STORE_ABI } from "../survey.abi";
 
 export class ViemService {
 
+    account: any;
     chainId : number;
     walletClient: any;
     publicClient: any;
@@ -13,7 +14,7 @@ export class ViemService {
     
         this.chainId = getChainId(chain);
 
-        const account = privateKeyToAccount(import.meta.env.VITE_ETHEREUM_PRIVATE_KEY as `0x${string}`);
+        this.account = privateKeyToAccount(import.meta.env.VITE_ETHEREUM_PRIVATE_KEY as `0x${string}`);
 
         console.log(this.chainId);
         console.log("rpc", getRPCUrl(this.chainId))
@@ -22,7 +23,7 @@ export class ViemService {
         console.log( getViemChainById(this.chainId))
 
         this.walletClient = createWalletClient({
-            account,
+            account: this.account,
             chain: getViemChainById(this.chainId),
             transport: http(getRPCUrl(this.chainId))
         });
@@ -34,6 +35,12 @@ export class ViemService {
 
     }
 
+    getAddress() {
+
+        return this.account.address;
+
+    }
+
     async signMessage(
         messageHash: string
     ) {
@@ -42,7 +49,7 @@ export class ViemService {
         })
     }
 
-    async genericTx(
+    async writeContract(
         address: string,
         abi: any,
         functionName: string,
@@ -68,5 +75,14 @@ export class ViemService {
         return receipt;
     }
 
+    async readSurveyContract(functionName: any, args: any[])  {
+    
+        return await this.publicClient.readContract({
+            address: import.meta.env.VITE_SURVEYSTORE_CONTRACT,
+            abi: SURVEY_STORE_ABI,
+            functionName,
+            args
+        });
+    }
 
 }

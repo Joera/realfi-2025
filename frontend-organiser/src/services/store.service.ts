@@ -36,13 +36,11 @@ class Observable<T> {
 
 // Store state interface
 interface AppState {
-  user: {};
   ui: {
-    currentStep: 'register';
+    landingStep: 'register',
+    resultTab: "results" | "config" | "questions" 
   },
-   services: {
-    [key: string]: any; 
-  };
+  surveys: any[] 
 }
 
 class Store {
@@ -54,40 +52,32 @@ class Store {
   constructor() {
     // Initialize observables with proper types
     this.observables = {
-      user: new Observable<AppState['user']>({}),
       ui: new Observable<AppState['ui']>({
-        currentStep: 'register'
+        landingStep: 'register',
+        resultTab: 'results'  // Default tab
       }),
-      services:  new Observable<AppState['services']>({
-      }),
+      surveys: new Observable<AppState['surveys']>([])
     };
   }
 
-  // Getters
-  get user() { return this.observables.user.get(); }
-  get ui() { return this.observables.ui.get(); }
 
-  // Setters
-  setUser(update: Partial<AppState['user']>) {
-    this.observables.user.update(current => ({ ...current, ...update }));
-  }
+  get ui() { return this.observables.ui.get(); }
+  get surveys() { return this.observables.surveys.get(); }
+
 
   setUI(update: Partial<AppState['ui']>) {
     this.observables.ui.update(current => ({ ...current, ...update }));
   }
 
-  setService(name: string, service: any) {
-    this.observables.services = {
-      ...this.observables.services,
-      [name]: service
-    } as any;
+  setSurveys(surveys: AppState['surveys']) {  // ← Add this
+    console.log(1)
+    this.observables.surveys.set(surveys);
   }
 
-  getService(name: string) {
-    return (this.observables.services as any)[name];
+  addSurvey(survey: any) {  // ← Add this
+    this.observables.surveys.update(current => [...current, survey]);
   }
 
-  // Subscribe to changes
   subscribe<K extends keyof AppState>(
     key: K,
     listener: Listener<AppState[K]>
@@ -95,16 +85,12 @@ class Store {
     return this.observables[key].subscribe(listener);
   }
 
-  // Persist user data
-  persistUser() {
-    const user = this.user;
-    // if (user.nullifier) localStorage.setItem('nullifer', user.nullifier);
-
-  }
-
-  // Clear all data
   clear() {
-    this.setUI({ currentStep: 'register'});
+    this.setUI({ 
+        landingStep: 'register',
+        resultTab: 'results' 
+    });
+    this.setSurveys([]); 
   }
 }
 

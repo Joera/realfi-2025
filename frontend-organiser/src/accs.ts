@@ -1,8 +1,9 @@
+
 export const accsForSurveyOwner = (surveyId: string) => {
 
         const rawCondition: any = {
             chain: "base",
-            contractAddress: process.env.SURVEY_STORE_ADDRESS,
+            contractAddress: import.meta.env.VITE_SURVEYSTORE_CONTRACT,
             functionName: "isOwner",
 
             functionParams: [":userAddress", surveyId],
@@ -33,7 +34,7 @@ export const accsForSurveyOwner = (surveyId: string) => {
 export const accsForUser = () => {
     const rawCondition: any = {
         chain: "base",
-        contractAddress: process.env.SURVEY_STORE_ADDRESS,
+        contractAddress: import.meta.env.VITE_SURVEYSTORE_CONTRACT,
         functionName: "isNullifierUsed",
         
         functionParams: [":nullifier", ":batchId"], // Both are placeholders

@@ -28,7 +28,6 @@ export class LitService {
             evmContractConditions: accs,
             chain: "ethereum",
         });
-
     }
 
 
@@ -41,9 +40,6 @@ export class LitService {
             chain: "ethereum",
         });
     }
-
-    
-
 }
 
 

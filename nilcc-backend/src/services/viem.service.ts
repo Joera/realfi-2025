@@ -1,6 +1,6 @@
 import { createPublicClient, http, type PublicClient } from "viem";
 import { base } from "viem/chains";
-import { SURVEY_STORE_ABI } from "./survey.abi";
+import { SURVEY_STORE_ABI } from "../survey.abi";
 
 const SURVEY_STORE_ADDRESS = '0x4CAfD69E3D7a9c37beCbFaF3D3D5C542F7b5fF6c'; 
 
@@ -11,7 +11,7 @@ export class ViemService {
 
     constructor() {
 
-        this.rpcUrl =  `https://base-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`;
+        this.rpcUrl = `https://base-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`;
 
         this.publicClient = createPublicClient({
             chain: base,
@@ -27,11 +27,5 @@ export class ViemService {
             functionName,
             args: [surveyId]
         });
-
-
     }
-
-
-     
-
 }

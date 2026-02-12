@@ -19,8 +19,10 @@ export class SurveyController {
         this.viem = viem;
     }
 
+
     async create(body: any) {
-        const { signerAddress, surveyId, surveyConfig } = body;
+
+        const { authContext, nillDelegation, signerAddress, surveyId, surveyConfig } = body;
         
         // Generate survey-specific keypair
         const privateKeyBytes = secp256k1.utils.randomSecretKey();
@@ -32,23 +34,15 @@ export class SurveyController {
         const schema = createSurveyCollectionSchema(surveyId, surveyConfig);
         const collectionId = await this.nildb.createSurveyCollection(schema);
 
-        // Get delegation from builder
-        const delegation = await this.nildb.getDelegation(
-            surveyOwnerDid.didString, 
-            collectionId
-        );
-
         // Encrypt everything
-        const [encryptedSurveyConfig, encryptedKey, encryptedDelegation] = await Promise.all([
+        const [encryptedSurveyConfig, encryptedKey] = await Promise.all([
             this.lit.encrypt(surveyConfig, accsForUser()),
             this.lit.encrypt(privateKeyHex, accsForSurveyOwner(surveyId)),
-            this.lit.encrypt(delegation, accsForSurveyOwner(surveyId))
         ]);
 
         const config = {
             nilDid: surveyOwnerDid.didString,
             encryptedNilKey: encryptedKey,
-            encryptedDelegation,
             collectionID: collectionId,
             surveyConfig: encryptedSurveyConfig
         };
@@ -84,18 +78,18 @@ export class SurveyController {
         );
 
         // Path B: Safe signer
-        let isSafeSigner = false;
-        if (safeAddress) {
-            isSafeSigner = await this.verifySafeSigner(
-                safeAddress,
-                owner,
-                requestorDid,
-                message,
-                signature
-            );
-        }
+        // let isSafeSigner = false;
+        // if (safeAddress) {
+        //     isSafeSigner = await this.verifySafeSigner(
+        //         safeAddress,
+        //         owner,
+        //         requestorDid,
+        //         message,
+        //         signature
+        //     );
+        // }
 
-        if (!isDirectOwner && !isSafeSigner) {
+        if (!isDirectOwner) { //  && !isSafeSigner
             return { 
                 error: 'Not authorized: must be survey owner or Safe signer' 
             };
@@ -132,37 +126,37 @@ export class SurveyController {
     }
 
     // Helper: Verify Safe signer
-    async verifySafeSigner(
-        safeAddress: string,
-        surveyOwnerAddress: string,
-        requestorDid: string,
-        message: string,
-        signature:  Signature
-    ): Promise<boolean> {
-        // Verify Safe address matches survey owner
-        if (safeAddress.toLowerCase() !== surveyOwnerAddress.toLowerCase()) {
-            return false;
-        }
+    // async verifySafeSigner(
+    //     safeAddress: string,
+    //     surveyOwnerAddress: string,
+    //     requestorDid: string,
+    //     message: string,
+    //     signature:  Signature
+    // ): Promise<boolean> {
+    //     // Verify Safe address matches survey owner
+    //     if (safeAddress.toLowerCase() !== surveyOwnerAddress.toLowerCase()) {
+    //         return false;
+    //     }
 
-        // Recover signer from signature
-        // const signerAddress = await recoverMessageAddress({ message, signature });
+    //     // Recover signer from signature
+    //     // const signerAddress = await recoverMessageAddress({ message, signature });
         
-        // // Check if signer is owner of the Safe
-        // const safe = await Safe.init({
-        //     provider: ethProvider,
-        //     safeAddress: safeAddress,
-        // });
+    //     // // Check if signer is owner of the Safe
+    //     // const safe = await Safe.init({
+    //     //     provider: ethProvider,
+    //     //     safeAddress: safeAddress,
+    //     // });
 
-        const owners = await safe.getOwners();
-        const isSigner = owners.some(
-            (owner: any) => owner.toLowerCase() === signerAddress.toLowerCase()
-        );
+    //     const owners = await safe.getOwners();
+    //     const isSigner = owners.some(
+    //         (owner: any) => owner.toLowerCase() === signerAddress.toLowerCase()
+    //     );
 
-        // Verify message format
-        const expectedMessage = `Request delegation for ${requestorDid}`;
+    //     // Verify message format
+    //     const expectedMessage = `Request delegation for ${requestorDid}`;
         
-        return isSigner && message === expectedMessage;
-    }
+    //     return isSigner && message === expectedMessage;
+    // }
 
 
 }

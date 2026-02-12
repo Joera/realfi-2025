@@ -3,39 +3,20 @@
 
 import { bytesToHex } from 'viem';
 import '../components/survey-config-form.js';
-import LITCtrlr from '../lit.ctrlr.js';
-import { PinataService } from '../pinata.service.js';
 import { generateCardSecrets } from '../services/invitation.factory.js';
-import { PermissionlessSafeService } from '../services/permissionless.safe.service.js';
 import { store } from '../services/store.service.js';
-import { ViemService } from '../services/viem.service.js';
 import { randomBytes } from '../utils/random.js';
 import { reactive } from '../utils/reactive.js';
 import slugify  from 'slugify';
-
-const BACKEND = "http://localhost:8080"; 
-const SURVEYSTORE = "0x4CAfD69E3D7a9c37beCbFaF3D3D5C542F7b5fF6c"
-
+import { IServices } from '../services/container.js';
 
 export class LandingController {
   private reactiveViews: any[] = [];
-  pinata: any;
-  lit: any;
-  safe: any;
-  viem: any;
+  private services: IServices;
 
-  constructor() {
+  constructor(services: IServices) {
 
-    this.pinata = new PinataService(
-      // @ts-ignore
-      import.meta.env.VITE_PINATA_KEY,
-      // @ts-ignore
-      import.meta.env.VITE_PINATA_SECRET
-    )
-
-    this.lit = new LITCtrlr();
-    this.safe = new PermissionlessSafeService('base');
-    this.viem = new ViemService('base')
+    this.services = services;
   }
 
   private renderTemplate() {
@@ -47,9 +28,9 @@ export class LandingController {
     `;
 
     const view = reactive('#landing-content', () => {
-      const { currentStep } = store.ui;
+      const { landingStep } = store.ui;
 
-      switch (currentStep) {
+      switch (landingStep) {
         case 'register':
           return `
             <survey-config-form></survey-config-form>
@@ -96,35 +77,21 @@ export class LandingController {
 
   async setSurveyListener() {
         
-    
     document.addEventListener('survey-config-generated', async (event: any) => {
 
-      // console.log(event.detail.config)
-
       const randomHex = bytesToHex(randomBytes(4));
-      const surveyId = `${this.viem.walletClient.account.address.slice(0, 8)}${Date.now()}${randomHex}`; 
+      const surveyId = `${this.services.viem.walletClient.account.address.slice(0,8)}${Date.now()}${randomHex}`; 
 
-      let delegation: any  = await fetch(`${BACKEND}/api/request-delegation`, {
+      const nillDid = this.services.nillion.getDid();
+                    
+      let res: any  = await fetch(`${import.meta.env.VITE_BACKEND}/api/create-survey`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json', 
           },
           body: JSON.stringify({ 
-              surveyId,
-              requestorDid,
-              signature,     
-              message  
-          })
-      });
-                           
-      let res: any  = await fetch(`${BACKEND}/api/create-survey`, {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json', 
-          },
-          body: JSON.stringify({ 
-              authContext: await this.lit.createAuthContext(),
-              signerAddress: this.lit.getAddress(),
+              authContext: {}, // await this.lit.createAuthContext(),
+              signerAddress: this.services.lit.getAddress(),
               surveyId,
               surveyConfig: event.detail.config
           })
@@ -135,34 +102,32 @@ export class LandingController {
       console.log(info)
 
       // check if combination owner + survey title was used before ! 
-
      
       const abi = [{"inputs":[{"internalType":"string","name":"surveyId","type":"string"},{"internalType":"string","name":"ipfsCid","type":"string"}],"name":"createSurvey","outputs":[],"stateMutability":"nonpayable","type":"function"}]
       const args = [surveyId, info.surveyCid.toString()]
 
+      // if (event.detail.multisig) {
 
+        // await this.safe.connectToFreshSafe('s3ntiment_survey_' + surveySlug);
+        // await this.safe.updateSigner(import.meta.env.VITE_ETHEREUM_PRIVATE_KEY)
+      
+        // const tx = await this.safe.genericTx(contract, abi, 'createSurvey', args, false, false )
 
-            // if (event.detail.multisig) {
+        // console.log(tx)
 
-              // await this.safe.connectToFreshSafe('s3ntiment_survey_' + surveySlug);
-              // await this.safe.updateSigner(import.meta.env.VITE_ETHEREUM_PRIVATE_KEY)
-           
-              // const tx = await this.safe.genericTx(contract, abi, 'createSurvey', args, false, false )
+      // } else {
 
-              // console.log(tx)
-
-            // } else {
-
-      const receipt = await this.viem.genericTx(SURVEYSTORE, abi, 'createSurvey', args)
+      const receipt = await this.services.viem.writeContract(import.meta.env.VITE_SURVEYSTORE_CONTRACT, abi, 'createSurvey', args)
       console.log(receipt)
 
       const batchId = "original";
       // create qr codes 
-      await generateCardSecrets(this.viem, batchId, event.detail.batchSize, surveyId);
+      await generateCardSecrets(this.services.viem, batchId, event.detail.batchSize, surveyId);
 
-      const test = await generateCardSecrets(this.viem, "test", 1, surveyId);
+      // include one qr code for testing .. excluded from not counted , no nullifier , batchid =test 
+      const test = await generateCardSecrets(this.services.viem, "test", 1, surveyId);
 
-          // include one qr code for testing .. excluded from not counted , no nullifier , batchid =test 
+      
       console.log(test)
 
 

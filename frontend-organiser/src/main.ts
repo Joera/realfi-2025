@@ -1,5 +1,6 @@
 import './styles/main.scss';
 import { initRouter } from './router';
+import { getServices } from './services/container';
 
 const onPagePainted = () => {
 
@@ -13,8 +14,11 @@ const onPagePainted = () => {
 
 
 const main = async () => {
+
+  const services = getServices();
+  await services.initialize();
   // Initialize router
-  initRouter();
+  initRouter(services);
 }
 
 if (document.readyState === 'loading') {
