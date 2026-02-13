@@ -116,6 +116,11 @@ class OptionsEditor extends HTMLElement {
                 font-size: 1rem;
             }
 
+            input::placeholder {
+                color: white;
+                font-style: italic;
+            }
+
             input:focus {
                 outline: none;
                 border-color: var(--green);

@@ -81,7 +81,8 @@ class QuestionGroupElement extends HTMLElement {
             }
 
             .group-title-input::placeholder {
-                color: #9ca3af;
+                color: white;
+                font-style: italic;
                 font-weight: normal;
             }
 
@@ -102,6 +103,11 @@ class QuestionGroupElement extends HTMLElement {
                 display: flex;
                 justify-content: center;
                 align-items: center;
+            }
+
+            #group-copy {
+
+            font-size : 2rem;
             }
 
             .questions-container {

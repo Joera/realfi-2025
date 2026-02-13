@@ -69,7 +69,7 @@ class ScaleConfig extends HTMLElement {
             }
 
             .scale-config input {
-                width: auto;
+                width: 100%;
             }
 
             label {
@@ -86,6 +86,11 @@ class ScaleConfig extends HTMLElement {
                 border-radius: 6px;
                 margin-bottom: 0.75rem;
                 font-size: 1rem;
+            }
+
+            input::placeholder {
+                color: white;
+                font-style: italic;
             }
 
             input:focus {

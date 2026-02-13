@@ -148,7 +148,8 @@ class QuestionCard extends HTMLElement {
             }
 
             .question-title-input::placeholder {
-                color: #9ca3af;
+                color: white;
+                font-style: italic;
                 font-weight: normal;
             }
 

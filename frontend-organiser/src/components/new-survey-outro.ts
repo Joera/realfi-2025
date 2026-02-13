@@ -34,6 +34,27 @@ class NewSurveyFormOutro extends HTMLElement {
                 width: 100%;
             }
 
+            input[type="text"],
+            textarea,
+            select {
+                width: 100%;
+                padding: 0.75rem;
+                border: 1px solid #fff;
+                border-radius: 8px;
+                font-size: 1rem;
+                font-family: inherit;
+                transition: border-color 0.2s;
+                box-sizing: border-box;
+                margin-bottom: 1rem;
+            }
+
+            input[type="text"]:focus,
+            textarea:focus,
+            select:focus {
+                outline: none;
+                border-color: var(--green);
+            }
+
     
 
             .form-actions {
