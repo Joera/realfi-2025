@@ -1,13 +1,13 @@
 
-import { IServices } from "../services/container";
-import { store } from "../services/store.service";
-import { reactive } from "../utils/reactive";
+import { IServices } from "../services/container.js";
+import { store } from "../services/store.service.js";
+import { reactive } from "../utils/reactive.js";
 import '../components/survey-result.js';
 import '../components/survey-config.js';
 import '../components/survey-questions.js';
 import { router } from "../router.js";
 
-export class ResultController {
+export class SurveyController {
     private reactiveViews: any[] = [];
     private services: IServices;
     private surveyId: string;

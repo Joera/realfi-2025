@@ -72,7 +72,9 @@ export class WaapService {
     }
 
     async initWaap() { 
+        
         await initWaaP(initConfig);
+        await this.createWallet()
     }
 
     initPublicClient() {
@@ -82,22 +84,36 @@ export class WaapService {
         });
     }
 
-    async login() : Promise<LoginResult> {
+    async createWallet() {
 
-        try {
-          
-            const loginType = await window.waap.login();
-  
-            const accounts:any = await window.waap.request({ method: 'eth_requestAccounts' }); 
-            this.address = accounts[0];         
+        const accounts:any = await window.waap.request({ method: 'eth_requestAccounts' }); 
+        if (accounts[0]) {
+            this.address = accounts[0];  
+            console.log("address set")       
             this.walletClient = createWalletClient({
                 account: this.address as `0x${string}`,
                 chain: base, 
                 transport: custom(window.waap)
             });
+        }
 
+        return this.walletClient 
+    
+    }
+
+    async login() : Promise<LoginResult> {
+
+        try {
+          
+            const loginType = await window.waap.login();
+            await this.createWallet();
+           
             if (!this.address) {
                 throw new Error('Failed to get wallet address');
+            }
+
+            if (!this.walletClient) {
+                throw new Error('Failed to create wallet client');
             }
             
             return { 

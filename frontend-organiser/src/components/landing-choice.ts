@@ -5,7 +5,7 @@ import { store } from '../services/store.service.js'
 import { router } from '../router.js';
 import { layoutStyles } from '../styles/shared-layout-styles.js';
 
-class RegisterFlow extends HTMLElement {
+class LandingChoice extends HTMLElement {
     private unsubscribe?: () => void;
     private surveyId!: string;
 
@@ -43,7 +43,8 @@ class RegisterFlow extends HTMLElement {
         </style>
 
         <div class="centered button-group">
-            <button id="login-btn" class="btn-primary">Login</button>
+            <button id="new-btn" class="btn-secondary">New</button>
+            <button id="surveys-btn" class="btn-secondary">My surveys</button>
         </div>
         `;
 
@@ -53,13 +54,14 @@ class RegisterFlow extends HTMLElement {
 
     private attachListeners() {
        
-        this.shadowRoot?.querySelector('#login-btn')?.addEventListener('click', () => {
+        this.shadowRoot?.querySelector('#new-btn')?.addEventListener('click', () => {
             
-            this.dispatchEvent(new CustomEvent('ready-to-login', {
-                detail: { },
-                bubbles: true,
-                composed: true
-            }))
+            router.navigate('new')
+        });
+
+        this.shadowRoot?.querySelector('#urveys-btn')?.addEventListener('click', () => {
+            
+            router.navigate('surveys')
         });
 
    
@@ -68,6 +70,6 @@ class RegisterFlow extends HTMLElement {
 
 }
 
-customElements.define('register-flow', RegisterFlow)
+customElements.define('landing-choice', LandingChoice)
 
-export { RegisterFlow }
+export { LandingChoice }

@@ -5,7 +5,7 @@ import { store } from '../services/store.service.js'
 import { router } from '../router.js';
 import { layoutStyles } from '../styles/shared-layout-styles.js';
 
-class RegisterFlow extends HTMLElement {
+class LandingRegister extends HTMLElement {
     private unsubscribe?: () => void;
     private surveyId!: string;
 
@@ -68,6 +68,6 @@ class RegisterFlow extends HTMLElement {
 
 }
 
-customElements.define('register-flow', RegisterFlow)
+customElements.define('landing-register', LandingRegister)
 
-export { RegisterFlow }
+export { LandingRegister }

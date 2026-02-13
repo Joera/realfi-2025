@@ -37,10 +37,12 @@ class Observable<T> {
 // Store state interface
 interface AppState {
   ui: {
-    landingStep: 'register',
+    landingStep: 'welcome' | 'register' | 'choice',
+    newStep: 'intro' | 'questions' | 'outro',
     resultTab: "results" | "config" | "questions" 
   },
-  surveys: any[] 
+  surveys: any[],
+  surveyDraft: any,
 }
 
 class Store {
@@ -53,10 +55,12 @@ class Store {
     // Initialize observables with proper types
     this.observables = {
       ui: new Observable<AppState['ui']>({
-        landingStep: 'register',
+        landingStep: 'welcome',
+        newStep: 'intro',
         resultTab: 'results'  // Default tab
       }),
-      surveys: new Observable<AppState['surveys']>([])
+      surveys: new Observable<AppState['surveys']>([]),
+      surveyDraft: new Observable<AppState['surveyDraft']>({}), 
     };
   }
 
@@ -70,7 +74,6 @@ class Store {
   }
 
   setSurveys(surveys: AppState['surveys']) {  // ← Add this
-    console.log(1)
     this.observables.surveys.set(surveys);
   }
 
@@ -87,7 +90,8 @@ class Store {
 
   clear() {
     this.setUI({ 
-        landingStep: 'register',
+        landingStep: 'welcome',
+        newStep: 'intro',
         resultTab: 'results' 
     });
     this.setSurveys([]); 

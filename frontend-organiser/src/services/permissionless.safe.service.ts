@@ -5,7 +5,6 @@ import {
 import { createSmartAccountClient } from "permissionless";
 import { createPimlicoClient } from "permissionless/clients/pimlico";
 import { createPublicClient, encodeFunctionData, http, keccak256, parseAbi, parseEther, toBytes } from "viem";
-import { privateKeyToAccount, toAccount } from "viem/accounts";
 import { getChainId, getRPCUrl, getScanApi, getViemChainById } from "./chains.factory.ts";
 
 
@@ -84,8 +83,8 @@ export class PermissionlessSafeService implements IPermissionlessSafeService {
     });
   }
 
-  async updateSigner(pk: string) {
-    this.signer = await privateKeyToAccount(pk as `0x${string}`);
+  async updateSigner(waapWalletClient: any) {
+    this.signer = waapWalletClient
     return this.signer.address;
   }
   

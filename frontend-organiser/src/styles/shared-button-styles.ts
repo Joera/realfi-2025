@@ -28,18 +28,22 @@ buttonStyles.replaceSync(`
         .btn-primary {
           background-color: ${bgTooDark};
           color: white;
-        }s
+        }
 
         .btn-primary:hover:not(:disabled) {
-          background-color: ${bgTooDark};
+          background-color: black;
+        }
 
         .btn-secondary {
-          background-color: #f3f4f6;
-          color: #374151;
+          background-color: transparent;
+          border: 1px solid ${bgTooDark};
+          color: ${bgTooDark};
         }
 
         .btn-secondary:hover:not(:disabled) {
-          background-color: #e5e7eb;
+          background-color: transparent;
+          color: black;
+          border-color: black;
         }
 
         .error-message {

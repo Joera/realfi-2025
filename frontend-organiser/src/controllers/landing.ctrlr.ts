@@ -1,13 +1,10 @@
 // src/controllers/landing.controller.ts
 
-
-import { bytesToHex } from 'viem';
-import '../components/register-flow.js';
-import { generateCardSecrets } from '../services/invitation.factory.js';
+// import '../components/landing-welcome.js';
+import '../components/landing-register.js';
+import '../components/landing-choice.js';
 import { store } from '../services/store.service.js';
-import { randomBytes } from '../utils/random.js';
 import { reactive } from '../utils/reactive.js';
-import slugify  from 'slugify';
 import { IServices } from '../services/container.js';
 
 export class LandingController {
@@ -30,10 +27,21 @@ export class LandingController {
     const view = reactive('#landing-content', () => {
       const { landingStep } = store.ui;
 
+      console.log("switch")
+
       switch (landingStep) {
+        case 'welcome':
+          return ``;
+        
         case 'register':
           return `
-            <register-flow class="centered"></register-flow>
+            <landing-register class="centered"></landing-register>
+          `;
+
+        case 'choice':
+          return `
+            
+            <landing-choice class="centered"></landing-choice>
           `;
         
         default:
@@ -52,8 +60,25 @@ export class LandingController {
 
   async process() {
 
-    
-   
+    const ready = this.services.isInitialized()
+  
+    if(ready) {
+      // happens too fast
+      console.log("ADDR", this.services.waap.address)
+      if (this.services.waap.address == undefined) {
+        console.log(0)
+        store.setUI({ landingStep: 'register'})
+      } else {
+        console.log(1)
+        store.setUI({ landingStep: 'choice'})
+      }
+    }
+
+    // console.log('2', await window.waap.request({ method: 'eth_requestAccounts' }))
+
+    // console.log(address);
+
+  
     // @ts-ignore
     // const signer = await this.lit.init(import.meta.env.VITE_ETHEREUM_PRIVATE_KEY); 
 
@@ -82,7 +107,7 @@ export class LandingController {
         if (walletClient && address) {
 
           console.log("logged in")
-
+   
         }
 
     });

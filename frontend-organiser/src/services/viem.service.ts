@@ -16,12 +16,6 @@ export class ViemService {
 
         this.account = privateKeyToAccount(import.meta.env.VITE_ETHEREUM_PRIVATE_KEY as `0x${string}`);
 
-        console.log(this.chainId);
-        console.log("rpc", getRPCUrl(this.chainId))
-
-        console.log(this.chainId)
-        console.log( getViemChainById(this.chainId))
-
         this.walletClient = createWalletClient({
             account: this.account,
             chain: getViemChainById(this.chainId),

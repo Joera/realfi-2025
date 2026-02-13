@@ -32,7 +32,7 @@ export const getChainId = (chain: string) => {
     }
 }
 
-export const getRPCUrl = (chainId: number): string => {
+export const getRPCUrl = (chainId: number): string|undefined => {
   let rpc;
 
   const alchemy_key = import.meta.env.VITE_ALCHEMY_KEY;
@@ -60,8 +60,6 @@ export const getRPCUrl = (chainId: number): string => {
       break;
 
   }
-
-  console.log(rpc)
 
   return rpc;
 };

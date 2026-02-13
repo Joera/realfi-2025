@@ -5,7 +5,7 @@ import type { Match } from 'navigo';
 import { LandingController } from './controllers/landing.ctrlr';
 import { IServices } from './services/container';
 import { ResultsController } from './controllers/results.ctrlr';
-import { ResultController } from './controllers/result.ctrlr';
+import { SurveyController } from './controllers/survey.ctrlr.ts';
 import { NewSurveyController } from './controllers/new.ctrlr.ts';
 
 const router = new Navigo('/');
@@ -30,8 +30,7 @@ export const initRouter = (services: IServices) => {
       currentController.render();
     })
     .on('/survey/:surveyId', function(match) {
-      if (currentController?.destroy) currentController.destroy();
-      
+      if (currentController?.destroy) currentController.destroy();      
       const surveyId = match?.params?.surveyId || match?.data?.surveyId || '';
 
       if (!surveyId) {
@@ -39,7 +38,7 @@ export const initRouter = (services: IServices) => {
         return;
       }
       
-      currentController = new ResultController(services, surveyId);
+      currentController = new SurveyController(services, surveyId);
       currentController.render();
     })
     .notFound(() => {

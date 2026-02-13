@@ -1,6 +1,5 @@
 import { createPublicClient, http } from 'viem';
 import { base } from 'viem/chains';
-import { fromPinata } from './ipfs.factory';
 
 const client = createPublicClient({
   chain: base,

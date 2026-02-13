@@ -12,6 +12,7 @@ export interface IServices {
   lit: LitService;
   safe: PermissionlessSafeService;
   ipfs: IPFSMethods;
+  isInitialized: () => boolean;
 }
 
 export class ServiceContainer {
@@ -52,6 +53,18 @@ export class ServiceContainer {
     this.viem = new ViemService(import.meta.env.VITE_L2);
 
     this.ipfs = new IPFSMethods(import.meta.env.VITE_KUBO_ENDPOINT, import.meta.env.VITE_PINATA_JWT, import.meta.env.VITE_PINATA_GATEWAY)
+
+    const walletClient = await this.waap.createWallet();
+
+    if(walletClient) {
+      this.safe.updateSigner(walletClient);
+      await this.safe.connectToFreshSafe('s3ntiment')
+    }
+
+    console.log("safe address",this.safe.address)
+
+
+
     this.initialized = true;
   }
   

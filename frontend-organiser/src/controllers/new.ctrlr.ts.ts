@@ -27,10 +27,10 @@ export class NewSurveyController {
     `;
 
     const view = reactive('#new-survey', () => {
-      const { landingStep } = store.ui;
+      const { newStep } = store.ui;
 
-      switch (landingStep) {
-        case 'register':
+      switch (newStep) {
+        case 'intro':
           return `
             <survey-config-form></survey-config-form>
           `;
@@ -50,9 +50,9 @@ export class NewSurveyController {
   async process() {
    
     // @ts-ignore
-    const signer = await this.lit.init(import.meta.env.VITE_ETHEREUM_PRIVATE_KEY); 
+   // const signer = await this.lit.init(import.meta.env.VITE_ETHEREUM_PRIVATE_KEY); 
 
-    console.log("initialized lit with ", signer)
+   // console.log("initialized lit with ", signer)
 
     await customElements.whenDefined('survey-config-form');
     const form = document.querySelector('survey-config-form');
