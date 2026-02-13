@@ -1,7 +1,7 @@
 
 import { accsForSurveyOwner } from "../accs";
 import { IServices } from "../services/container";
-import { store } from "../services/store.service";
+import { store } from "../state/store.js";
 import { reactive } from "../utils/reactive";
 import '../components/survey-results-list.js';
 

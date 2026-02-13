@@ -2,9 +2,11 @@
 
 
 import { bytesToHex } from 'viem';
-import '../components/survey-config-form.js';
+import '../components/new-survey-intro.js';
+import '../components/new-survey-questions.js';
+import '../components/new-survey-outro.js';
 import { generateCardSecrets } from '../services/invitation.factory.js';
-import { store } from '../services/store.service.js';
+import { store } from '../state/store.js';
 import { randomBytes } from '../utils/random.js';
 import { reactive } from '../utils/reactive.js';
 import { IServices } from '../services/container.js';
@@ -23,7 +25,7 @@ export class NewSurveyController {
     if (!app) return;
 
     app.innerHTML = `
-      <div id="new-survey"></div>
+      <div id="new-survey" class="container centered"></div>
     `;
 
     const view = reactive('#new-survey', () => {
@@ -32,7 +34,15 @@ export class NewSurveyController {
       switch (newStep) {
         case 'intro':
           return `
-            <survey-config-form></survey-config-form>
+            <new-survey-form-intro class="container container-large centered"></survey-config-form-intro>
+          `;
+        case 'questions':
+          return `
+            <new-survey-form-questions class="container container-large centered"></survey-config-form-questions>
+          `;
+        case 'outro':
+          return `
+            <new-survey-form-outro class="container container-large centered"></survey-config-form-outro>
           `;
         
         default:

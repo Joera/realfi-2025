@@ -1,6 +1,6 @@
 // src/utils/reactive.ts
 
-import { store } from '../services/store.service';
+import { store } from '../state/store';
 
 type TemplateFunction = () => string;
 

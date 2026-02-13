@@ -1,6 +1,6 @@
 
 import { IServices } from "../services/container.js";
-import { store } from "../services/store.service.js";
+import { store } from "../state/store.js";
 import { reactive } from "../utils/reactive.js";
 import '../components/survey-result.js';
 import '../components/survey-config.js';

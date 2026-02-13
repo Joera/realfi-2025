@@ -3,7 +3,7 @@
 // import '../components/landing-welcome.js';
 import '../components/landing-register.js';
 import '../components/landing-choice.js';
-import { store } from '../services/store.service.js';
+import { store } from '../state/store.js';
 import { reactive } from '../utils/reactive.js';
 import { IServices } from '../services/container.js';
 
@@ -64,7 +64,7 @@ export class LandingController {
   
     if(ready) {
       // happens too fast
-      console.log("ADDR", this.services.waap.address)
+      console.log("signer address", this.services.waap.address)
       if (this.services.waap.address == undefined) {
         console.log(0)
         store.setUI({ landingStep: 'register'})

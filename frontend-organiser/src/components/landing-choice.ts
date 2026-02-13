@@ -1,7 +1,7 @@
 import { typograhyStyles } from '../styles/shared-typograhy-styles.js'
 import { colourStyles } from '../styles/shared-colour-styles.js'
 import { buttonStyles } from '../styles/shared-button-styles.js'
-import { store } from '../services/store.service.js'
+import { store } from '../state/store.js'
 import { router } from '../router.js';
 import { layoutStyles } from '../styles/shared-layout-styles.js';
 
@@ -44,7 +44,7 @@ class LandingChoice extends HTMLElement {
 
         <div class="centered button-group">
             <button id="new-btn" class="btn-secondary">New</button>
-            <button id="surveys-btn" class="btn-secondary">My surveys</button>
+            <button id="list-btn" class="btn-secondary">My surveys</button>
         </div>
         `;
 
@@ -55,13 +55,11 @@ class LandingChoice extends HTMLElement {
     private attachListeners() {
        
         this.shadowRoot?.querySelector('#new-btn')?.addEventListener('click', () => {
-            
-            router.navigate('new')
+            router.navigate('/new');
         });
 
-        this.shadowRoot?.querySelector('#urveys-btn')?.addEventListener('click', () => {
-            
-            router.navigate('surveys')
+        this.shadowRoot?.querySelector('#list-btn')?.addEventListener('click', () => {
+            router.navigate('/surveys');
         });
 
    

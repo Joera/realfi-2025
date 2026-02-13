@@ -1,7 +1,7 @@
 import { typograhyStyles } from '../styles/shared-typograhy-styles.js'
 import { colourStyles } from '../styles/shared-colour-styles.js'
 import { buttonStyles } from '../styles/shared-button-styles.js'
-import { store } from '../services/store.service.js';
+import { store } from '../state/store.js';
 import { router } from '../router.js';
 
 class SurveyResultsList extends HTMLElement {
@@ -41,9 +41,7 @@ class SurveyResultsList extends HTMLElement {
         <style>
 
             :host {
-                
                 --green: rgb(42.9834254144, 112.6165745856, 98.0022099448)
-         
             }
 
             .survey-table {

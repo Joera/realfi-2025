@@ -1,3 +1,5 @@
+import { SurveyConfig } from "../types";
+
 type Listener<T> = (value: T) => void;
 
 class Observable<T> {
@@ -42,7 +44,7 @@ interface AppState {
     resultTab: "results" | "config" | "questions" 
   },
   surveys: any[],
-  surveyDraft: any,
+  surveyDraft: SurveyConfig,
 }
 
 class Store {
@@ -67,6 +69,9 @@ class Store {
 
   get ui() { return this.observables.ui.get(); }
   get surveys() { return this.observables.surveys.get(); }
+  get surveyDraft() { 
+    return this.observables.surveyDraft.get(); 
+  }
 
 
   setUI(update: Partial<AppState['ui']>) {
@@ -77,8 +82,15 @@ class Store {
     this.observables.surveys.set(surveys);
   }
 
-  addSurvey(survey: any) {  // ← Add this
+  addSurvey(survey: SurveyConfig) {  // ← Add this
     this.observables.surveys.update(current => [...current, survey]);
+  }
+
+   updateSurveyDraft(updates: Partial<SurveyConfig>) {
+    this.observables.surveyDraft.update(current => ({
+      ...current,
+      ...updates
+    }));
   }
 
   subscribe<K extends keyof AppState>(
@@ -95,6 +107,11 @@ class Store {
         resultTab: 'results' 
     });
     this.setSurveys([]); 
+  }
+
+   clearSurveyDraft() {
+    this.observables.surveyDraft.set({
+    });
   }
 }
 
