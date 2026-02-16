@@ -1,6 +1,6 @@
-import { typograhyStyles } from '../styles/shared-typograhy-styles.js'
-import { colourStyles } from '../styles/shared-colour-styles.js'
-import { buttonStyles } from '../styles/shared-button-styles.js'
+import { typograhyStyles } from '../../styles/shared-typograhy-styles.js'
+import { colourStyles } from '../../styles/shared-colour-styles.js'
+import { buttonStyles } from '../../styles/shared-button-styles.js'
 
 class OptionsEditor extends HTMLElement {
     private _options: string[] = []

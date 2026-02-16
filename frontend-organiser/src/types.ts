@@ -38,7 +38,7 @@ export interface QuestionGroup {
 
 export interface SurveyConfig {
     title?: string
-    instruction?: string
+    introduction?: string
     groups?: QuestionGroup[]
 }
 

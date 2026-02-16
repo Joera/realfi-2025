@@ -51,6 +51,10 @@ export class ViemService {
         ) {
 
 
+        console.log('Contract:', address);
+        console.log('Args:', args);
+        console.log('Chain:', this.walletClient.chain);
+
         // lijkt weer dat geval met te hoge tx kosten want denkt aan mainnet ipv base 
 
 
@@ -61,10 +65,10 @@ export class ViemService {
             args
         });
 
-        // console.log('Tx hash:', hash);
+        console.log('Tx hash:', hash);
 
         const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
-        // console.log('Tx confirmed in block:', receipt.blockNumber);
+        console.log('Tx confirmed in block:', receipt.blockNumber);
 
         return receipt;
     }

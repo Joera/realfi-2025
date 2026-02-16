@@ -1,13 +1,11 @@
-import { typograhyStyles } from '../styles/shared-typograhy-styles.js'
-import { colourStyles } from '../styles/shared-colour-styles.js'
-import { buttonStyles } from '../styles/shared-button-styles.js'
-import type { Question, QuestionGroup } from '../types.js'
-import { store } from '../state/store.js'
+import { typograhyStyles } from '../../styles/shared-typograhy-styles.js'
+import { colourStyles } from '../../styles/shared-colour-styles.js'
+import { buttonStyles } from '../../styles/shared-button-styles.js'
+import type { Question, QuestionGroup } from '../../types.js'
 import './question-group.js'
 
-class NewSurveyFormQuestions extends HTMLElement {
-    private groups: QuestionGroup[] = []
-    private unsubscribe: (() => void) | null = null
+class SurveyFormQuestions extends HTMLElement {
+    private _groups: QuestionGroup[] = []
 
     constructor() {
         super()
@@ -16,46 +14,41 @@ class NewSurveyFormQuestions extends HTMLElement {
     }
 
     connectedCallback() {
-        this.loadFromStore()
         this.render()
         this.attachEventListeners()
+    }
 
-        // Subscribe to store changes to reload when navigating back
-        this.unsubscribe = store.subscribe('surveyDraft', (draft) => {
-            // Only reload if groups changed externally (e.g., from another step)
-            const draftGroups = draft.groups || []
-            if (JSON.stringify(draftGroups) !== JSON.stringify(this.groups)) {
-                this.groups = this.deepCloneGroups(draftGroups)
+    set groups(value: QuestionGroup[]) {
+        // Only update if data actually changed (compare by reference for external updates)
+        // Internal updates modify _groups directly, external updates pass new array
+        if (value !== this._groups) {
+            this._groups = this.deepCloneGroups(value)
+            if (this.isConnected) {
                 this.renderGroups()
             }
-        })
-    }
-
-    disconnectedCallback() {
-        if (this.unsubscribe) {
-            this.unsubscribe()
-            this.unsubscribe = null
         }
     }
 
-    private loadFromStore() {
-        const draft = store.surveyDraft
-        if (draft.groups && draft.groups.length > 0) {
-            // Deep clone to avoid mutating store directly
-            this.groups = this.deepCloneGroups(draft.groups)
-        } else {
-            this.groups = []
-        }
+    get groups(): QuestionGroup[] {
+        return this._groups
     }
 
     private deepCloneGroups(groups: QuestionGroup[]): QuestionGroup[] {
         return groups.map(g => ({
             ...g,
-            questions: g.questions.map(q => ({
+            questions: g.questions.map((q: any) => ({
                 ...q,
                 options: q.options ? [...q.options] : undefined,
                 scaleRange: q.scaleRange ? { ...q.scaleRange } : undefined
             }))
+        }))
+    }
+
+    private emitChange() {
+        this.dispatchEvent(new CustomEvent('groups-change', {
+            detail: { value: this._groups },
+            bubbles: true,
+            composed: true
         }))
     }
 
@@ -70,16 +63,10 @@ class NewSurveyFormQuestions extends HTMLElement {
             }
 
             .form-container {
-                padding: 1.5rem;
+                padding: 1.5rem 3rem 1.5rem 1.5rem;
                 width: 100%;
-                max-height: calc(100vh - 9rem);
+                max-height: calc(100vh - 24rem);
                 overflow-y: auto;
-            }
-
-            .form-actions {
-                display: flex;
-                gap: 1rem;
-                margin-top: 2rem;
             }
 
             .empty-state {
@@ -90,16 +77,15 @@ class NewSurveyFormQuestions extends HTMLElement {
                 border-radius: 12px;
                 margin-bottom: 1.5rem;
             }
+
+            .add-group-btn {
+                margin-top: 1rem;
+            }
         </style>
 
         <div class="form-container">
             <div id="groups-container"></div>
-
-            <div class="form-actions">
-                <button class="btn-secondary" id="back-btn">< Back</button>
-                <button class="btn-secondary" id="add-group">+ New Group</button>
-                <button class="btn-secondary" id="next-btn">Next ></button>
-            </div>
+            <button class="btn-secondary add-group-btn" id="add-group">+ New Group</button>
         </div>
         `
 
@@ -110,7 +96,7 @@ class NewSurveyFormQuestions extends HTMLElement {
         const container = this.shadowRoot?.querySelector('#groups-container')
         if (!container) return
 
-        if (this.groups.length === 0) {
+        if (this._groups.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
                     <p>No question groups yet. Click "+ New Group" to get started.</p>
@@ -119,37 +105,28 @@ class NewSurveyFormQuestions extends HTMLElement {
             return
         }
 
-        container.innerHTML = this.groups.map((_, gIndex) => `
+        container.innerHTML = this._groups.map((_, gIndex) => `
             <question-group group-index="${gIndex}"></question-group>
         `).join('')
 
         // Set group data via property
         const groupElements = container.querySelectorAll('question-group')
         groupElements.forEach((el, index) => {
-            (el as any).group = this.groups[index]
+            (el as any).group = this._groups[index]
         })
     }
 
     private attachEventListeners() {
-        // Back button
-        this.shadowRoot?.querySelector('#back-btn')?.addEventListener('click', () => {
-            this.saveDraft()
-            store.setUI({ newStep: 'intro' })
-        })
-
         // Add group button
         this.shadowRoot?.querySelector('#add-group')?.addEventListener('click', () => this.addGroup())
-
-        // Next button
-        this.shadowRoot?.querySelector('#next-btn')?.addEventListener('click', () => this.handleNext())
 
         // Listen for events from child components
         this.shadowRoot?.addEventListener('group-update', ((e: CustomEvent) => {
             const { groupIndex, field, value } = e.detail
             if (field === 'title') {
-                this.groups[groupIndex].title = value
+                this._groups[groupIndex].title = value
             }
-            this.saveDraft()
+            this.emitChange()
         }) as EventListener)
 
         this.shadowRoot?.addEventListener('group-copy', ((e: CustomEvent) => {
@@ -168,7 +145,7 @@ class NewSurveyFormQuestions extends HTMLElement {
         this.shadowRoot?.addEventListener('question-update', ((e: CustomEvent) => {
             const { groupIndex, questionIndex, field, value } = e.detail
             this.updateQuestion(groupIndex, questionIndex, field, value)
-            this.saveDraft()
+            this.emitChange()
         }) as EventListener)
 
         this.shadowRoot?.addEventListener('question-remove', ((e: CustomEvent) => {
@@ -184,13 +161,13 @@ class NewSurveyFormQuestions extends HTMLElement {
         this.shadowRoot?.addEventListener('scale-update', ((e: CustomEvent) => {
             const { groupIndex, questionIndex, field, value } = e.detail
             this.updateQuestion(groupIndex, questionIndex, field, value)
-            this.saveDraft()
+            this.emitChange()
         }) as EventListener)
 
         this.shadowRoot?.addEventListener('option-update', ((e: CustomEvent) => {
             const { groupIndex, questionIndex, optionIndex, value } = e.detail
             this.updateOption(groupIndex, questionIndex, optionIndex, value)
-            this.saveDraft()
+            this.emitChange()
         }) as EventListener)
 
         this.shadowRoot?.addEventListener('option-add', ((e: CustomEvent) => {
@@ -204,11 +181,6 @@ class NewSurveyFormQuestions extends HTMLElement {
         }) as EventListener)
     }
 
-    // Save current state to store
-    private saveDraft() {
-        store.updateSurveyDraft({ groups: this.groups })
-    }
-
     // Group operations
     private addGroup() {
         const group: QuestionGroup = {
@@ -216,13 +188,13 @@ class NewSurveyFormQuestions extends HTMLElement {
             title: '',
             questions: []
         }
-        this.groups.push(group)
-        this.saveDraft()
+        this._groups.push(group)
+        this.emitChange()
         this.renderGroups()
     }
 
     private copyGroup(groupIndex: number) {
-        const original = this.groups[groupIndex]
+        const original = this._groups[groupIndex]
         const copy: QuestionGroup = {
             id: `group_${Date.now()}`,
             title: original.title ? `${original.title} (copy)` : '',
@@ -233,14 +205,14 @@ class NewSurveyFormQuestions extends HTMLElement {
                 scaleRange: q.scaleRange ? { ...q.scaleRange } : undefined
             }))
         }
-        this.groups.splice(groupIndex + 1, 0, copy)
-        this.saveDraft()
+        this._groups.splice(groupIndex + 1, 0, copy)
+        this.emitChange()
         this.renderGroups()
     }
 
     private removeGroup(groupIndex: number) {
-        this.groups.splice(groupIndex, 1)
-        this.saveDraft()
+        this._groups.splice(groupIndex, 1)
+        this.emitChange()
         this.renderGroups()
     }
 
@@ -259,14 +231,14 @@ class NewSurveyFormQuestions extends HTMLElement {
             question.scaleRange = { min: 1, max: 10, minLabel: '', maxLabel: '' }
         }
 
-        this.groups[groupIndex].questions.push(question)
-        this.saveDraft()
+        this._groups[groupIndex].questions.push(question)
+        this.emitChange()
         this.renderGroups()
     }
 
     private updateQuestion(groupIndex: number, questionIndex: number, field: string, value: any) {
-        const question = this.groups[groupIndex].questions[questionIndex]
-        
+        const question = this._groups[groupIndex].questions[questionIndex]
+
         if (field.startsWith('scaleRange.')) {
             const scaleField = field.split('.')[1]
             if (!question.scaleRange) {
@@ -279,86 +251,62 @@ class NewSurveyFormQuestions extends HTMLElement {
     }
 
     private removeQuestion(groupIndex: number, questionIndex: number) {
-        this.groups[groupIndex].questions.splice(questionIndex, 1)
-        this.saveDraft()
+        this._groups[groupIndex].questions.splice(questionIndex, 1)
+        this.emitChange()
         this.renderGroups()
     }
 
     private reorderQuestion(fromGroupIndex: number, fromIndex: number, toGroupIndex: number, toIndex: number) {
-        // Remove from original position
-        const [question] = this.groups[fromGroupIndex].questions.splice(fromIndex, 1)
-        
-        // Adjust toIndex if moving within same group and after the original position
+        const [question] = this._groups[fromGroupIndex].questions.splice(fromIndex, 1)
+
         let adjustedToIndex = toIndex
         if (fromGroupIndex === toGroupIndex && fromIndex < toIndex) {
             adjustedToIndex--
         }
-        
-        // Insert at new position
-        this.groups[toGroupIndex].questions.splice(adjustedToIndex, 0, question)
-        
-        this.saveDraft()
+
+        this._groups[toGroupIndex].questions.splice(adjustedToIndex, 0, question)
+        this.emitChange()
         this.renderGroups()
     }
 
     // Option operations
     private addOption(groupIndex: number, questionIndex: number) {
-        this.groups[groupIndex].questions[questionIndex].options?.push('')
-        this.saveDraft()
+        this._groups[groupIndex].questions[questionIndex].options?.push('')
+        this.emitChange()
         this.renderGroups()
     }
 
     private updateOption(groupIndex: number, questionIndex: number, optionIndex: number, value: string) {
-        const options = this.groups[groupIndex].questions[questionIndex].options
+        const options = this._groups[groupIndex].questions[questionIndex].options
         if (options) {
             options[optionIndex] = value
         }
     }
 
     private removeOption(groupIndex: number, questionIndex: number, optionIndex: number) {
-        this.groups[groupIndex].questions[questionIndex].options?.splice(optionIndex, 1)
-        this.saveDraft()
+        this._groups[groupIndex].questions[questionIndex].options?.splice(optionIndex, 1)
+        this.emitChange()
         this.renderGroups()
     }
 
-    // Validation and navigation
-    private handleNext() {
-        const errors = this.validateQuestions()
-        if (errors.length > 0) {
-            alert(`Please fix:\n${errors.join('\n')}`)
-            return
-        }
-
-        this.saveDraft()
-        
-        // Dispatch event for any external listeners
-        this.dispatchEvent(new CustomEvent('survey-config-generated', {
-            detail: { config: { groups: this.groups } },
-            bubbles: true,
-            composed: true
-        }))
-
-        // Navigate to next step
-        store.setUI({ newStep: 'outro' })
-    }
-
-    private validateQuestions(): string[] {
+    // Validation
+    validate(): string[] {
         const errors: string[] = []
 
-        if (this.groups.length === 0) {
+        if (this._groups.length === 0) {
             errors.push('Please add at least one question group')
             return errors
         }
 
-        this.groups.forEach((group, gIndex) => {
+        this._groups.forEach((group, gIndex) => {
             if (group.questions.length === 0) {
                 const groupName = group.title || `Group ${gIndex + 1}`
                 errors.push(`${groupName}: Please add at least one question`)
             }
 
-            group.questions.forEach((q, qIndex) => {
-                const prefix = group.title 
-                    ? `"${group.title}" Q${qIndex + 1}` 
+            group.questions.forEach((q: any, qIndex: number) => {
+                const prefix = group.title
+                    ? `"${group.title}" Q${qIndex + 1}`
                     : `Group ${gIndex + 1} Q${qIndex + 1}`
 
                 if (!q.question.trim()) {
@@ -366,7 +314,7 @@ class NewSurveyFormQuestions extends HTMLElement {
                 }
 
                 if ((q.type === 'radio' || q.type === 'checkbox') &&
-                    (!q.options || q.options.filter(o => o.trim()).length === 0)) {
+                    (!q.options || q.options.filter((o: any) => o.trim()).length === 0)) {
                     errors.push(`${prefix}: At least one option required`)
                 }
             })
@@ -376,6 +324,6 @@ class NewSurveyFormQuestions extends HTMLElement {
     }
 }
 
-customElements.define('new-survey-form-questions', NewSurveyFormQuestions)
+customElements.define('survey-form-questions', SurveyFormQuestions)
 
-export { NewSurveyFormQuestions }
+export { SurveyFormQuestions }

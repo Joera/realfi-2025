@@ -3,6 +3,7 @@
 // import '../components/landing-welcome.js';
 import '../components/landing-register.js';
 import '../components/landing-choice.js';
+import '../components/ui/loading-spinner.js'
 import { store } from '../state/store.js';
 import { reactive } from '../utils/reactive.js';
 import { IServices } from '../services/container.js';
@@ -27,11 +28,10 @@ export class LandingController {
     const view = reactive('#landing-content', () => {
       const { landingStep } = store.ui;
 
-      console.log("switch")
 
       switch (landingStep) {
         case 'welcome':
-          return ``;
+          return `<loading-spinner></loading-spinner>`;
         
         case 'register':
           return `
@@ -74,27 +74,8 @@ export class LandingController {
       }
     }
 
-    // console.log('2', await window.waap.request({ method: 'eth_requestAccounts' }))
-
-    // console.log(address);
-
-  
     // @ts-ignore
-    // const signer = await this.lit.init(import.meta.env.VITE_ETHEREUM_PRIVATE_KEY); 
 
-    // console.log("initialized lit with ", signer)
-
-    // await customElements.whenDefined('survey-config-form');
-    // const form = document.querySelector('survey-config-form');
-
-    // if (form) {
-
-    //     this.setListeners();
-
-    //}
-
-
-      
 
   }
 

@@ -4,7 +4,7 @@ import Navigo from 'navigo';
 import type { Match } from 'navigo';
 import { LandingController } from './controllers/landing.ctrlr';
 import { IServices } from './services/container';
-import { ResultsController } from './controllers/results.ctrlr';
+import { SurveyListController } from './controllers/survey-list.ts';
 import { SurveyController } from './controllers/survey.ctrlr.ts';
 import { NewSurveyController } from './controllers/new.ctrlr.ts';
 
@@ -26,7 +26,7 @@ export const initRouter = (services: IServices) => {
     })
     .on('/surveys', () => {
       if (currentController?.destroy) currentController.destroy();
-      currentController = new ResultsController(services);
+      currentController = new SurveyListController(services);
       currentController.render();
     })
     .on('/survey/:surveyId', function(match) {

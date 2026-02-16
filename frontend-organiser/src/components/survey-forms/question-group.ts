@@ -1,12 +1,13 @@
-import { typograhyStyles } from '../styles/shared-typograhy-styles.js'
-import { colourStyles } from '../styles/shared-colour-styles.js'
-import { buttonStyles } from '../styles/shared-button-styles.js'
-import type { QuestionGroup, Question } from '../types.js'
+import { typograhyStyles } from '../../styles/shared-typograhy-styles.js'
+import { colourStyles } from '../../styles/shared-colour-styles.js'
+import { buttonStyles } from '../../styles/shared-button-styles.js'
+import type { QuestionGroup, Question } from '../../types.js'
 import './question-card.js'
 
 class QuestionGroupElement extends HTMLElement {
     private _group: QuestionGroup | null = null
     private _groupIndex: number = 0
+    private _collapsed: boolean = false
 
     static get observedAttributes() {
         return ['group-index']
@@ -42,8 +43,27 @@ class QuestionGroupElement extends HTMLElement {
         return this._group
     }
 
+    private toggleCollapse() {
+        this._collapsed = !this._collapsed
+        const container = this.shadowRoot?.querySelector('#questions-container') as HTMLElement
+        const addBtn = this.shadowRoot?.querySelector('#add-question') as HTMLElement
+        const collapseBtn = this.shadowRoot?.querySelector('#collapse-btn')
+        
+        if (container) {
+            container.style.display = this._collapsed ? 'none' : 'block'
+        }
+        if (addBtn) {
+            addBtn.style.display = this._collapsed ? 'none' : 'block'
+        }
+        if (collapseBtn) {
+            collapseBtn.textContent = this._collapsed ? '▼' : '▶'
+        }
+    }
+
     private render() {
         if (!this.shadowRoot || !this._group) return
+
+        const questionCount = this._group.questions.length
 
         this.shadowRoot.innerHTML = `
         <style>
@@ -53,12 +73,42 @@ class QuestionGroupElement extends HTMLElement {
                 margin-bottom: 1.5rem;
             }
 
+            .group-card {
+                display: flex;
+                gap: 0.25rem;
+            }
+
+            .collapse-btn {
+                background: transparent;
+                border: none;
+                color: var(--green);
+                cursor: pointer;
+                font-size: 0.75rem;
+                padding: 0.25rem;
+                width: 1.5rem;
+                height: 1.5rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+                margin-top: 0.25rem;
+            }
+
+            .collapse-btn:hover {
+                background: rgba(42, 112, 98, 0.1);
+                border-radius: 4px;
+            }
+
+            .group-content {
+                flex: 1;
+            }
+
             .group-header {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 1rem;
-                gap: 1rem;
+                gap: 0.5rem;
                 border-left: 3px solid var(--green);
                 padding: 0 .75rem;
             }
@@ -105,9 +155,13 @@ class QuestionGroupElement extends HTMLElement {
                 align-items: center;
             }
 
-            #group-copy {
+            .btn-icon:hover {
+                background: rgba(42, 112, 98, 0.1);
+                border-radius: 4px;
+            }
 
-            font-size : 2rem;
+            #copy-group {
+                font-size: 2rem;
             }
 
             .questions-container {
@@ -130,36 +184,39 @@ class QuestionGroupElement extends HTMLElement {
         </style>
 
         <div class="group-card">
-            <div class="group-header">
-                <input 
-                    type="text" 
-                    class="group-title-input" 
-                    id="group-title"
-                    value="${this._group.title}" 
-                    placeholder="Group title (optional)"
-                />
-                <div class="group-actions">
-                    <button class="btn-icon" id="copy-group" title="Copy group">⧉</button>
-                    <button class="btn-icon" id="remove-group" title="Remove group">✕</button>
+            <button class="collapse-btn" id="collapse-btn" title="Collapse/expand group">▶</button>
+            <div class="group-content">
+                <div class="group-header">
+                    <input 
+                        type="text" 
+                        class="group-title-input" 
+                        id="group-title"
+                        value="${this._group.title}" 
+                        placeholder="Group title (optional)"
+                    />
+                    <div class="group-actions">
+                        <button class="btn-icon" id="remove-group" title="Remove group">✕</button>
+                        <button class="btn-icon" id="copy-group" title="Copy group">⧉</button>
+                    </div>
                 </div>
-            </div>
 
-            <div class="questions-container" id="questions-container">
-                ${this._group.questions.map((_, qIndex) => `
-                    <question-card 
-                        group-index="${this._groupIndex}" 
-                        question-index="${qIndex}"
-                    ></question-card>
-                `).join('')}
-            </div>
+                <div class="questions-container" id="questions-container">
+                    ${this._group.questions.map((_, qIndex) => `
+                        <question-card 
+                            group-index="${this._groupIndex}" 
+                            question-index="${qIndex}"
+                        ></question-card>
+                    `).join('')}
+                </div>
 
-            <select class="add-question-select btn-primary" id="add-question">
-                <option value="">+ Add question...</option>
-                <option value="radio">Radio (Single Choice)</option>
-                <option value="checkbox">Checkbox (Multiple Choice)</option>
-                <option value="scale">Scale</option>
-                <option value="text">Text Input</option>
-            </select>
+                <select class="add-question-select btn-primary" id="add-question">
+                    <option value="">+ Add question...</option>
+                    <option value="radio">Radio (Single Choice)</option>
+                    <option value="checkbox">Checkbox (Multiple Choice)</option>
+                    <option value="scale">Scale</option>
+                    <option value="text">Text Input</option>
+                </select>
+            </div>
         </div>
         `
     }
@@ -176,6 +233,11 @@ class QuestionGroupElement extends HTMLElement {
     }
 
     private attachEventListeners() {
+        // Collapse toggle
+        this.shadowRoot?.querySelector('#collapse-btn')?.addEventListener('click', () => {
+            this.toggleCollapse()
+        })
+
         // Group title
         this.shadowRoot?.querySelector('#group-title')?.addEventListener('input', (e) => {
             this.dispatchEvent(new CustomEvent('group-update', {

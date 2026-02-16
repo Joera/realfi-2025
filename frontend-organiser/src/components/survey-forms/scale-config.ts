@@ -1,5 +1,5 @@
-import { typograhyStyles } from '../styles/shared-typograhy-styles.js'
-import { colourStyles } from '../styles/shared-colour-styles.js'
+import { typograhyStyles } from '../../styles/shared-typograhy-styles.js'
+import { colourStyles } from '../../styles/shared-colour-styles.js'
 
 class ScaleConfig extends HTMLElement {
     private _min: number = 1

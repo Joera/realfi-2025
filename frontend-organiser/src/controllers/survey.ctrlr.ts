@@ -117,7 +117,7 @@ export class SurveyController {
     
     async process() {
 
-        this.survey = store.surveys.find(s => s.id === this.surveyId);
+        this.survey = store.surveys.find((s: any) => s.id === this.surveyId);
 
          if (!this.survey) {
             console.log('Survey not in store, fetching...');

@@ -26,7 +26,7 @@ export class LitService {
         return await this.client.encrypt({
             dataToEncrypt: nilKey,
             evmContractConditions: accs,
-            chain: "ethereum",
+            chain: "base",
         });
     }
 

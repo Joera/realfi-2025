@@ -45,10 +45,10 @@ export interface IPermissionlessSafeService {
   // getPredictedAddress: (owners: string[], salt: string) => Promise<string>;
   connectToFreshSafe: (salt: string) => Promise<string>
   connectToExistingSafe: (safe_address: string) => Promise<string>
-  genericRead: (address: string, abi: string, method: string, args: string[]) => Promise<any>;
-  genericTx: (address: string, abi: string, method: string, args: string[], deploy: boolean, wait?: boolean) => Promise<string>;
-  batchGenericTx: (calls: Array<{ address: string; abi: string; method: string; args: any[]; }>) => Promise<string[]>;
-  valueTx: (to: string, amount: string) => Promise<string>;
+  read: (address: string, abi: string, method: string, args: string[]) => Promise<any>;
+  write: (address: string, abi: string, method: string, args: string[], deploy: boolean, wait?: boolean) => Promise<string>;
+  batchWrite: (calls: Array<{ address: string; abi: string; method: string; args: any[]; }>) => Promise<string[]>;
+  transfer: (to: string, amount: string) => Promise<string>;
   getSafeAddress: (owners: string[], salt: string) => Promise<string>;
   isDeployed: () => Promise<boolean>;
 }
@@ -178,7 +178,7 @@ export class PermissionlessSafeService implements IPermissionlessSafeService {
   }
 
 
-  async genericRead(address: string, abi: string, method: string, args: string[]): Promise<any> {
+  async read(address: string, abi: string, method: string, args: string[]): Promise<any> {
     let retries = 1;
     while (retries > 0) {
         try {
@@ -203,7 +203,7 @@ export class PermissionlessSafeService implements IPermissionlessSafeService {
     }
   }
 
-  async genericTx(address: string, abi: string, method: string, args: string[], deploy: boolean, wait = false ): Promise<string> {
+  async write(address: string, abi: string, method: string, args: string[], deploy: boolean, wait = false ): Promise<string> {
 
 
     console.log("🔧 genericTx called:", { address, method, args: JSON.stringify(args) });
@@ -250,7 +250,7 @@ export class PermissionlessSafeService implements IPermissionlessSafeService {
     return await this.extractDeployedAddress(txHash);
   }
 
-  async valueTx(to: string, amount: string): Promise<string> {
+  async transfer(to: string, amount: string): Promise<string> {
 
     const gasPrice = await this.pimlicoClient.getUserOperationGasPrice();
 
@@ -265,7 +265,7 @@ export class PermissionlessSafeService implements IPermissionlessSafeService {
   }
 
 
-  async batchGenericTx(calls: Array<{
+  async batchWrite(calls: Array<{
       address: string;
       abi: string;
       method: string;
@@ -282,7 +282,7 @@ export class PermissionlessSafeService implements IPermissionlessSafeService {
           await (this.txMutex = this.txMutex.then(async () => {
               console.log("📤 Executing:", call.method);
               
-              result = await this.genericTx(
+              result = await this.write(
                   call.address,
                   call.abi,
                   call.method,

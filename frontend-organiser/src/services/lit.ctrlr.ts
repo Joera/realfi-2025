@@ -1,6 +1,6 @@
 import { nagaDev, nagaTest } from "@lit-protocol/networks";
 import { createLitClient } from "@lit-protocol/lit-client";
-import { privateKeyToAccount } from 'viem/accounts';
+import { Account, privateKeyToAccount } from 'viem/accounts';
 import { ViemAccountAuthenticator } from '@lit-protocol/auth';
 import { createAuthManager, storagePlugins } from "@lit-protocol/auth";
 
@@ -16,48 +16,54 @@ export default class LitService {
     litClient: any;
     account: any;
 
-    constructor() {}
+    constructor() {
+        
+    }
 
-    async init(private_key: string) {
+    async init() {
 
         this.litClient = await createLitClient({
-            network: nagaTest,
+            network: nagaDev, //nagaTest,
         });
-
-        this.account = privateKeyToAccount(
-            private_key as `0x${string}`
-        );
-
-        return this.account.address;
-
     }
 
 
-    async createAuthContext() {
+    async createAuthContext(waapWalletClient: any) {
 
-        if (this.account == undefined) throw 'lit client not ready';
+        if (this.litClient == undefined) throw 'lit client not ready';
+
+        const wrappedAccount = {
+            address: waapWalletClient.account.address,
+            type: 'local', // Trick it into thinking it's a local account
+            signMessage: async ({ message }: { message: string }) => {
+                // Use the WalletClient's signMessage which goes through WaaP
+                return await waapWalletClient.signMessage({
+                    account: waapWalletClient.account!,
+                    message,
+                });
+            },
+        } as unknown as Account;
         
-        const authData = await ViemAccountAuthenticator.authenticate(this.account);
-    
 
         const authManager = createAuthManager({
             storage: storagePlugins.localStorage({
                 appName: "s3ntiment",
-                networkName: "naga-test",
+                networkName: "naga-dev",
             }),
         });
 
-        return await authManager.createPkpAuthContext({
-            authData: authData, 
-            pkpPublicKey: pkpInfo.pubkey,
+        // Use createEoaAuthContext instead of createPkpAuthContext
+        return await authManager.createEoaAuthContext({
+            config: {
+                account: wrappedAccount,
+            },
             authConfig: {
-                resources: [
-                ["pkp-signing", "*"],
-                ["lit-action-execution", "*"],
-                ],
+                domain: window.location.host,
+                statement: "I authorize S3ntiment to access encrypted survey data",
                 expiration: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
-                statement: "",
-                domain: window.location.origin,
+                resources: [
+                    ["access-control-condition-decryption", "*"]
+                ],
             },
             litClient: this.litClient,
         });

@@ -22,36 +22,52 @@ export class SurveyController {
 
     async create(body: any) {
 
-        const { authContext, nillDelegation, signerAddress, surveyId, surveyConfig } = body;
+        // signerAddress,
+        // authContext
+
+        const { surveyConfig } = body;
+
+        console.log(0)
         
         // Generate survey-specific keypair
         const privateKeyBytes = secp256k1.utils.randomSecretKey();
-        const privateKeyHex = bytesToHex(privateKeyBytes);
+        const privateKeyHex = bytesToHex(privateKeyBytes).slice(2);
         const surveyOwner = Signer.fromPrivateKey(privateKeyHex, 'key');
         const surveyOwnerDid = await surveyOwner.getDid();
 
+        console.log(1, surveyOwnerDid.didString)
+
         // Create collection
-        const schema = createSurveyCollectionSchema(surveyId, surveyConfig);
-        const collectionId = await this.nildb.createSurveyCollection(schema);
+        const rawSchema = createSurveyCollectionSchema(surveyConfig);
+
+        console.log(2)
+
+        await this.nildb.createSurveyCollection(rawSchema);
+
+        console.log(3)
 
         // Encrypt everything
         const [encryptedSurveyConfig, encryptedKey] = await Promise.all([
             this.lit.encrypt(surveyConfig, accsForUser()),
-            this.lit.encrypt(privateKeyHex, accsForSurveyOwner(surveyId)),
+            this.lit.encrypt(privateKeyHex, accsForSurveyOwner(surveyConfig.id)),
         ]);
 
+        console.log(4)
+
         const config = {
+
+            surveyId: surveyConfig.id,
             nilDid: surveyOwnerDid.didString,
             encryptedNilKey: encryptedKey,
-            collectionID: collectionId,
+            // collectionID: collectionId,
             surveyConfig: encryptedSurveyConfig
         };
 
         console.log('📦 Survey config:', config);
 
-        const surveyCid = (await this.pinata.uploadJSON(config)).IpfsHash;
+        const res = await this.pinata.uploadJSON(config);
 
-        return surveyCid;
+        return res.IpfsHash;
     }
 
     async requestDelegation(body: any) {

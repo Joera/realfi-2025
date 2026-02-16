@@ -58,8 +58,15 @@ export class ServiceContainer {
 
     if(walletClient) {
       this.safe.updateSigner(walletClient);
-      await this.safe.connectToFreshSafe('s3ntiment')
+      // await this.safe.connectToFreshSafe('s3ntiment') // we need safe for survey, not user 
     }
+
+    await this.lit.init()
+
+    // how to get key for lit ? can i do it with signer 
+    // const signer = await this.lit.init(import.meta.env.VITE_ETHEREUM_PRIVATE_KEY); 
+
+    // console.log("initialized lit with ", signer)
 
     console.log("safe address",this.safe.address)
 

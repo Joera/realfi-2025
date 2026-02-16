@@ -54,7 +54,7 @@ const initConfig = {
         logo: ''
     },
     useStaging: false,
-    walletConnectProjectId: "c60a06bf03cd6b4972e1b7d3c0b738ff", 
+    walletConnectProjectId: "", 
     referralCode: "", 
 }
 

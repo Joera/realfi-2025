@@ -1,4 +1,4 @@
-export interface SurveyQuestion {
+export interface Question {
   id: string
   question: string
   type: 'radio' | 'checkbox' | 'text' | 'scale'
@@ -15,8 +15,15 @@ export interface SurveyAnswer {
   scaleRange?: { min: number; max: number; minLabel: string; maxLabel: string }
 }
 
+export interface QuestionGroup {
+    id: string
+    title: string
+    questions: Question[]
+}
+
 export interface SurveyConfig {
+  id: string,
   title: string
-  description?: string
-  questions: SurveyQuestion[]
+  introduction?: string
+  groups: QuestionGroup[]
 }

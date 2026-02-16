@@ -13,6 +13,6 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "types": ["vite/client"],
-    "include": ["src"]
+    "include": ["src/**/*", "vite-env.d.ts"]
   }
 }

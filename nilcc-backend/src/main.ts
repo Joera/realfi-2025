@@ -43,8 +43,9 @@ await lit.init();
 app.post('/api/create-survey', async (req, res) => {
 
   console.log(req.body)
-  const surveyCid = survey.create(req.body);
-  res.send({ surveyCid });
+  const surveyCid = await survey.create(req.body);
+  console.log("b4", surveyCid)
+  res.send( surveyCid );
 
 });
 

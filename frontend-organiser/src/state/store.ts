@@ -1,119 +1,114 @@
-import { SurveyConfig } from "../types";
-
-type Listener<T> = (value: T) => void;
-
-class Observable<T> {
-  private value: T;
-  private listeners: Set<Listener<T>> = new Set();
-
-  constructor(initialValue: T) {
-    this.value = initialValue;
-  }
-
-  get(): T {
-    return this.value;
-  }
-
-  set(newValue: T) {
-    this.value = newValue;
-    this.notify();
-  }
-
-  update(updater: (current: T) => T) {
-    this.value = updater(this.value);
-    this.notify();
-  }
-
-  subscribe(listener: Listener<T>): () => void {
-    this.listeners.add(listener);
-    // Return unsubscribe function
-    return () => this.listeners.delete(listener);
-  }
-
-  private notify() {
-    this.listeners.forEach(listener => listener(this.value));
-  }
-}
-
-
-// Store state interface
-interface AppState {
-  ui: {
-    landingStep: 'welcome' | 'register' | 'choice',
-    newStep: 'intro' | 'questions' | 'outro',
-    resultTab: "results" | "config" | "questions" 
-  },
-  surveys: any[],
-  surveyDraft: SurveyConfig,
-}
+import { UIStore } from './ui.store.js';
+import { DraftsStore } from './drafts.store.js';
+import { SurveysStore } from './surveys.store.js';
+import { Listener } from './observable.js';
+import { UIState, DraftMeta, DraftsMap } from './types.js';
+import { SurveyConfig } from '../types.js';
 
 class Store {
-  // Make state public so it can be accessed
-  public readonly observables: {
-    [K in keyof AppState]: Observable<AppState[K]>;
-  };
+  private uiStore: UIStore;
+  private draftsStore: DraftsStore;
+  private surveysStore: SurveysStore;
 
   constructor() {
-    // Initialize observables with proper types
-    this.observables = {
-      ui: new Observable<AppState['ui']>({
-        landingStep: 'welcome',
-        newStep: 'intro',
-        resultTab: 'results'  // Default tab
-      }),
-      surveys: new Observable<AppState['surveys']>([]),
-      surveyDraft: new Observable<AppState['surveyDraft']>({}), 
-    };
+    this.uiStore = new UIStore();
+    this.draftsStore = new DraftsStore();
+    this.surveysStore = new SurveysStore();
   }
 
-
-  get ui() { return this.observables.ui.get(); }
-  get surveys() { return this.observables.surveys.get(); }
-  get surveyDraft() { 
-    return this.observables.surveyDraft.get(); 
+  // ============ UI ============
+  get ui(): UIState {
+    return this.uiStore.state;
   }
 
-
-  setUI(update: Partial<AppState['ui']>) {
-    this.observables.ui.update(current => ({ ...current, ...update }));
+  setUI(update: Partial<UIState>): void {
+    this.uiStore.set(update);
   }
 
-  setSurveys(surveys: AppState['surveys']) {  // ← Add this
-    this.observables.surveys.set(surveys);
+  subscribeUI(listener: Listener<UIState>): () => void {
+    return this.uiStore.subscribe(listener);
   }
 
-  addSurvey(survey: SurveyConfig) {  // ← Add this
-    this.observables.surveys.update(current => [...current, survey]);
+  // ============ Survey Draft ============
+  get surveyDraft(): SurveyConfig {
+    return this.draftsStore.draft;
   }
 
-   updateSurveyDraft(updates: Partial<SurveyConfig>) {
-    this.observables.surveyDraft.update(current => ({
-      ...current,
-      ...updates
-    }));
+  get currentDraftId(): string | null {
+    return this.draftsStore.currentId;
   }
 
-  subscribe<K extends keyof AppState>(
+  updateSurveyDraft(updates: Partial<SurveyConfig>): void {
+    this.draftsStore.update(updates);
+  }
+
+  subscribeSurveyDraft(listener: Listener<SurveyConfig>): () => void {
+    return this.draftsStore.subscribe(listener);
+  }
+
+  getAllDrafts(): DraftsMap {
+    return this.draftsStore.getAll();
+  }
+
+  getDraftsList(): Array<{ id: string; meta: DraftMeta }> {
+    return this.draftsStore.getList();
+  }
+
+  loadDraft(draftId: string): void {
+    this.draftsStore.load(draftId);
+  }
+
+  newDraft(): void {
+    this.draftsStore.new();
+  }
+
+  deleteDraft(draftId: string): void {
+    this.draftsStore.delete(draftId);
+  }
+
+  clearSurveyDraft(): void {
+    this.draftsStore.clear();
+  }
+
+  // ============ Surveys ============
+  get surveys(): SurveyConfig[] {
+    return this.surveysStore.all;
+  }
+
+  setSurveys(surveys: SurveyConfig[]): void {
+    this.surveysStore.set(surveys);
+  }
+
+  addSurvey(survey: SurveyConfig): void {
+    this.surveysStore.add(survey);
+  }
+
+  subscribeSurveys(listener: Listener<SurveyConfig[]>): () => void {
+    return this.surveysStore.subscribe(listener);
+  }
+
+  // ============ Global ============
+  clear(): void {
+    this.uiStore.reset();
+    this.surveysStore.clear();
+  }
+
+  // Legacy subscribe method for backwards compatibility
+  subscribe<K extends 'ui' | 'surveys' | 'surveyDraft'>(
     key: K,
-    listener: Listener<AppState[K]>
+    listener: Listener<K extends 'ui' ? UIState : K extends 'surveys' ? SurveyConfig[] : SurveyConfig>
   ): () => void {
-    return this.observables[key].subscribe(listener);
-  }
-
-  clear() {
-    this.setUI({ 
-        landingStep: 'welcome',
-        newStep: 'intro',
-        resultTab: 'results' 
-    });
-    this.setSurveys([]); 
-  }
-
-   clearSurveyDraft() {
-    this.observables.surveyDraft.set({
-    });
+    switch (key) {
+      case 'ui':
+        return this.uiStore.subscribe(listener as Listener<UIState>);
+      case 'surveys':
+        return this.surveysStore.subscribe(listener as Listener<SurveyConfig[]>);
+      case 'surveyDraft':
+        return this.draftsStore.subscribe(listener as Listener<SurveyConfig>);
+      default:
+        throw new Error(`Unknown store key: ${key}`);
+    }
   }
 }
 
-// Export singleton instance
-export const store = new Store();
+export const store = new Store();123

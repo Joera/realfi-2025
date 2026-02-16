@@ -11,7 +11,7 @@ import {
   SecretVaultUserClient,
   NucCmd
 } from '@nillion/secretvaults';
-import { SurveyConfig } from './types';
+
 import { randomUUID } from "crypto";
 
 
@@ -110,16 +110,26 @@ export class NilDBService {
     //     return delegation;
     // }
 
-    async createSurveyCollection(schema: any, surveyOwnerDid: any) {
+    async createSurveyCollection(rawSchema: any, surveyOwnerDid: any) {
 
-        const collectionId = randomUUID();
-        await this.builderClient.createCollection({
-            _id: collectionId,
-            owner: surveyOwnerDid,  // ← Owned by survey owner, not builder
-            schema,
-        });
+        try {
 
-        return collectionId;
+        
+            await this.builderClient.createCollection({
+                _id: rawSchema._id,
+                name: rawSchema.name,
+                type: rawSchema.type,
+                schema: rawSchema.schema,  // Het nested schema object
+                owner: surveyOwnerDid,
+            });
+
+        } catch (e) {
+
+            console.log(JSON.stringify(e))
+            console.log(JSON.stringify(e.body, null, 2));
+        }
+
+        return rawSchema._id;
     }
 
     async getDelegation(surveyOwnerDid: any, collectionId: string) {

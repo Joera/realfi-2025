@@ -1,22 +1,19 @@
-// src/controllers/landing.controller.ts
-
+/// <reference types="vite/client" />
 
 import { bytesToHex } from 'viem';
-import '../components/new-survey-intro.js';
-import '../components/new-survey-questions.js';
-import '../components/new-survey-outro.js';
+import '../components/draft-survey-editor.js';
 import { generateCardSecrets } from '../services/invitation.factory.js';
 import { store } from '../state/store.js';
 import { randomBytes } from '../utils/random.js';
 import { reactive } from '../utils/reactive.js';
 import { IServices } from '../services/container.js';
+import { randomUUID } from 'crypto';
 
 export class NewSurveyController {
   private reactiveViews: any[] = [];
   private services: IServices;
 
   constructor(services: IServices) {
-
     this.services = services;
   }
 
@@ -25,53 +22,17 @@ export class NewSurveyController {
     if (!app) return;
 
     app.innerHTML = `
-      <div id="new-survey" class="container centered"></div>
+      <div id="new-survey" class="container centered">
+        <draft-survey-editor class="container container-small centered"></draft-survey-editor>
+      </div>
     `;
 
-    const view = reactive('#new-survey', () => {
-      const { newStep } = store.ui;
-
-      switch (newStep) {
-        case 'intro':
-          return `
-            <new-survey-form-intro class="container container-large centered"></survey-config-form-intro>
-          `;
-        case 'questions':
-          return `
-            <new-survey-form-questions class="container container-large centered"></survey-config-form-questions>
-          `;
-        case 'outro':
-          return `
-            <new-survey-form-outro class="container container-large centered"></survey-config-form-outro>
-          `;
-        
-        default:
-          return '';
-      }
-    });
-
-    if (view) {
-      view.bind('ui');
-      this.reactiveViews.push(view);
-    }
+    this.setSurveyListener();
   }
 
-
   async process() {
-   
     // @ts-ignore
-   // const signer = await this.lit.init(import.meta.env.VITE_ETHEREUM_PRIVATE_KEY); 
-
-   // console.log("initialized lit with ", signer)
-
-    await customElements.whenDefined('survey-config-form');
-    const form = document.querySelector('survey-config-form');
-
-    if (form) {
-
-        this.setSurveyListener();
-
-    }
+ 
   }
 
   async render() {
@@ -85,71 +46,58 @@ export class NewSurveyController {
   }
 
   async setSurveyListener() {
-        
-    document.addEventListener('survey-config-generated', async (event: any) => {
+    document.addEventListener('survey-submit', async (event: any) => {
+      const survey = event.detail.survey;
 
-      const randomHex = bytesToHex(randomBytes(4));
-      const surveyId = `${this.services.viem.walletClient.account.address.slice(0,8)}${Date.now()}${randomHex}`; 
+      const surveyId = randomUUID();
 
       const nillDid = this.services.nillion.getDid();
-                    
-      let res: any  = await fetch(`${import.meta.env.VITE_BACKEND}/api/create-survey`, {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json', 
-          },
-          body: JSON.stringify({ 
-              authContext: {}, // await this.lit.createAuthContext(),
-              signerAddress: this.services.lit.getAddress(),
-              surveyId,
-              surveyConfig: event.detail.config
-          })
+
+      let res: any = await fetch(`${import.meta.env.VITE_BACKEND}/api/create-survey`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({          
+          surveyConfig: {
+            id: surveyId,
+            title: survey.title,
+            introduction: survey.introduction,
+            groups: survey.groups,
+          }
+        })
       });
 
-      const info = await res.json();
+      const surveyCid = await res.text();
+      console.log(surveyCid);
 
-      console.log(info)
+      // check if combination owner + survey id was used before ! .. update pattern 
 
-      // check if combination owner + survey title was used before ! 
-     
-      const abi = [{"inputs":[{"internalType":"string","name":"surveyId","type":"string"},{"internalType":"string","name":"ipfsCid","type":"string"}],"name":"createSurvey","outputs":[],"stateMutability":"nonpayable","type":"function"}]
-      const args = [surveyId, info.surveyCid.toString()]
+      // predict safe for survey 
+      await this.services.safe.connectToFreshSafe(surveyId)
 
-      // if (event.detail.multisig) {
+      const abi = [{ "inputs": [{ "internalType": "string", "name": "surveyId", "type": "string" }, { "internalType": "string", "name": "ipfsCid", "type": "string" }], "name": "createSurvey", "outputs": [], "stateMutability": "nonpayable", "type": "function" }];
+      const args = [surveyId, surveyCid.toString()];
 
-        // await this.safe.connectToFreshSafe('s3ntiment_survey_' + surveySlug);
-        // await this.safe.updateSigner(import.meta.env.VITE_ETHEREUM_PRIVATE_KEY)
-      
-        // const tx = await this.safe.genericTx(contract, abi, 'createSurvey', args, false, false )
+      // register survey and deploy safe 
+      const receipt = await this.services.safe.write(import.meta.env.VITE_SURVEYSTORE_CONTRACT, JSON.stringify(abi), 'createSurvey', args, true, true);
+      console.log(receipt);
 
-        // console.log(tx)
+      // const batchId = survey.batchName || "original";
+      // const batchSize = parseInt(survey.batchSize) || 10;
 
-      // } else {
+      // // create qr codes 
+      // await generateCardSecrets(this.services.viem, batchId, batchSize, surveyId);
 
-      const receipt = await this.services.viem.writeContract(import.meta.env.VITE_SURVEYSTORE_CONTRACT, abi, 'createSurvey', args)
-      console.log(receipt)
+      // // include one qr code for testing .. excluded from not counted, no nullifier, batchid=test 
+      // const test = await generateCardSecrets(this.services.viem, "test", 1, surveyId);
+      // console.log(test);
 
-      const batchId = "original";
-      // create qr codes 
-      await generateCardSecrets(this.services.viem, batchId, event.detail.batchSize, surveyId);
+      // // Clear draft after successful submission
+      // store.clearSurveyDraft();
 
-      // include one qr code for testing .. excluded from not counted , no nullifier , batchid =test 
-      const test = await generateCardSecrets(this.services.viem, "test", 1, surveyId);
-
-      
-      console.log(test)
-
-
-            // }
-            
-
-            // hoe ingewikkeld is het om consensus te krijgen voor inzien resultaten??
-            //  Het lit-eip-7579-module repo van Lit zelf demonstreert precies deze integratie.
-
-            // fund nilKey, pkp ? 
-
-            // how to keep track of my surveys ? zonder frontend 
-
+      // Navigate back or show success
+      // store.setUI({ ... })
     });
   }
 }
