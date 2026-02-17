@@ -55,62 +55,74 @@ export class SurveyListController {
 
         const authContext = await this.services.lit.createAuthContext(this.services.waap.getWalletClient(), this.services.viem.account);
         console.log("authcontext address", authContext.account.address)
+
+       
+
+        
         
         let surveys = await Promise.all(
             _surveys.map(async (surveyId: string) => {
                 let s = await this.services.viem.readSurveyContract('getSurvey', [surveyId]);
                 let d = {}
 
-                if (isCid(s[0]) && surveyId == "ea859a4a-c6a2-44ab-ba92-b13bfa3e7d75") {
+                if (isCid(s[0]) && surveyId == "b51b3ebc-b278-47c3-a66e-6e5e58d77a35") {
+
+                    // const encData = await this.services.lit.encrypt("kippenkoppen", alwaysTrue);
+
+                  const encData = {
+                    ciphertext: 'tI9fSD69/08FL3TvLhj+Dz7BMkXIViKWNvYSEsGRj/9b4fDulCsOP/XR2ga2BOsyaQ0C1OLX1eQ1ZM6/nS2o24vwDvS5NHD8MuPjovwcSlIgCQOVrkZYkA1ljK0q+WA4Tvh6AQtWtMNk88PXIvtDQ/gC',
+                    dataToEncryptHash: 'df46219531cb5d522d0845901978dccfa286a5b0437f4f9cd4e485064f6b632c',
+                    metadata: { dataType: 'string' }
+
+                        
+                  }
+
+                  const accs = accsForOwnerOrUser(surveyId, import.meta.env.VITE_SURVEYSTORE_CONTRACT);
+
+                  console.log(accs);
+
+                  const data = await this.services.lit.decrypt(encData, authContext, accs);
+                  console.log(data)
 
                
-                  let c = JSON.parse(await this.services.ipfs.fetchFromPinata(s[0]));
+        //           let c = JSON.parse(await this.services.ipfs.fetchFromPinata(s[0]));
                 
-                  console.log(c);
+        //           console.log(c);
                   
 
-                  if (isDid(c.nilDid) && c.surveyId !== undefined) {
+        //           if (isDid(c.nilDid) && c.surveyId !== undefined) {
 
-                    // console.log("sid", surveyId)
-
-
-                    const accs = alwaysTrue; // accsForOwnerOrUser(surveyId, import.meta.env.VITE_SURVEYSTORE_CONTRACT);
-
-                    console.log(authContext)
-                    console.log(JSON.stringify(accs, null, 2));
+        //             // console.log("sid", surveyId)
 
 
-                    // console.log(c.surveyConfig)
+        //             const accs = alwaysTrue; // accsForOwnerOrUser(surveyId, import.meta.env.VITE_SURVEYSTORE_CONTRACT);
 
-                    const sc = {
-                      ciphertext: 'r60gZAWYX1iZRd4FICHmKGXFLEJMr4YyiGxOY7kgRDsqG7dl5xfWyeYh8AvZrN65uUmy2EECw/T31nlczsEwDdKZPMNAMKn33r/yVaHlTDYgOjjoniSdJPM8FZFcM3vhnEuB3Y1eMep44ECLhfGG/xIC',
-                      dataToEncryptHash: 'f7fedc1ce8904aa57054e7d1315d03ece5247b2c90a643b7264fabf10e4af177',
-                      metadata: { dataType: 'string' }
-                    }
-                                      
+
+
+               
 
                     
-                    try {
-                      d = await this.services.lit.decrypt(sc, authContext, accs);
-                      console.log("decrypted", c.collectionID || c.collectioniD)
-                    } catch (error){
-                        console.log(error);
-                    }
-                  }
+        //             try {
+        //               d = await this.services.lit.decrypt(sc, authContext, accs);
+        //               console.log("decrypted", c.collectionID || c.collectioniD)
+        //             } catch (error){
+        //                 console.log(error);
+        //             }
+        //           }
 
-                  return {
-                    id: surveyId,
-                    createdAt: s[2],
-                    collectionID: c.collectionID || c.collectioniD,
-                    ...d
-                  }
+        //           return {
+        //             id: surveyId,
+        //             createdAt: s[2],
+        //             collectionID: c.collectionID || c.collectioniD,
+        //             ...d
+        //           }
                 }
             })
         );
 
         // surveys = surveys.filter( s => s.groups != undefined && s.groups.length > 0);
 
-        // console.log("SS", surveys);
+        console.log("SS", surveys);
 
         store.setSurveys(surveys);
 

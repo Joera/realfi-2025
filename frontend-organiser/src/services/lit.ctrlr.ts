@@ -3,6 +3,7 @@ import { createLitClient } from "@lit-protocol/lit-client";
 import { Account, privateKeyToAccount } from 'viem/accounts';
 import { ViemAccountAuthenticator } from '@lit-protocol/auth';
 import { createAuthManager, storagePlugins } from "@lit-protocol/auth";
+import { alwaysTrue } from "../accs";
 
 const pkpInfo = {
     ethAddress:  "0x9924a83B7F50d90d84168AAA35Bc026412727ce1",
@@ -21,7 +22,7 @@ export default class LitService {
     async init() {
 
         this.litClient = await createLitClient({
-            network: nagaDev, // nagaTest, // 
+            network: nagaTest, // nagaDev, // 
         });
     }
 
@@ -30,7 +31,6 @@ export default class LitService {
 
         if (this.litClient == undefined) throw 'lit client not ready';
 
-        // COULD THIS BE THE ISSUE?????????????????????
         const wrappedAccount = {
             address: waapWalletClient.account.address,
             type: 'local', // Trick it into thinking it's a local account
@@ -54,7 +54,7 @@ export default class LitService {
         // Use createEoaAuthContext instead of createPkpAuthContext
         return await authManager.createEoaAuthContext({
             config: {
-                account: viemAccount,
+                account: wrappedAccount,
             },
             authConfig: {
                 domain: window.location.host,
@@ -68,6 +68,16 @@ export default class LitService {
         });
     }
 
+     async encrypt(toEncrypt: any, accs: any[]) {
+
+        return await this.litClient.encrypt({
+            dataToEncrypt: toEncrypt,
+            unifiedAccessControlConditions: accs,
+            chain: "ethereum",
+        });
+    }
+
+
     async decrypt (encryptedData: any, authContext: any, accs: any[] ) {
 
 
@@ -79,6 +89,29 @@ export default class LitService {
             authContext,
             chain: "ethereum",
         });
+    }
+
+    async test(authContext: any) {
+
+            const accs = alwaysTrue; // canRead(contentId, safeAddress, publicationModule) // 
+
+            const encryptedData = await this.litClient.encrypt({
+            dataToEncrypt: "Hello, my love! ❤️",
+            // @ts-ignore
+            unifiedAccessControlConditions: accs,
+            chain: "ethereum",
+            });
+
+            const decryptedResponse = await this.litClient.decrypt({
+            data: encryptedData,
+            // @ts-ignore
+            unifiedAccessControlConditions: accs,
+            authContext: authContext,
+            chain: "ethereum",
+            });
+
+            console.log(decryptedResponse);
+
     }
 
     getAddress() {

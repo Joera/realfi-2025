@@ -112,12 +112,12 @@ class DraftSurveyEditor extends HTMLElement {
             }
         </style>
 
-        <div class="editor-container container container-small centered">
+        <div class="editor-container container container-large centered">
             ${this.renderStep()}
            
         </div>
         <div class="action-container container centered">
-            <div class="container container-small centered">
+            <div class="container container-large centered">
                 ${this.renderActions()}
             </div>
         </div>
@@ -127,11 +127,11 @@ class DraftSurveyEditor extends HTMLElement {
     private renderStep(): string {
         switch (this.currentStep) {
             case 'intro':
-                return `<survey-form-intro></survey-form-intro>`
+                return `<survey-form-intro class="container"></survey-form-intro>`
             case 'questions':
-                return `<survey-form-questions></survey-form-questions>`
+                return `<survey-form-questions class="container"></survey-form-questions>`
             case 'outro':
-                return `<survey-form-outro></survey-form-outro>`
+                return `<survey-form-outro class="container"></survey-form-outro>`
             default:
                 return ''
         }

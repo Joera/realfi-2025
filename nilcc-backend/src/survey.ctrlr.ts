@@ -25,7 +25,7 @@ export class SurveyController {
         // signerAddress,
         // authContext
 
-        const { surveyConfig, authContext } = body;
+        const { surveyConfig } = body;
 
         console.log(0)
         
@@ -37,22 +37,20 @@ export class SurveyController {
 
         console.log(1, surveyOwnerDid.didString)
 
-        // Create collection
+        // // Create collection
         const rawSchema = createSurveyCollectionSchema(surveyConfig);
 
-        console.log(2)
+        // NOT WORKING ON DESKTOP ??????????? 
+        // const collectionId = await this.nildb.createSurveyCollection(rawSchema, surveyOwnerDid.didString);
+        // console.log(collectionId)
 
-        const collectionId = await this.nildb.createSurveyCollection(rawSchema, surveyOwnerDid.didString);
-
-        console.log(collectionId)
+        const contract = process.env.SURVEY_STORE_ADDRESS || "";
 
         // Encrypt everything
         const [encryptedSurveyConfig, encryptedKey] = await Promise.all([
-            this.lit.encrypt(surveyConfig, alwaysTrue), // accsForOwnerOrUser(surveyConfig.id)),
-            this.lit.encrypt(privateKeyHex, accsForSurveyOwner(surveyConfig.id)),
+            this.lit.encrypt("harry", accsForOwnerOrUser(surveyConfig.id, contract)),
+            this.lit.encrypt(privateKeyHex, accsForSurveyOwner(surveyConfig.id, contract))
         ]);
-
-        console.log(4)
 
         const config = {
 
@@ -61,7 +59,6 @@ export class SurveyController {
             encryptedNilKey: encryptedKey,
             surveyConfig: encryptedSurveyConfig
         };
-
 
         console.log('📦 Survey config:', config);
 

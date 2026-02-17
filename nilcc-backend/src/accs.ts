@@ -1,7 +1,7 @@
-const surveyOwner = (surveyId: string) => ({
+const surveyOwner = (surveyId: string, contract: string) => ({
   conditionType: "evmContract" as const,
+  contractAddress: contract,
   chain: "base" as const,
-  contractAddress: process.env.SURVEY_STORE_ADDRESS as string,
   functionName: "isOwner",
   functionParams: [":userAddress", surveyId],
   functionAbi: {
@@ -21,10 +21,10 @@ const surveyOwner = (surveyId: string) => ({
   },
 });
 
-const user = () => ({
+const user = (contract: string) => ({
   conditionType: "evmContract" as const,
+  contractAddress: contract,
   chain: "base" as const,
-  contractAddress: process.env.SURVEY_STORE_ADDRESS as string,
   functionName: "isNullifierUsed",
   functionParams: [":nullifier", ":batchId"],
   functionAbi: {
@@ -44,17 +44,17 @@ const user = () => ({
   },
 });
 
-export const accsForSurveyOwner = (surveyId: string) => {
-  return [surveyOwner(surveyId)];
+export const accsForSurveyOwner = (surveyId: string, contract: string) => {
+  return [surveyOwner(surveyId, contract)];
 };
 
-export const accsForUser = () => {
-  return [user()];
+export const accsForUser = (contract: string) => {
+  return [user(contract)];
 };
 
-export const accsForOwnerOrUser = (surveyId: string) => {
+export const accsForOwnerOrUser = (surveyId: string, contract: string) => {
   console.log("surveyId used for acc", surveyId);
-  return [surveyOwner(surveyId), { operator: "or" }, user()];
+  return [surveyOwner(surveyId, contract), { operator: "or" }, user(contract)];
 };
 
 export const alwaysTrue =  [

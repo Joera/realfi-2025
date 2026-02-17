@@ -48,7 +48,7 @@ export class NewSurveyController {
 
       const nillDid = this.services.nillion.getDid();
 
-      const authContext = this.services.lit.createAuthContext(await this.services.waap.getWalletClient())
+      const authContext = this.services.lit.createAuthContext(await this.services.waap.getWalletClient(), this.services.viem.account)
 
       let res: any = await fetch(`${import.meta.env.VITE_BACKEND}/api/create-survey`, {
         method: 'POST',
@@ -72,9 +72,7 @@ export class NewSurveyController {
       // check if combination owner + survey id was used before ! .. update pattern 
 
       // predict safe for survey 
-      await this.services.safe.connectToFreshSafe(surveyId);
-
-
+      // await this.services.safe.connectToFreshSafe(surveyId);
 
       const abi = [{ "inputs": [{ "internalType": "string", "name": "surveyId", "type": "string" }, { "internalType": "string", "name": "ipfsCid", "type": "string" }], "name": "createSurvey", "outputs": [], "stateMutability": "nonpayable", "type": "function" }];
       const args = [surveyId, surveyCid.toString()];
