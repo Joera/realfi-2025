@@ -5,8 +5,10 @@ import { getServices } from './services/container';
 
 const onPagePainted = () => {
 
-  const icon = document.querySelector('header svg') as HTMLElement;
-  icon!.style.display = "flex";
+  console.log("piant");
+  const header = document.querySelector('#header') as HTMLElement;
+  console.log(header);
+  header!.style.display = "flex";
   
   // const nav = document.getElementsByTagName('nav')[0];
   // nav.style.display = "flex";

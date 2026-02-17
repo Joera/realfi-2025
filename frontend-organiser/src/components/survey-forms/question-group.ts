@@ -195,8 +195,9 @@ class QuestionGroupElement extends HTMLElement {
                         placeholder="Group title (optional)"
                     />
                     <div class="group-actions">
-                        <button class="btn-icon" id="remove-group" title="Remove group">✕</button>
                         <button class="btn-icon" id="copy-group" title="Copy group">⧉</button>
+                        <button class="btn-icon" id="remove-group" title="Remove group">✕</button>
+                        
                     </div>
                 </div>
 

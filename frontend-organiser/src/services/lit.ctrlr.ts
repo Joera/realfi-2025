@@ -16,22 +16,21 @@ export default class LitService {
     litClient: any;
     account: any;
 
-    constructor() {
-        
-    }
+    constructor() {}
 
     async init() {
 
         this.litClient = await createLitClient({
-            network: nagaDev, //nagaTest,
+            network: nagaDev, // nagaTest, // 
         });
     }
 
 
-    async createAuthContext(waapWalletClient: any) {
+    async createAuthContext(waapWalletClient: any, viemAccount: any) {
 
         if (this.litClient == undefined) throw 'lit client not ready';
 
+        // COULD THIS BE THE ISSUE?????????????????????
         const wrappedAccount = {
             address: waapWalletClient.account.address,
             type: 'local', // Trick it into thinking it's a local account
@@ -55,7 +54,7 @@ export default class LitService {
         // Use createEoaAuthContext instead of createPkpAuthContext
         return await authManager.createEoaAuthContext({
             config: {
-                account: wrappedAccount,
+                account: viemAccount,
             },
             authConfig: {
                 domain: window.location.host,
@@ -69,11 +68,14 @@ export default class LitService {
         });
     }
 
-    async decrypt (encryptedData: string, authContext: any, accs: any[] ) {
+    async decrypt (encryptedData: any, authContext: any, accs: any[] ) {
+
 
         return await this.litClient.decrypt({
+            // ciphertext: encryptedData.ciphertext,
+            // dataToEncryptHash: encryptedData.dataToEncryptHash,
             data: encryptedData,
-            evmContractConditions: accs,
+            unifiedAccessControlConditions: accs,
             authContext,
             chain: "ethereum",
         });

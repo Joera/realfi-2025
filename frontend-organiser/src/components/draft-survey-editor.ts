@@ -1,6 +1,7 @@
 import { typograhyStyles } from '../styles/shared-typograhy-styles.js'
 import { colourStyles } from '../styles/shared-colour-styles.js'
 import { buttonStyles } from '../styles/shared-button-styles.js'
+import { layoutStyles} from '../styles/shared-layout-styles.js'
 import { store } from '../state/index.js'
 import './survey-forms/survey-form-intro.js'
 import './survey-forms/survey-form-questions.js'
@@ -17,7 +18,7 @@ class DraftSurveyEditor extends HTMLElement {
     constructor() {
         super()
         this.attachShadow({ mode: 'open' })
-        this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, colourStyles, buttonStyles]
+        this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, colourStyles, buttonStyles, layoutStyles]
     }
 
     connectedCallback() {
@@ -106,11 +107,19 @@ class DraftSurveyEditor extends HTMLElement {
                 gap: 1rem;
                 padding: 1.5rem;
             }
+
+            .action-container {
+            }
         </style>
 
-        <div class="editor-container">
+        <div class="editor-container container container-small centered">
             ${this.renderStep()}
-            ${this.renderActions()}
+           
+        </div>
+        <div class="action-container container centered">
+            <div class="container container-small centered">
+                ${this.renderActions()}
+            </div>
         </div>
         `
     }

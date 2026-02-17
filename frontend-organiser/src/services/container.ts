@@ -58,7 +58,6 @@ export class ServiceContainer {
 
     if(walletClient) {
       this.safe.updateSigner(walletClient);
-      // await this.safe.connectToFreshSafe('s3ntiment') // we need safe for survey, not user 
     }
 
     await this.lit.init()
@@ -68,7 +67,7 @@ export class ServiceContainer {
 
     // console.log("initialized lit with ", signer)
 
-    console.log("safe address",this.safe.address)
+   
 
 
 

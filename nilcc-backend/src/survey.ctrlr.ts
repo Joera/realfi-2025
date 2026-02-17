@@ -1,7 +1,7 @@
 import { Builder, Codec, Signer } from "@nillion/nuc";
 import { secp256k1 } from "@noble/curves/secp256k1.js";
 import { bytesToHex, recoverMessageAddress, Signature, verifyMessage } from "viem";
-import { accsForUser, accsForSurveyOwner } from "./accs";
+import { accsForUser, accsForSurveyOwner, accsForOwnerOrUser, alwaysTrue } from "./accs";
 import { createSurveyCollectionSchema } from "./create_collection";
 import { SurveyConfig } from "./types";
 
@@ -25,7 +25,7 @@ export class SurveyController {
         // signerAddress,
         // authContext
 
-        const { surveyConfig } = body;
+        const { surveyConfig, authContext } = body;
 
         console.log(0)
         
@@ -42,13 +42,13 @@ export class SurveyController {
 
         console.log(2)
 
-        await this.nildb.createSurveyCollection(rawSchema);
+        const collectionId = await this.nildb.createSurveyCollection(rawSchema, surveyOwnerDid.didString);
 
-        console.log(3)
+        console.log(collectionId)
 
         // Encrypt everything
         const [encryptedSurveyConfig, encryptedKey] = await Promise.all([
-            this.lit.encrypt(surveyConfig, accsForUser()),
+            this.lit.encrypt(surveyConfig, alwaysTrue), // accsForOwnerOrUser(surveyConfig.id)),
             this.lit.encrypt(privateKeyHex, accsForSurveyOwner(surveyConfig.id)),
         ]);
 
@@ -59,9 +59,9 @@ export class SurveyController {
             surveyId: surveyConfig.id,
             nilDid: surveyOwnerDid.didString,
             encryptedNilKey: encryptedKey,
-            // collectionID: collectionId,
             surveyConfig: encryptedSurveyConfig
         };
+
 
         console.log('📦 Survey config:', config);
 

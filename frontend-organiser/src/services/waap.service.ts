@@ -87,9 +87,17 @@ export class WaapService {
     async createWallet() {
 
         const accounts:any = await window.waap.request({ method: 'eth_requestAccounts' }); 
+
+        await window.waap.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: '0x2105' }] // 8453 in hex
+        });
+
+
+
         if (accounts[0]) {
             this.address = accounts[0];  
-            console.log("address set")       
+            console.log("address set", this.address)       
             this.walletClient = createWalletClient({
                 account: this.address as `0x${string}`,
                 chain: base, 
@@ -128,6 +136,10 @@ export class WaapService {
 
     }
 
+    async logout() {
+        await window.waap.logout();
+    }
+
     getWalletClient() {
         return this.walletClient;
     }
@@ -161,7 +173,7 @@ export class WaapService {
 
        
 
-    async writeContract(
+    async write(
         contractAddress: `0x${string}`, 
         abi: any, 
         functionName: string, 
@@ -214,7 +226,7 @@ export class WaapService {
         return result;
     }
 
-    async readContract<T = any>(
+    async read<T = any>(
         contractAddress: `0x${string}`, 
         abi: any, 
         functionName: string, 

@@ -1,13 +1,8 @@
 /// <reference types="vite/client" />
 
-import { bytesToHex } from 'viem';
+
 import '../components/draft-survey-editor.js';
-import { generateCardSecrets } from '../services/invitation.factory.js';
-import { store } from '../state/store.js';
-import { randomBytes } from '../utils/random.js';
-import { reactive } from '../utils/reactive.js';
 import { IServices } from '../services/container.js';
-import { randomUUID } from 'crypto';
 
 export class NewSurveyController {
   private reactiveViews: any[] = [];
@@ -23,7 +18,7 @@ export class NewSurveyController {
 
     app.innerHTML = `
       <div id="new-survey" class="container centered">
-        <draft-survey-editor class="container container-small centered"></draft-survey-editor>
+        <draft-survey-editor class="container centered"></draft-survey-editor>
       </div>
     `;
 
@@ -49,16 +44,19 @@ export class NewSurveyController {
     document.addEventListener('survey-submit', async (event: any) => {
       const survey = event.detail.survey;
 
-      const surveyId = randomUUID();
+      const surveyId = crypto.randomUUID();
 
       const nillDid = this.services.nillion.getDid();
+
+      const authContext = this.services.lit.createAuthContext(await this.services.waap.getWalletClient())
 
       let res: any = await fetch(`${import.meta.env.VITE_BACKEND}/api/create-survey`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({          
+        body: JSON.stringify({ 
+          authContext,         
           surveyConfig: {
             id: surveyId,
             title: survey.title,
@@ -74,13 +72,18 @@ export class NewSurveyController {
       // check if combination owner + survey id was used before ! .. update pattern 
 
       // predict safe for survey 
-      await this.services.safe.connectToFreshSafe(surveyId)
+      await this.services.safe.connectToFreshSafe(surveyId);
+
+
 
       const abi = [{ "inputs": [{ "internalType": "string", "name": "surveyId", "type": "string" }, { "internalType": "string", "name": "ipfsCid", "type": "string" }], "name": "createSurvey", "outputs": [], "stateMutability": "nonpayable", "type": "function" }];
       const args = [surveyId, surveyCid.toString()];
 
       // register survey and deploy safe 
-      const receipt = await this.services.safe.write(import.meta.env.VITE_SURVEYSTORE_CONTRACT, JSON.stringify(abi), 'createSurvey', args, true, true);
+      // const receipt = await this.services.safe.writeWithWaapSigning(import.meta.env.VITE_SURVEYSTORE_CONTRACT, JSON.stringify(abi), 'createSurvey', args);
+      // console.log(receipt);
+
+      const receipt = await this.services.waap.write(import.meta.env.VITE_SURVEYSTORE_CONTRACT as any, abi, 'createSurvey', args, {});
       console.log(receipt);
 
       // const batchId = survey.batchName || "original";

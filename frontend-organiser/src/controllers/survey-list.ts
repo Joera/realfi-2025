@@ -1,5 +1,5 @@
 
-import { accsForSurveyOwner } from "../accs.js";
+import { accsForOwnerOrUser, accsForSurveyOwner, alwaysTrue } from "../accs.js";
 import { IServices } from "../services/container.js";
 import { store } from "../state/store.js";
 import { reactive } from "../utils/reactive.js";
@@ -47,38 +47,51 @@ export class SurveyListController {
     
     async process() {
 
-        const userAddress = this.services.viem.getAddress();
+        const userAddress = this.services.waap.getAddress();
         console.log("useraddress", userAddress)
 
         // who owns the surveys now/   signer or safe? 
         const _surveys = await this.services.viem.readSurveyContract('getOwnerSurveys',[userAddress]);
 
-        const authContext = await this.services.lit.createAuthContext(this.services.waap.getWalletClient());
-        console.log(authContext.account.address)
+        const authContext = await this.services.lit.createAuthContext(this.services.waap.getWalletClient(), this.services.viem.account);
+        console.log("authcontext address", authContext.account.address)
         
         let surveys = await Promise.all(
             _surveys.map(async (surveyId: string) => {
                 let s = await this.services.viem.readSurveyContract('getSurvey', [surveyId]);
                 let d = {}
 
-                if (isCid(s[0])) {
+                if (isCid(s[0]) && surveyId == "ea859a4a-c6a2-44ab-ba92-b13bfa3e7d75") {
 
-                  // console.log(s);
+               
                   let c = JSON.parse(await this.services.ipfs.fetchFromPinata(s[0]));
                 
-                  // console.log(c);
+                  console.log(c);
+                  
 
-                  if (isDid(c.nilDid) && c.nilDid == 'did:key:zQ3shdyNAT2kcfnxUMzta3zwhTRbQ5krcBRay2GfTRd3w9cgG') {
+                  if (isDid(c.nilDid) && c.surveyId !== undefined) {
 
-                    console.log("sid", surveyId)
+                    // console.log("sid", surveyId)
 
 
-                    const accs = accsForSurveyOwner(surveyId);
+                    const accs = alwaysTrue; // accsForOwnerOrUser(surveyId, import.meta.env.VITE_SURVEYSTORE_CONTRACT);
 
-                    console.log(c.surveyConfig)
+                    console.log(authContext)
+                    console.log(JSON.stringify(accs, null, 2));
+
+
+                    // console.log(c.surveyConfig)
+
+                    const sc = {
+                      ciphertext: 'r60gZAWYX1iZRd4FICHmKGXFLEJMr4YyiGxOY7kgRDsqG7dl5xfWyeYh8AvZrN65uUmy2EECw/T31nlczsEwDdKZPMNAMKn33r/yVaHlTDYgOjjoniSdJPM8FZFcM3vhnEuB3Y1eMep44ECLhfGG/xIC',
+                      dataToEncryptHash: 'f7fedc1ce8904aa57054e7d1315d03ece5247b2c90a643b7264fabf10e4af177',
+                      metadata: { dataType: 'string' }
+                    }
+                                      
+
                     
                     try {
-                      d = await this.services.lit.decrypt(c.surveyConfig, authContext, accs);
+                      d = await this.services.lit.decrypt(sc, authContext, accs);
                       console.log("decrypted", c.collectionID || c.collectioniD)
                     } catch (error){
                         console.log(error);

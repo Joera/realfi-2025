@@ -1,9 +1,6 @@
-import { nagaDev } from "@lit-protocol/networks";
+import { nagaDev, nagaTest } from "@lit-protocol/networks";
 import { createLitClient } from "@lit-protocol/lit-client";
 import { createAccBuilder } from "@lit-protocol/access-control-conditions";
-
-
-const SURVEYSTORE = "0x6Ab10D4705041408b2ED049F12cc0606B735dF0e"
 
 export class LitService {
 
@@ -16,26 +13,31 @@ export class LitService {
     async init () {
 
         this.client = await createLitClient({
-            network: nagaDev,
+            network: nagaDev, // nagaDev,
         });
 
     }
 
-    async encrypt(nilKey:string, accs: any[]) {
-        
+    async encrypt(toEncrypt: any, accs: any[]) {
+
+        console.log(JSON.stringify(accs, null, 2));
+
+        console.log("typeof toEncrypt:", typeof toEncrypt);
+        console.log("toEncrypt:", toEncrypt);
+
         return await this.client.encrypt({
-            dataToEncrypt: nilKey,
-            evmContractConditions: accs,
-            chain: "base",
+            dataToEncrypt: toEncrypt,
+            unifiedAccessControlConditions: accs,
+            chain: "ethereum",
         });
     }
 
 
-    async decrypt (encryptedNilKey: string, authContext: string, accs: any[] ) {
+    async decrypt (encryptedData: any, authContext: string, accs: any[] ) {
 
         return await this.client.decrypt({
-            data: encryptedNilKey,
-            evmContractConditions: accs,
+            data: encryptedData,
+            unifiedAccessControlConditions: accs,
             authContext,
             chain: "ethereum",
         });

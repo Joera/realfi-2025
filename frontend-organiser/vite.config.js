@@ -9,7 +9,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   root: '.',
   server: {
-    port: 7778,
+    port: 7779,
     open: true
   },
   build: {
