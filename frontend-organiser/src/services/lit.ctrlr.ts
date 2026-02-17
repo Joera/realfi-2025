@@ -31,6 +31,8 @@ export default class LitService {
 
         if (this.litClient == undefined) throw 'lit client not ready';
 
+       
+
         const wrappedAccount = {
             address: waapWalletClient.account.address,
             type: 'local', // Trick it into thinking it's a local account
@@ -50,6 +52,8 @@ export default class LitService {
                 networkName: "naga-dev",
             }),
         });
+
+        
 
         // Use createEoaAuthContext instead of createPkpAuthContext
         return await authManager.createEoaAuthContext({
@@ -82,12 +86,11 @@ export default class LitService {
 
 
         return await this.litClient.decrypt({
-            // ciphertext: encryptedData.ciphertext,
-            // dataToEncryptHash: encryptedData.dataToEncryptHash,
             data: encryptedData,
             unifiedAccessControlConditions: accs,
             authContext,
             chain: "ethereum",
+            userMaxPrice: 1000000000000000000n,
         });
     }
 

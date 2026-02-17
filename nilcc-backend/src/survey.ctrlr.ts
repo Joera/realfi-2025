@@ -41,19 +41,18 @@ export class SurveyController {
         const rawSchema = createSurveyCollectionSchema(surveyConfig);
 
         // NOT WORKING ON DESKTOP ??????????? 
-        // const collectionId = await this.nildb.createSurveyCollection(rawSchema, surveyOwnerDid.didString);
-        // console.log(collectionId)
+        const collectionId = await this.nildb.createSurveyCollection(rawSchema, surveyOwnerDid.didString);
+        console.log(collectionId)
 
         const contract = process.env.SURVEY_STORE_ADDRESS || "";
 
         // Encrypt everything
         const [encryptedSurveyConfig, encryptedKey] = await Promise.all([
-            this.lit.encrypt("harry", accsForOwnerOrUser(surveyConfig.id, contract)),
+            this.lit.encrypt(surveyConfig, accsForOwnerOrUser(surveyConfig.id, contract)),
             this.lit.encrypt(privateKeyHex, accsForSurveyOwner(surveyConfig.id, contract))
         ]);
 
         const config = {
-
             surveyId: surveyConfig.id,
             nilDid: surveyOwnerDid.didString,
             encryptedNilKey: encryptedKey,
