@@ -25,17 +25,17 @@ export class SurveyListController {
         `;
     
         const view = reactive('#survey-results', () => {
-          const { landingStep } = store.ui;
+          // const { landingStep } = store.ui;
     
-          switch (landingStep) {
-            case 'register':
+          // switch (landingStep) {
+          //   case 'register':
               return `
                 <survey-results-list></survey-results-list>
               `;
             
-            default:
-              return '';
-          }
+          //   default:
+          //     return '';
+          // }
         });
     
         if (view) {
@@ -65,6 +65,7 @@ export class SurveyListController {
 
                   let c = JSON.parse(await this.services.ipfs.fetchFromPinata(s[0]));
                   const accs = accsForOwnerOrUser(surveyId, import.meta.env.VITE_SURVEYSTORE_CONTRACT);
+
                   try { 
                     const data = await this.services.lit.decrypt(c.surveyConfig, authContext, accs);
                     d = data.convertedData;

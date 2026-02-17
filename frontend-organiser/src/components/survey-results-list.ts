@@ -16,9 +16,8 @@ class SurveyResultsList extends HTMLElement {
 
     connectedCallback() {
 
-        this.unsubscribe = store.subscribe('surveys', (surveys: any[]) => {
 
-            console.log("US", surveys)
+        this.unsubscribe = store.subscribeSurveys((surveys: any[]) => {
             this.render(surveys);
         });
         
@@ -33,6 +32,7 @@ class SurveyResultsList extends HTMLElement {
     }
 
     private render(surveys: any[]) {
+        console.log
 
 
         if (!this.shadowRoot) return
@@ -87,9 +87,10 @@ class SurveyResultsList extends HTMLElement {
             <!-- Data Rows -->
             ${surveys.map(survey => `
                 <div class="table-row" data-survey-id="${survey.id}">
+                    <div class="table-cell">${survey.title}...</div>
                     <div class="table-cell">${survey.id.slice(0, 16)}...</div>
                     <div class="table-cell">${new Date(Number(survey.createdAt) * 1000).toLocaleDateString()}</div>
-                    <div class="table-cell">${survey.collectionID?.slice(0, 8)}...</div>
+                    
                 </div>
             `).join('')}
         </div>

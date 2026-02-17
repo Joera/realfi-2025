@@ -13,6 +13,7 @@ export class SurveysStore {
   }
 
   set(surveys: SurveyConfig[]): void {
+    console.log('hello')
     this.observable.set(surveys);
   }
 
