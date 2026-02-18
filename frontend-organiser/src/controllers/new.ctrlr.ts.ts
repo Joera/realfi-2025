@@ -48,7 +48,7 @@ export class NewSurveyController {
 
       const nillDid = this.services.nillion.getDid();
 
-      const authContext = this.services.lit.createAuthContext(await this.services.waap.getWalletClient(), this.services.viem.account)
+      const authContext = this.services.lit.createAuthContext(await this.services.waap.getWalletClient())
 
       let res: any = await fetch(`${import.meta.env.VITE_BACKEND}/api/create-survey`, {
         method: 'POST',

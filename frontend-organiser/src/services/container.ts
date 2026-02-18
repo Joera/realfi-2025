@@ -2,7 +2,7 @@ import { NillionService } from "./nillion.service";
 import { WaapService } from "./waap.service";
 import { ViemService } from "./viem.service";
 import { PermissionlessSafeService } from "./permissionless.safe.service";
-import LitService from "./lit.ctrlr";
+import LitService from "./lit.service";
 import { IPFSMethods } from "./ipfs.service";
 
 export interface IServices {

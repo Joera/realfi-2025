@@ -36,10 +36,19 @@ export interface QuestionGroup {
     questions: Question[]
 }
 
+export interface Batch {
+    id: string
+    name: string
+    amount: number
+    medium: 'qr-code' | 'cdn'
+    createdAt: number
+}
+
 export interface SurveyConfig {
     title?: string
     introduction?: string
     groups?: QuestionGroup[]
+    batches?: Batch[]
 }
 
 // Event detail types

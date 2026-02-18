@@ -5,9 +5,9 @@ import { layoutStyles} from '../styles/shared-layout-styles.js'
 import { store } from '../state/index.js'
 import './survey-forms/survey-form-intro.js'
 import './survey-forms/survey-form-questions.js'
-import './survey-forms/survey-form-outro.js'
+import './survey-forms/survey-form-batches.js'
 
-type Step = 'intro' | 'questions' | 'outro'
+type Step = 'intro' | 'questions' | 'batches'
 
 class DraftSurveyEditor extends HTMLElement {
     private unsubscribeUI: (() => void) | null = null
@@ -80,11 +80,10 @@ class DraftSurveyEditor extends HTMLElement {
             if (questionsForm) {
                 questionsForm.groups = draft.groups || []
             }
-        } else if (this.currentStep === 'outro') {
-            const outroForm = this.shadowRoot?.querySelector('survey-form-outro') as any
-            if (outroForm) {
-                outroForm.batchName = draft.batchName || ''
-                outroForm.batchSize = draft.batchSize || ''
+        } else if (this.currentStep === 'batches') {
+            const batchesForm = this.shadowRoot?.querySelector('survey-form-batches') as any
+            if (batchesForm) {
+                batchesForm.batches = draft.batches || []
             }
         }
     }
@@ -130,8 +129,8 @@ class DraftSurveyEditor extends HTMLElement {
                 return `<survey-form-intro class="container"></survey-form-intro>`
             case 'questions':
                 return `<survey-form-questions class="container"></survey-form-questions>`
-            case 'outro':
-                return `<survey-form-outro class="container"></survey-form-outro>`
+            case 'batches':
+                return `<survey-form-batches class="container"></survey-form-batches>`
             default:
                 return ''
         }
@@ -152,7 +151,7 @@ class DraftSurveyEditor extends HTMLElement {
                         <button class="btn-secondary" id="next-btn">Next ></button>
                     </div>
                 `
-            case 'outro':
+            case 'batches':
                 return `
                     <div class="form-actions">
                         <button class="btn-secondary" id="back-btn">< Back</button>
@@ -179,13 +178,9 @@ class DraftSurveyEditor extends HTMLElement {
             this.updateStore({ groups: e.detail.value })
         }) as EventListener)
 
-        // Form change events - outro
-        this.shadowRoot?.addEventListener('batch-name-change', ((e: CustomEvent) => {
-            this.updateStore({ batchName: e.detail.value })
-        }) as EventListener)
-
-        this.shadowRoot?.addEventListener('batch-size-change', ((e: CustomEvent) => {
-            this.updateStore({ batchSize: e.detail.value })
+        // Form change events - batches
+        this.shadowRoot?.addEventListener('batches-change', ((e: CustomEvent) => {
+            this.updateStore({ batches: e.detail.value })
         }) as EventListener)
 
         // Navigation
@@ -207,7 +202,7 @@ class DraftSurveyEditor extends HTMLElement {
             case 'questions':
                 store.setUI({ newStep: 'intro' })
                 break
-            case 'outro':
+            case 'batches':
                 store.setUI({ newStep: 'questions' })
                 break
         }
@@ -222,7 +217,7 @@ class DraftSurveyEditor extends HTMLElement {
                 break
             case 'questions':
                 if (this.validateQuestions()) {
-                    store.setUI({ newStep: 'outro' })
+                    store.setUI({ newStep: 'batches' })
                 }
                 break
         }
@@ -249,10 +244,10 @@ class DraftSurveyEditor extends HTMLElement {
         return true
     }
 
-    private validateOutro(): boolean {
-        const outroForm = this.shadowRoot?.querySelector('survey-form-outro') as any
-        if (outroForm) {
-            const errors = outroForm.validate()
+    private validateBatches(): boolean {
+        const batchesForm = this.shadowRoot?.querySelector('survey-form-batches') as any
+        if (batchesForm) {
+            const errors = batchesForm.validate()
             if (errors.length > 0) {
                 alert(`Please fix:\n${errors.join('\n')}`)
                 return false
@@ -262,7 +257,7 @@ class DraftSurveyEditor extends HTMLElement {
     }
 
     private submit() {
-        if (!this.validateOutro()) {
+        if (!this.validateBatches()) {
             return
         }
 

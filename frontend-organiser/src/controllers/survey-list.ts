@@ -5,6 +5,7 @@ import { store } from "../state/store.js";
 import { reactive } from "../utils/reactive.js";
 import '../components/survey-results-list.js';
 import { isCid, isDid } from "../utils/regex.js";
+import { fetchSurvey } from "../factories/survey.factory.js";
 
 export class SurveyListController {
     private reactiveViews: any[] = [];
@@ -53,32 +54,13 @@ export class SurveyListController {
         // who owns the surveys now/   signer or safe? 
         const _surveys = await this.services.viem.readSurveyContract('getOwnerSurveys',[userAddress]);
 
-        const authContext = await this.services.lit.createAuthContext(this.services.waap.getWalletClient(), this.services.viem.account);
-        console.log("authcontext address", authContext.account.address)
+        const authContext = await this.services.lit.createAuthContext(this.services.waap.getWalletClient());
+
+        // console.log("AUTHCONTEXT",authContext)
 
         let surveys = await Promise.all(
             _surveys.map(async (surveyId: string) => {
-                let s = await this.services.viem.readSurveyContract('getSurvey', [surveyId]);
-                let d: any = {}
-
-                if (isCid(s[0]) && surveyId == "dc1d4342-1c7d-4e69-8bb3-b133209f4c95") {
-
-                  let c = JSON.parse(await this.services.ipfs.fetchFromPinata(s[0]));
-                  const accs = accsForOwnerOrUser(surveyId, import.meta.env.VITE_SURVEYSTORE_CONTRACT);
-
-                  try { 
-                    const data = await this.services.lit.decrypt(c.surveyConfig, authContext, accs);
-                    d = data.convertedData;
-                    } catch (error){
-                         console.log(error);
-                    }
-      
-                  return {
-                    id: surveyId,
-                    createdAt: s[2],
-                    ...d
-                    }
-                }
+               return await fetchSurvey(this.services, authContext, surveyId)
             })
         );
 

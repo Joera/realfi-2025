@@ -1,5 +1,5 @@
 import { createPublicClient, createWalletClient, http } from "viem";
-import { getChainId, getRPCUrl, getViemChainById } from "./chains.factory";
+import { getChainId, getRPCUrl, getViemChainById } from "../factories/chains.factory";
 import { privateKeyToAccount } from "viem/accounts";
 import { SURVEY_STORE_ABI } from "../survey.abi";
 

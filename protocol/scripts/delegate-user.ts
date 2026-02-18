@@ -26,11 +26,11 @@ async function main() {
       account,
     });
 
-    // await paymentManager.setRestriction({
-    //     totalMaxPrice: '1000000000000000000', // max wei per request
-    //     requestsPerPeriod: '100',
-    //     periodSeconds: '3600',
-    // });
+    await paymentManager.setRestriction({
+        totalMaxPrice: '1000000000000000000', // max wei per request
+        requestsPerPeriod: '100',
+        periodSeconds: '3600',
+    });
 
     let res = await paymentManager.delegatePaymentsBatch({
         userAddresses: [userAddr],

@@ -12,8 +12,8 @@ export interface DraftsMap {
 
 export interface UIState {
   landingStep: 'welcome' | 'register' | 'choice';
-  newStep: 'intro' | 'questions' | 'outro';
-  resultTab: 'results' | 'config' | 'questions';
+  newStep: 'intro' | 'questions' | 'batches';
+  resultTab: 'results' | 'config' | 'questions' | 'batches';
 }
 
 export interface AppState {

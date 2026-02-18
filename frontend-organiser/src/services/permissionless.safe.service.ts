@@ -6,7 +6,7 @@ import {
 import { createSmartAccountClient } from "permissionless";
 import { createPimlicoClient } from "permissionless/clients/pimlico";
 import { concat, createClient, createPublicClient, encodeFunctionData, http, keccak256, pad, parseAbi, parseEther, toBytes, toHex } from "viem";
-import { getChainId, getRPCUrl, getScanApi, getViemChainById } from "./chains.factory.ts";
+import { getChainId, getRPCUrl, getScanApi, getViemChainById } from "../factories/chains.factory.ts";
 import { getPackedUserOperation } from "permissionless";
 import { encodeAbiParameters, parseAbiParameters } from "viem";
 
@@ -95,48 +95,48 @@ export class PermissionlessSafeService implements IPermissionlessSafeService {
 
   }
 
-  // async updateSigner(waapWalletClient: any) {
-  //   this.signer = waapWalletClient
-  //   return this.signer.address;
-  // }
-
   async updateSigner(waapWalletClient: any) {
-      const address = waapWalletClient.account.address;
-      
-      // Create a fake "local" account that delegates to walletClient
-      this.signer = {
-          address,
-          type: 'local',
-          source: 'custom',
-          
-          signMessage: async ({ message }: { message: string | { raw: Uint8Array } }) => {
-              const msg = typeof message === 'string' ? message : message.raw;
-              return await waapWalletClient.signMessage({
-                  account: address,
-                  message: msg,
-              });
-          },
-          
-          signTypedData: async (typedData: any) => {
-              return await waapWalletClient.signTypedData({
-                  account: address,
-                  domain: typedData.domain,
-                  types: typedData.types,
-                  primaryType: typedData.primaryType,
-                  message: typedData.message,
-              });
-          },
-          
-          signTransaction: async (tx: any) => {
-              return await waapWalletClient.signTransaction({
-                  account: address,
-                  ...tx,
-              });
-          },
-      };
-      
-      return address;
+    this.signer = waapWalletClient
+    return this.signer.address;
   }
+
+  // async updateSigner(waapWalletClient: any) {
+  //     const address = waapWalletClient.account.address;
+      
+  //     // Create a fake "local" account that delegates to walletClient
+  //     this.signer = {
+  //         address,
+  //         type: 'local',
+  //         source: 'custom',
+          
+  //         signMessage: async ({ message }: { message: string | { raw: Uint8Array } }) => {
+  //             const msg = typeof message === 'string' ? message : message.raw;
+  //             return await waapWalletClient.signMessage({
+  //                 account: address,
+  //                 message: msg,
+  //             });
+  //         },
+          
+  //         signTypedData: async (typedData: any) => {
+  //             return await waapWalletClient.signTypedData({
+  //                 account: address,
+  //                 domain: typedData.domain,
+  //                 types: typedData.types,
+  //                 primaryType: typedData.primaryType,
+  //                 message: typedData.message,
+  //             });
+  //         },
+          
+  //         signTransaction: async (tx: any) => {
+  //             return await waapWalletClient.signTransaction({
+  //                 account: address,
+  //                 ...tx,
+  //             });
+  //         },
+  //     };
+      
+  //     return address;
+  // }
   
   async isDeployed(address?: string): Promise<boolean> {
     try {
@@ -421,7 +421,7 @@ async writeWithWaapSigning(address: string, abi: string, method: string, args: a
 
     // 8. Wait for receipt
     console.log("⏳ [14] Waiting for UserOp receipt...");
-    let receipt = null;
+    let receipt: any = null;
     while (!receipt) {
         await new Promise(r => setTimeout(r, 2000));
         try {

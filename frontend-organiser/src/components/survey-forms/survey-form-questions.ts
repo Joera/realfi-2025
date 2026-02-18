@@ -3,9 +3,12 @@ import { colourStyles } from '../../styles/shared-colour-styles.js'
 import { buttonStyles } from '../../styles/shared-button-styles.js'
 import type { Question, QuestionGroup } from '../../types.js'
 import './question-group.js'
+import { store } from '../../state/store.js'
 
 class SurveyFormQuestions extends HTMLElement {
     private _groups: QuestionGroup[] = []
+
+    static get observedAttributes() { return ['survey-id'] }
 
     constructor() {
         super()
@@ -16,6 +19,15 @@ class SurveyFormQuestions extends HTMLElement {
     connectedCallback() {
         this.render()
         this.attachEventListeners()
+    }
+
+    attributeChangedCallback(name: string, _: string, newVal: string) {
+        if (name === 'survey-id' && newVal) {
+            const survey = store.surveys.find( (s: any)  => s.id === newVal);
+            if (survey) {
+                this.groups = survey.groups || [];
+            }
+        }
     }
 
     set groups(value: QuestionGroup[]) {

@@ -25,6 +25,12 @@ contract S3ntimentSurveyStore {
         string ipfsCid,
         uint256 timestamp
     );
+
+    event SurveyUpdated(
+        string surveyId, 
+        string newIpfsCid
+    );
+
     event CardValidated(
         string indexed surveyId,
         string indexed batchId,
@@ -66,6 +72,13 @@ contract S3ntimentSurveyStore {
         ownerSurveys[msg.sender].push(surveyId);
         
         emit SurveyCreated(msg.sender, surveyId, ipfsCid, block.timestamp);
+    }
+
+    function updateSurveyCid(string memory surveyId, string memory newIpfsCid) external {
+        Survey storage survey = surveys[surveyId];
+        require(survey.owner == msg.sender, "Not owner");
+        survey.ipfsCid = newIpfsCid;
+        emit SurveyUpdated(surveyId, newIpfsCid);
     }
     
     /**
