@@ -7,9 +7,11 @@ import type { Batch } from '../../types.js'
 class SurveyFormBatches extends HTMLElement {
     private _existingBatches: Batch[] = []  // from contract, read-only
     private _newBatches: Batch[] = []  // editable drafts
+    private _mode: 'draft' | 'existing' = 'draft'
+    private _surveyId: string = ''
 
     static get observedAttributes() {
-        return ['survey-id']
+        return ['survey-id', 'mode']
     }
 
     constructor() {
@@ -19,12 +21,30 @@ class SurveyFormBatches extends HTMLElement {
     }
 
     connectedCallback() {
+        // In draft mode, ensure there's always one batch to fill in
+        if (this._mode === 'draft' && this._newBatches.length === 0) {
+            this._newBatches.push({
+                id: crypto.randomUUID(),
+                name: '',
+                amount: 50,
+                medium: 'zip-file',
+                createdAt: Date.now()
+            })
+        }
         this.render()
         this.attachEventListeners()
     }
 
     attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+        if (name === 'mode' && oldValue !== newValue) {
+            this._mode = newValue as 'draft' | 'existing'
+            this.render()
+            this.attachEventListeners()
+        }
+        
         if (name === 'survey-id' && oldValue !== newValue) {
+            this._surveyId = newValue
+            this._mode = 'existing'  // survey-id implies existing survey
             const survey = store.surveys.find((s: any) => s.id === newValue)
             if (survey) {
                 this._existingBatches = survey.batches || []
@@ -38,6 +58,18 @@ class SurveyFormBatches extends HTMLElement {
     // For draft editor - sets new batches being created
     set batches(value: Batch[]) {
         this._newBatches = value
+        
+        // In draft mode, ensure there's always one batch
+        if (this._mode === 'draft' && this._newBatches.length === 0) {
+            this._newBatches.push({
+                id: crypto.randomUUID(),
+                name: '',
+                amount: 50,
+                medium: 'zip-file',
+                createdAt: Date.now()
+            })
+        }
+        
         this.render()
         this.attachEventListeners()
     }
@@ -106,30 +138,6 @@ class SurveyFormBatches extends HTMLElement {
                 border-style: dashed;
             }
 
-            .batch-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 1rem;
-            }
-
-            .batch-number {
-                font-weight: 600;
-                color: var(--green);
-            }
-
-            .batch-status {
-                font-size: 0.75rem;
-                padding: 0.25rem 0.5rem;
-                border-radius: 4px;
-                background: var(--green);
-                color: white;
-            }
-
-            .batch-status.draft {
-                background: #f59e0b;
-            }
-
             .remove-btn {
                 background: none;
                 border: none;
@@ -161,7 +169,8 @@ class SurveyFormBatches extends HTMLElement {
                 display: block;
                 margin-bottom: 0.5rem;
                 font-weight: 500;
-                font-size: 0.875rem;
+                font-size: 1rem;
+                color: var(--green);
             }
 
             input[type="text"],
@@ -212,11 +221,9 @@ class SurveyFormBatches extends HTMLElement {
 
             .batch-actions {
                 display: flex;
-                justify-content: flex-end;
+                justify-content: flex-start;
                 gap: 0.5rem;
-                margin-top: 1rem;
-                padding-top: 1rem;
-                border-top: 1px solid #e5e7eb;
+                margin-top: 1.5rem;
             }
 
             .create-btn {
@@ -242,12 +249,8 @@ class SurveyFormBatches extends HTMLElement {
         <div class="form-container">
             ${this._existingBatches.length > 0 ? `
                 <div class="section-title">Existing Batches</div>
-                ${this._existingBatches.map((batch, index) => `
+                ${this._existingBatches.map((batch) => `
                     <div class="batch-card existing">
-                        <div class="batch-header">
-                            <span class="batch-number">${batch.name || `Batch ${index + 1}`}</span>
-                            <span class="batch-status">Active</span>
-                        </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label>Name</label>
@@ -259,18 +262,14 @@ class SurveyFormBatches extends HTMLElement {
                             </div>
                             <div class="form-group small">
                                 <label>Medium</label>
-                                <div class="readonly-value">${batch.medium === 'qr-code' ? 'QR Code' : 'CDN Link'}</div>
+                                <div class="readonly-value">${batch.medium === 'zip-file' ? 'QR Code' : 'CDN Link'}</div>
                             </div>
                         </div>
                     </div>
                 `).join('')}
             ` : ''}
 
-            ${this._newBatches.length > 0 || this._existingBatches.length > 0 ? `
-                <div class="section-title">New Batches</div>
-            ` : ''}
-
-            ${this._newBatches.length === 0 && this._existingBatches.length === 0 ? `
+            ${this._mode === 'existing' && this._newBatches.length === 0 && this._existingBatches.length === 0 ? `
                 <div class="empty-state">
                     <p>No batches yet. Add a batch to create invitations.</p>
                 </div>
@@ -278,13 +277,6 @@ class SurveyFormBatches extends HTMLElement {
 
             ${this._newBatches.map((batch, index) => `
                 <div class="batch-card new" data-index="${index}">
-                    <div class="batch-header">
-                        <span class="batch-number">New Batch ${index + 1}</span>
-                        <div>
-                            <span class="batch-status draft">Draft</span>
-                            <button class="remove-btn" data-action="remove" data-index="${index}">×</button>
-                        </div>
-                    </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label>Name</label>
@@ -299,20 +291,24 @@ class SurveyFormBatches extends HTMLElement {
                         <div class="form-group small">
                             <label>Medium</label>
                             <select data-field="medium" data-index="${index}">
-                                <option value="qr-code" ${batch.medium === 'qr-code' ? 'selected' : ''}>QR Code</option>
+                                <option value="qr-code" ${batch.medium === 'zip-file' ? 'selected' : ''}>ZIP File</option>
                                 <option value="cdn" ${batch.medium === 'cdn' ? 'selected' : ''}>CDN Link</option>
                             </select>
                         </div>
                     </div>
-                    <div class="batch-actions">
-                        <button class="create-btn" data-action="create" data-index="${index}">
-                            Create Batch
-                        </button>
-                    </div>
+                    ${this._mode === 'existing' ? `
+                        <div class="batch-actions">
+                            <button class="create-btn" data-action="create" data-index="${index}">
+                                Create Batch
+                            </button>
+                        </div>
+                    ` : ''}
                 </div>
             `).join('')}
             
-            <button class="btn-secondary add-batch-btn" id="add-batch">+ Add Batch</button>
+            ${this._mode === 'existing' ? `
+                <button class="btn-secondary add-batch-btn" id="add-batch">+ Add Batch</button>
+            ` : ''}
         </div>
         `
     }
@@ -320,7 +316,13 @@ class SurveyFormBatches extends HTMLElement {
     private attachEventListeners() {
         // Add batch
         this.shadowRoot?.querySelector('#add-batch')?.addEventListener('click', () => {
-            this._newBatches.push({ name: '', amount: 50, medium: 'qr-code' })
+            this._newBatches.push({ 
+                id: crypto.randomUUID(),
+                name: '', 
+                amount: 50, 
+                medium: 'zip-file',
+                createdAt: Date.now()
+            })
             this.emitChange()
             this.render()
             this.attachEventListeners()
@@ -337,7 +339,7 @@ class SurveyFormBatches extends HTMLElement {
             })
         })
 
-        // Create batch - dispatch event for parent controller
+        // Create batch - only in existing mode
         this.shadowRoot?.querySelectorAll('[data-action="create"]').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const index = parseInt((e.target as HTMLElement).dataset.index!)
@@ -354,7 +356,7 @@ class SurveyFormBatches extends HTMLElement {
                 }
 
                 this.dispatchEvent(new CustomEvent('batch-create', {
-                    detail: { batch, index },
+                    detail: { batch, index, surveyId: this._surveyId },
                     bubbles: true,
                     composed: true
                 }))
@@ -371,8 +373,8 @@ class SurveyFormBatches extends HTMLElement {
                 if (field === 'amount') {
                     this._newBatches[index][field] = parseInt(target.value) || 0
                 } else if (field === 'medium') {
-                    this._newBatches[index][field] = target.value as 'qr-code' | 'cdn'
-                } else {
+                    this._newBatches[index][field] = target.value as 'zip-file' | 'cdn'
+                } else if (field === 'name') {
                     this._newBatches[index][field] = target.value
                 }
                 
@@ -382,15 +384,11 @@ class SurveyFormBatches extends HTMLElement {
     }
 
     // Call this after successful contract registration
-    markBatchCreated(index: number, contractBatchId: string) {
+    markBatchCreated(index: number) {
         const batch = this._newBatches[index]
         if (batch) {
             // Move from new to existing
-            this._existingBatches.push({
-                ...batch,
-                id: contractBatchId,
-                created: Date.now()
-            })
+            this._existingBatches.push(batch)
             this._newBatches.splice(index, 1)
             this.emitChange()
             this.render()

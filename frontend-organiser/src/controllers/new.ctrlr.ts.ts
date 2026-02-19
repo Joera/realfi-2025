@@ -2,6 +2,7 @@
 
 
 import '../components/draft-survey-editor.js';
+import { createZipFile, generateCardSecrets } from '../factories/invitation.factory.js';
 import { IServices } from '../services/container.js';
 
 export class NewSurveyController {
@@ -41,14 +42,16 @@ export class NewSurveyController {
   }
 
   async setSurveyListener() {
+
     document.addEventListener('survey-submit', async (event: any) => {
       const survey = event.detail.survey;
+      console.log("ready to submit", survey)
 
       const surveyId = crypto.randomUUID();
 
-      const nillDid = this.services.nillion.getDid();
-
       const authContext = this.services.lit.createAuthContext(await this.services.waap.getWalletClient())
+
+
 
       let res: any = await fetch(`${import.meta.env.VITE_BACKEND}/api/create-survey`, {
         method: 'POST',
@@ -62,6 +65,7 @@ export class NewSurveyController {
             title: survey.title,
             introduction: survey.introduction,
             groups: survey.groups,
+            batches: survey.batches
           }
         })
       });
@@ -77,28 +81,23 @@ export class NewSurveyController {
       const abi = [{ "inputs": [{ "internalType": "string", "name": "surveyId", "type": "string" }, { "internalType": "string", "name": "ipfsCid", "type": "string" }], "name": "createSurvey", "outputs": [], "stateMutability": "nonpayable", "type": "function" }];
       const args = [surveyId, surveyCid.toString()];
 
-      // register survey and deploy safe 
-      // const receipt = await this.services.safe.writeWithWaapSigning(import.meta.env.VITE_SURVEYSTORE_CONTRACT, JSON.stringify(abi), 'createSurvey', args);
+      // const receipt = await this.services.waap.write(import.meta.env.VITE_SURVEYSTORE_CONTRACT as any, abi, 'createSurvey', args, {});
       // console.log(receipt);
 
-      const receipt = await this.services.waap.write(import.meta.env.VITE_SURVEYSTORE_CONTRACT as any, abi, 'createSurvey', args, {});
-      console.log(receipt);
+      for (const batch of survey.batches) {
 
-      // const batchId = survey.batchName || "original";
-      // const batchSize = parseInt(survey.batchSize) || 10;
+          const cards: any[] = await generateCardSecrets(this.services.viem, batch.id, batch.amount, surveyId);
 
-      // // create qr codes 
-      // await generateCardSecrets(this.services.viem, batchId, batchSize, surveyId);
+          if (batch.medium == 'zip-file') {
 
-      // // include one qr code for testing .. excluded from not counted, no nullifier, batchid=test 
-      // const test = await generateCardSecrets(this.services.viem, "test", 1, surveyId);
-      // console.log(test);
+              await createZipFile(cards, surveyId)
+          }
+      }
 
-      // // Clear draft after successful submission
-      // store.clearSurveyDraft();
+      const test = await generateCardSecrets(this.services.viem, "test", 1, surveyId);
 
-      // Navigate back or show success
-      // store.setUI({ ... })
+      console.log(test)
+  
     });
   }
 }

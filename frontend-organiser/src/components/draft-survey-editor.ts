@@ -130,7 +130,7 @@ class DraftSurveyEditor extends HTMLElement {
             case 'questions':
                 return `<survey-form-questions class="container"></survey-form-questions>`
             case 'batches':
-                return `<survey-form-batches class="container"></survey-form-batches>`
+                return `<survey-form-batches mode="draft" class="container"></survey-form-batches>`
             default:
                 return ''
         }

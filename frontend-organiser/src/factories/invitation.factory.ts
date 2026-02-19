@@ -57,7 +57,7 @@ async function generateQRCodeSVG(cardData: CardData, surveyId: string): Promise<
 
 export const generateCardSecrets = async (viem: any, batchId: string, batchSize: number, surveyId: string) => {
   const cards: any[] = [];
-  const zip = new JSZip();
+ 
   
   for (let i = 0; i < batchSize; i++) {
 
@@ -70,7 +70,6 @@ export const generateCardSecrets = async (viem: any, batchId: string, batchSize:
     console.log(message)
     console.log(messageHash)
    
-    
     // Sign the hash with EIP-191 prefix
     const signature = await viem.signMessage(messageHash);
 
@@ -83,12 +82,22 @@ export const generateCardSecrets = async (viem: any, batchId: string, batchSize:
       signature: signature,
     };
   
-    let svgString = await generateQRCodeSVG(card, surveyId)
-    zip.file(`qr-${String(i + 1).padStart(3, '0')}.svg`, svgString);
+    card.svgString = await generateQRCodeSVG(card, surveyId)
+   
     cards.push(card)
   }
   
+  return cards;
+}
+
+export const createZipFile = async (cards: any[], surveyId: string) => {
+
+  const zip = new JSZip();
+  let i = 0;
+  for (let card of cards) {
+      zip.file(`qr-${String(i + 1).padStart(3, '0')}.svg`, card.svgString);
+      i++;
+  }
   const zipBlob = await zip.generateAsync({type: 'blob'});
   saveAs(zipBlob, `s3ntiment-qr-codes-${surveyId}.zip`);
-  return cards;
 }

@@ -40,7 +40,7 @@ export interface Batch {
     id: string
     name: string
     amount: number
-    medium: 'qr-code' | 'cdn'
+    medium: 'zip-file' | 'cdn'
     createdAt: number
 }
 
