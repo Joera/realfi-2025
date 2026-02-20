@@ -1,0 +1,682 @@
+{
+  "address": "0x3ed14e40a2d272f45378336dbe18b7f70cf11ec7",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "InvalidSignature",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NullifierAlreadyUsed",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "SignerNotSurveyOwner",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "SurveyAlreadyExists",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "SurveyNotFound",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "string",
+          "name": "surveyId",
+          "type": "string"
+        },
+        {
+          "indexed": true,
+          "internalType": "string",
+          "name": "batchId",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "nullifier",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "newCount",
+          "type": "uint256"
+        }
+      ],
+      "name": "CardValidated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "signer",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "messageHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "SignatureValidated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "surveyId",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "ipfsCid",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "SurveyCreated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "surveyId",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "newIpfsCid",
+          "type": "string"
+        }
+      ],
+      "name": "SurveyUpdated",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "name": "batchCardCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "surveyId",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "ipfsCid",
+          "type": "string"
+        }
+      ],
+      "name": "createSurvey",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "surveyId",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "batchId",
+          "type": "string"
+        }
+      ],
+      "name": "getBatchCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "name": "getOwnerSurveyCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "name": "getOwnerSurveys",
+      "outputs": [
+        {
+          "internalType": "string[]",
+          "name": "",
+          "type": "string[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "surveyId",
+          "type": "string"
+        }
+      ],
+      "name": "getSurvey",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "ipfsCid",
+          "type": "string"
+        },
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "createdAt",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "nullifier",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "batchId",
+          "type": "string"
+        }
+      ],
+      "name": "isNullifierUsed",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "authSigAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "string",
+          "name": "surveyId",
+          "type": "string"
+        }
+      ],
+      "name": "isOwner",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "surveyId",
+          "type": "string"
+        }
+      ],
+      "name": "surveyExists",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "surveyId",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "newIpfsCid",
+          "type": "string"
+        }
+      ],
+      "name": "updateSurvey",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "usedNullifiers",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "nullifier",
+          "type": "string"
+        },
+        {
+          "internalType": "bytes",
+          "name": "signature",
+          "type": "bytes"
+        },
+        {
+          "internalType": "string",
+          "name": "batchId",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "surveyId",
+          "type": "string"
+        }
+      ],
+      "name": "validateCard",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "contractName": "S3ntimentSurveyStore",
+  "sourceName": "src/SurveyStore/SurveyStore.sol",
+  "bytecode": "0x6080604052348015600e575f5ffd5b5061162b8061001c5f395ff3fe608060405234801561000f575f5ffd5b50600436106100cf575f3560e01c8063c15d35931161007d578063cd37996411610058578063cd379964146101f0578063ce26807014610203578063f4060dd11461024b575f5ffd5b8063c15d359314610186578063c5b8806614610199578063c6576e47146101ce575f5ffd5b806394b2c95c116100ad57806394b2c95c1461013d5780639ee8481214610150578063be7d356814610171575f5ffd5b8063206137aa146100d35780633cfebb6e1461010a57806342abbabd1461012a575b5f5ffd5b6100f56100e1366004610efe565b60036020525f908152604090205460ff1681565b60405190151581526020015b60405180910390f35b61011d610118366004610f3d565b61025e565b6040516101019190610fa9565b6100f561013836600461110a565b610355565b6100f561014b366004611144565b6103ad565b61016361015e366004611144565b610411565b604051908152602001610101565b61018461017f366004611144565b610455565b005b6100f56101943660046111a9565b6106cf565b6101636101a7366004610f3d565b73ffffffffffffffffffffffffffffffffffffffff165f9081526001602052604090205490565b6101e16101dc36600461110a565b610add565b60405161010193929190611275565b6100f56101fe3660046112af565b610c24565b610163610211366004611144565b8151602081840181018051600282529282019482019490942091909352815180830184018051928152908401929093019190912091525481565b610184610259366004611144565b610c7d565b73ffffffffffffffffffffffffffffffffffffffff81165f908152600160209081526040808320805482518185028101850190935280835260609492939192909184015b8282101561034a578382905f5260205f200180546102bf906112e4565b80601f01602080910402602001604051908101604052809291908181526020018280546102eb906112e4565b80156103365780601f1061030d57610100808354040283529160200191610336565b820191905f5260205f20905b81548152906001019060200180831161031957829003601f168201915b5050505050815260200190600101906102a2565b505050509050919050565b5f5f73ffffffffffffffffffffffffffffffffffffffff165f8360405161037c919061134c565b9081526040519081900360200190206001015473ffffffffffffffffffffffffffffffffffffffff16141592915050565b5f5f83836040516020016103c2929190611357565b604080517fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe081840301815291815281516020928301205f908152600390925290205460ff169150505b92915050565b5f600283604051610422919061134c565b90815260200160405180910390208260405161043e919061134c565b908152602001604051809103902054905092915050565b5f8251116104c4576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601960248201527f5375727665792049442063616e6e6f7420626520656d7074790000000000000060448201526064015b60405180910390fd5b5f81511161052e576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601860248201527f49504653204349442063616e6e6f7420626520656d707479000000000000000060448201526064016104bb565b5f73ffffffffffffffffffffffffffffffffffffffff165f83604051610554919061134c565b9081526040519081900360200190206001015473ffffffffffffffffffffffffffffffffffffffff16146105b4576040517f2dbb439c00000000000000000000000000000000000000000000000000000000815260040160405180910390fd5b60408051606081018252828152336020820152428183015290515f906105db90859061134c565b908152604051908190036020019020815181906105f890826113e7565b50602082810151600183810180547fffffffffffffffffffffffff00000000000000000000000000000000000000001673ffffffffffffffffffffffffffffffffffffffff90931692909217909155604093840151600290930192909255335f9081528282529283208054928301815583529091200161067883826113e7565b503373ffffffffffffffffffffffffffffffffffffffff167fdb3a8af2f37abe346b31fdd308fc1e8bcdfe1512f0e0a9790d5677cb5e3ba2c68383426040516106c3939291906114fe565b60405180910390a25050565b5f5f5f836040516106e0919061134c565b90815260200160405180910390206040518060600160405290815f82018054610708906112e4565b80601f0160208091040260200160405190810160405280929190818152602001828054610734906112e4565b801561077f5780601f106107565761010080835404028352916020019161077f565b820191905f5260205f20905b81548152906001019060200180831161076257829003601f168201915b5050509183525050600182015473ffffffffffffffffffffffffffffffffffffffff90811660208084019190915260029093015460409092019190915290820151919250166107fa576040517f7e3336d900000000000000000000000000000000000000000000000000000000815260040160405180910390fd5b5f868560405160200161080e929190611357565b60405160208183030381529060405290505f81604051602001610831919061134c565b6040516020818303038152906040528051906020012090505f8160405160200161088791907f19457468657265756d205369676e6564204d6573736167653a0a3332000000008152601c810191909152603c0190565b6040516020818303038152906040528051906020012090505f6108aa828a610d6c565b9050846020015173ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff1614610915576040517f5a1f7bdd00000000000000000000000000000000000000000000000000000000815260040160405180910390fd5b5f8381526003602052604090205460ff161561095d576040517fcad2ae0200000000000000000000000000000000000000000000000000000000815260040160405180910390fd5b5f838152600360205260409081902080547fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00166001179055516002906109a490899061134c565b9081526020016040518091039020886040516109c0919061134c565b9081526040519081900360200190208054905f6109dc83611560565b9190505550876040516109ef919061134c565b604051809103902087604051610a05919061134c565b60405180910390207f120be7a779fd31251124a6f0146622671a554fe5d1f554dc51006fc59b6dc1fe8c60028b604051610a3f919061134c565b90815260200160405180910390208c604051610a5b919061134c565b90815260405190819003602001812054610a759291611597565b60405180910390a38073ffffffffffffffffffffffffffffffffffffffff167fe6d0ab9c1bd0870c933bbb7d65e7a1ea1258be080d623c1ea46dce5cca03c55f83604051610ac591815260200190565b60405180910390a25060019998505050505050505050565b60605f5f5f5f85604051610af1919061134c565b90815260200160405180910390206040518060600160405290815f82018054610b19906112e4565b80601f0160208091040260200160405190810160405280929190818152602001828054610b45906112e4565b8015610b905780601f10610b6757610100808354040283529160200191610b90565b820191905f5260205f20905b815481529060010190602001808311610b7357829003601f168201915b5050509183525050600182015473ffffffffffffffffffffffffffffffffffffffff9081166020808401919091526002909301546040909201919091529082015191925016610c0b576040517f7e3336d900000000000000000000000000000000000000000000000000000000815260040160405180910390fd5b8051602082015160409092015190969195509350915050565b5f8273ffffffffffffffffffffffffffffffffffffffff165f83604051610c4b919061134c565b9081526040519081900360200190206001015473ffffffffffffffffffffffffffffffffffffffff1614905092915050565b5f5f83604051610c8d919061134c565b908152604051908190036020019020600181015490915073ffffffffffffffffffffffffffffffffffffffff163314610d22576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152600960248201527f4e6f74206f776e6572000000000000000000000000000000000000000000000060448201526064016104bb565b80610d2d83826113e7565b507f09e712397bdfeb330419324b95d1d1e2a91a8b47587998d6d408c6958740e56d8383604051610d5f9291906115b8565b60405180910390a1505050565b5f8151604114610dd8576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601860248201527f496e76616c6964207369676e6174757265206c656e677468000000000000000060448201526064016104bb565b6020820151604083015160608401515f1a601b811015610e0057610dfd601b826115dc565b90505b8060ff16601b1480610e1557508060ff16601c145b610e7b576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820181905260248201527f496e76616c6964207369676e6174757265207265636f766572792076616c756560448201526064016104bb565b604080515f81526020810180835288905260ff831691810191909152606081018490526080810183905260019060a0016020604051602081039080840390855afa158015610ecb573d5f5f3e3d5ffd5b50506040517fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe00151979650505050505050565b5f60208284031215610f0e575f5ffd5b5035919050565b803573ffffffffffffffffffffffffffffffffffffffff81168114610f38575f5ffd5b919050565b5f60208284031215610f4d575f5ffd5b610f5682610f15565b9392505050565b5f81518084528060208401602086015e5f6020828601015260207fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0601f83011685010191505092915050565b5f602082016020835280845180835260408501915060408160051b8601019250602086015f5b8281101561101e577fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc0878603018452611009858351610f5d565b94506020938401939190910190600101610fcf565b50929695505050505050565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52604160045260245ffd5b5f5f67ffffffffffffffff8411156110715761107161102a565b506040517fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0601f85018116603f0116810181811067ffffffffffffffff821117156110be576110be61102a565b6040528381529050808284018510156110d5575f5ffd5b838360208301375f60208583010152509392505050565b5f82601f8301126110fb575f5ffd5b610f5683833560208501611057565b5f6020828403121561111a575f5ffd5b813567ffffffffffffffff811115611130575f5ffd5b61113c848285016110ec565b949350505050565b5f5f60408385031215611155575f5ffd5b823567ffffffffffffffff81111561116b575f5ffd5b611177858286016110ec565b925050602083013567ffffffffffffffff811115611193575f5ffd5b61119f858286016110ec565b9150509250929050565b5f5f5f5f608085870312156111bc575f5ffd5b843567ffffffffffffffff8111156111d2575f5ffd5b6111de878288016110ec565b945050602085013567ffffffffffffffff8111156111fa575f5ffd5b8501601f8101871361120a575f5ffd5b61121987823560208401611057565b935050604085013567ffffffffffffffff811115611235575f5ffd5b611241878288016110ec565b925050606085013567ffffffffffffffff81111561125d575f5ffd5b611269878288016110ec565b91505092959194509250565b606081525f6112876060830186610f5d565b73ffffffffffffffffffffffffffffffffffffffff9490941660208301525060400152919050565b5f5f604083850312156112c0575f5ffd5b6112c983610f15565b9150602083013567ffffffffffffffff811115611193575f5ffd5b600181811c908216806112f857607f821691505b60208210810361132f577f4e487b71000000000000000000000000000000000000000000000000000000005f52602260045260245ffd5b50919050565b5f81518060208401855e5f93019283525090919050565b5f610f568284611335565b5f6113628285611335565b7f7c0000000000000000000000000000000000000000000000000000000000000081526113926001820185611335565b95945050505050565b601f8211156113e257805f5260205f20601f840160051c810160208510156113c05750805b601f840160051c820191505b818110156113df575f81556001016113cc565b50505b505050565b815167ffffffffffffffff8111156114015761140161102a565b6114158161140f84546112e4565b8461139b565b6020601f821160018114611466575f83156114305750848201515b7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff600385901b1c1916600184901b1784556113df565b5f848152602081207fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe08516915b828110156114b35787850151825560209485019460019092019101611493565b50848210156114ef57868401517fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff600387901b60f8161c191681555b50505050600190811b01905550565b606081525f6115106060830186610f5d565b82810360208401526115228186610f5d565b915050826040830152949350505050565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52601160045260245ffd5b5f7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff820361159057611590611533565b5060010190565b604081525f6115a96040830185610f5d565b90508260208301529392505050565b604081525f6115ca6040830185610f5d565b82810360208401526113928185610f5d565b60ff818116838216019081111561040b5761040b61153356fea26469706673582212205e2a30e451e9c8e2db4499cffbece6a282ab0648324c6e3af72010c3dfbbec5064736f6c634300081c0033",
+  "deployedBytecode": "0x608060405234801561000f575f5ffd5b50600436106100cf575f3560e01c8063c15d35931161007d578063cd37996411610058578063cd379964146101f0578063ce26807014610203578063f4060dd11461024b575f5ffd5b8063c15d359314610186578063c5b8806614610199578063c6576e47146101ce575f5ffd5b806394b2c95c116100ad57806394b2c95c1461013d5780639ee8481214610150578063be7d356814610171575f5ffd5b8063206137aa146100d35780633cfebb6e1461010a57806342abbabd1461012a575b5f5ffd5b6100f56100e1366004610efe565b60036020525f908152604090205460ff1681565b60405190151581526020015b60405180910390f35b61011d610118366004610f3d565b61025e565b6040516101019190610fa9565b6100f561013836600461110a565b610355565b6100f561014b366004611144565b6103ad565b61016361015e366004611144565b610411565b604051908152602001610101565b61018461017f366004611144565b610455565b005b6100f56101943660046111a9565b6106cf565b6101636101a7366004610f3d565b73ffffffffffffffffffffffffffffffffffffffff165f9081526001602052604090205490565b6101e16101dc36600461110a565b610add565b60405161010193929190611275565b6100f56101fe3660046112af565b610c24565b610163610211366004611144565b8151602081840181018051600282529282019482019490942091909352815180830184018051928152908401929093019190912091525481565b610184610259366004611144565b610c7d565b73ffffffffffffffffffffffffffffffffffffffff81165f908152600160209081526040808320805482518185028101850190935280835260609492939192909184015b8282101561034a578382905f5260205f200180546102bf906112e4565b80601f01602080910402602001604051908101604052809291908181526020018280546102eb906112e4565b80156103365780601f1061030d57610100808354040283529160200191610336565b820191905f5260205f20905b81548152906001019060200180831161031957829003601f168201915b5050505050815260200190600101906102a2565b505050509050919050565b5f5f73ffffffffffffffffffffffffffffffffffffffff165f8360405161037c919061134c565b9081526040519081900360200190206001015473ffffffffffffffffffffffffffffffffffffffff16141592915050565b5f5f83836040516020016103c2929190611357565b604080517fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe081840301815291815281516020928301205f908152600390925290205460ff169150505b92915050565b5f600283604051610422919061134c565b90815260200160405180910390208260405161043e919061134c565b908152602001604051809103902054905092915050565b5f8251116104c4576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601960248201527f5375727665792049442063616e6e6f7420626520656d7074790000000000000060448201526064015b60405180910390fd5b5f81511161052e576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601860248201527f49504653204349442063616e6e6f7420626520656d707479000000000000000060448201526064016104bb565b5f73ffffffffffffffffffffffffffffffffffffffff165f83604051610554919061134c565b9081526040519081900360200190206001015473ffffffffffffffffffffffffffffffffffffffff16146105b4576040517f2dbb439c00000000000000000000000000000000000000000000000000000000815260040160405180910390fd5b60408051606081018252828152336020820152428183015290515f906105db90859061134c565b908152604051908190036020019020815181906105f890826113e7565b50602082810151600183810180547fffffffffffffffffffffffff00000000000000000000000000000000000000001673ffffffffffffffffffffffffffffffffffffffff90931692909217909155604093840151600290930192909255335f9081528282529283208054928301815583529091200161067883826113e7565b503373ffffffffffffffffffffffffffffffffffffffff167fdb3a8af2f37abe346b31fdd308fc1e8bcdfe1512f0e0a9790d5677cb5e3ba2c68383426040516106c3939291906114fe565b60405180910390a25050565b5f5f5f836040516106e0919061134c565b90815260200160405180910390206040518060600160405290815f82018054610708906112e4565b80601f0160208091040260200160405190810160405280929190818152602001828054610734906112e4565b801561077f5780601f106107565761010080835404028352916020019161077f565b820191905f5260205f20905b81548152906001019060200180831161076257829003601f168201915b5050509183525050600182015473ffffffffffffffffffffffffffffffffffffffff90811660208084019190915260029093015460409092019190915290820151919250166107fa576040517f7e3336d900000000000000000000000000000000000000000000000000000000815260040160405180910390fd5b5f868560405160200161080e929190611357565b60405160208183030381529060405290505f81604051602001610831919061134c565b6040516020818303038152906040528051906020012090505f8160405160200161088791907f19457468657265756d205369676e6564204d6573736167653a0a3332000000008152601c810191909152603c0190565b6040516020818303038152906040528051906020012090505f6108aa828a610d6c565b9050846020015173ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff1614610915576040517f5a1f7bdd00000000000000000000000000000000000000000000000000000000815260040160405180910390fd5b5f8381526003602052604090205460ff161561095d576040517fcad2ae0200000000000000000000000000000000000000000000000000000000815260040160405180910390fd5b5f838152600360205260409081902080547fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00166001179055516002906109a490899061134c565b9081526020016040518091039020886040516109c0919061134c565b9081526040519081900360200190208054905f6109dc83611560565b9190505550876040516109ef919061134c565b604051809103902087604051610a05919061134c565b60405180910390207f120be7a779fd31251124a6f0146622671a554fe5d1f554dc51006fc59b6dc1fe8c60028b604051610a3f919061134c565b90815260200160405180910390208c604051610a5b919061134c565b90815260405190819003602001812054610a759291611597565b60405180910390a38073ffffffffffffffffffffffffffffffffffffffff167fe6d0ab9c1bd0870c933bbb7d65e7a1ea1258be080d623c1ea46dce5cca03c55f83604051610ac591815260200190565b60405180910390a25060019998505050505050505050565b60605f5f5f5f85604051610af1919061134c565b90815260200160405180910390206040518060600160405290815f82018054610b19906112e4565b80601f0160208091040260200160405190810160405280929190818152602001828054610b45906112e4565b8015610b905780601f10610b6757610100808354040283529160200191610b90565b820191905f5260205f20905b815481529060010190602001808311610b7357829003601f168201915b5050509183525050600182015473ffffffffffffffffffffffffffffffffffffffff9081166020808401919091526002909301546040909201919091529082015191925016610c0b576040517f7e3336d900000000000000000000000000000000000000000000000000000000815260040160405180910390fd5b8051602082015160409092015190969195509350915050565b5f8273ffffffffffffffffffffffffffffffffffffffff165f83604051610c4b919061134c565b9081526040519081900360200190206001015473ffffffffffffffffffffffffffffffffffffffff1614905092915050565b5f5f83604051610c8d919061134c565b908152604051908190036020019020600181015490915073ffffffffffffffffffffffffffffffffffffffff163314610d22576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152600960248201527f4e6f74206f776e6572000000000000000000000000000000000000000000000060448201526064016104bb565b80610d2d83826113e7565b507f09e712397bdfeb330419324b95d1d1e2a91a8b47587998d6d408c6958740e56d8383604051610d5f9291906115b8565b60405180910390a1505050565b5f8151604114610dd8576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820152601860248201527f496e76616c6964207369676e6174757265206c656e677468000000000000000060448201526064016104bb565b6020820151604083015160608401515f1a601b811015610e0057610dfd601b826115dc565b90505b8060ff16601b1480610e1557508060ff16601c145b610e7b576040517f08c379a000000000000000000000000000000000000000000000000000000000815260206004820181905260248201527f496e76616c6964207369676e6174757265207265636f766572792076616c756560448201526064016104bb565b604080515f81526020810180835288905260ff831691810191909152606081018490526080810183905260019060a0016020604051602081039080840390855afa158015610ecb573d5f5f3e3d5ffd5b50506040517fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe00151979650505050505050565b5f60208284031215610f0e575f5ffd5b5035919050565b803573ffffffffffffffffffffffffffffffffffffffff81168114610f38575f5ffd5b919050565b5f60208284031215610f4d575f5ffd5b610f5682610f15565b9392505050565b5f81518084528060208401602086015e5f6020828601015260207fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0601f83011685010191505092915050565b5f602082016020835280845180835260408501915060408160051b8601019250602086015f5b8281101561101e577fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffc0878603018452611009858351610f5d565b94506020938401939190910190600101610fcf565b50929695505050505050565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52604160045260245ffd5b5f5f67ffffffffffffffff8411156110715761107161102a565b506040517fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0601f85018116603f0116810181811067ffffffffffffffff821117156110be576110be61102a565b6040528381529050808284018510156110d5575f5ffd5b838360208301375f60208583010152509392505050565b5f82601f8301126110fb575f5ffd5b610f5683833560208501611057565b5f6020828403121561111a575f5ffd5b813567ffffffffffffffff811115611130575f5ffd5b61113c848285016110ec565b949350505050565b5f5f60408385031215611155575f5ffd5b823567ffffffffffffffff81111561116b575f5ffd5b611177858286016110ec565b925050602083013567ffffffffffffffff811115611193575f5ffd5b61119f858286016110ec565b9150509250929050565b5f5f5f5f608085870312156111bc575f5ffd5b843567ffffffffffffffff8111156111d2575f5ffd5b6111de878288016110ec565b945050602085013567ffffffffffffffff8111156111fa575f5ffd5b8501601f8101871361120a575f5ffd5b61121987823560208401611057565b935050604085013567ffffffffffffffff811115611235575f5ffd5b611241878288016110ec565b925050606085013567ffffffffffffffff81111561125d575f5ffd5b611269878288016110ec565b91505092959194509250565b606081525f6112876060830186610f5d565b73ffffffffffffffffffffffffffffffffffffffff9490941660208301525060400152919050565b5f5f604083850312156112c0575f5ffd5b6112c983610f15565b9150602083013567ffffffffffffffff811115611193575f5ffd5b600181811c908216806112f857607f821691505b60208210810361132f577f4e487b71000000000000000000000000000000000000000000000000000000005f52602260045260245ffd5b50919050565b5f81518060208401855e5f93019283525090919050565b5f610f568284611335565b5f6113628285611335565b7f7c0000000000000000000000000000000000000000000000000000000000000081526113926001820185611335565b95945050505050565b601f8211156113e257805f5260205f20601f840160051c810160208510156113c05750805b601f840160051c820191505b818110156113df575f81556001016113cc565b50505b505050565b815167ffffffffffffffff8111156114015761140161102a565b6114158161140f84546112e4565b8461139b565b6020601f821160018114611466575f83156114305750848201515b7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff600385901b1c1916600184901b1784556113df565b5f848152602081207fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe08516915b828110156114b35787850151825560209485019460019092019101611493565b50848210156114ef57868401517fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff600387901b60f8161c191681555b50505050600190811b01905550565b606081525f6115106060830186610f5d565b82810360208401526115228186610f5d565b915050826040830152949350505050565b7f4e487b71000000000000000000000000000000000000000000000000000000005f52601160045260245ffd5b5f7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff820361159057611590611533565b5060010190565b604081525f6115a96040830185610f5d565b90508260208301529392505050565b604081525f6115ca6040830185610f5d565b82810360208401526113928185610f5d565b60ff818116838216019081111561040b5761040b61153356fea26469706673582212205e2a30e451e9c8e2db4499cffbece6a282ab0648324c6e3af72010c3dfbbec5064736f6c634300081c0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "immutableReferences": {},
+  "inputSourceName": "project/src/SurveyStore/SurveyStore.sol",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "createSurvey(string,string)": {
+        "details": "Create a new survey with globally unique ID (generated client-side)",
+        "params": {
+          "ipfsCid": "IPFS content identifier for survey metadata",
+          "surveyId": "Unique identifier (UUID or composite)"
+        }
+      },
+      "getBatchCount(string,string)": {
+        "details": "Get number of cards used from a specific batch",
+        "params": {
+          "batchId": "Batch identifier",
+          "surveyId": "Survey identifier"
+        },
+        "returns": {
+          "_0": "Number of cards validated from this batch"
+        }
+      },
+      "getOwnerSurveyCount(address)": {
+        "details": "Get number of surveys owned by an address",
+        "params": {
+          "owner": "Address to query"
+        },
+        "returns": {
+          "_0": "Number of surveys"
+        }
+      },
+      "getOwnerSurveys(address)": {
+        "details": "Get all survey IDs owned by an address",
+        "params": {
+          "owner": "Address to query"
+        },
+        "returns": {
+          "_0": "Array of survey IDs (does not reveal survey content)"
+        }
+      },
+      "getSurvey(string)": {
+        "details": "Get survey details by ID",
+        "params": {
+          "surveyId": "Survey identifier"
+        },
+        "returns": {
+          "createdAt": "Creation timestamp",
+          "ipfsCid": "IPFS content ID",
+          "owner": "Survey owner address"
+        }
+      },
+      "isNullifierUsed(string,string)": {
+        "details": "Check if a specific card has been used",
+        "params": {
+          "batchId": "Batch identifier",
+          "nullifier": "Card nullifier"
+        },
+        "returns": {
+          "_0": "True if card has been used"
+        }
+      },
+      "isOwner(address,string)": {
+        "details": "Check if an address owns a specific survey",
+        "params": {
+          "authSigAddress": "Address to check",
+          "surveyId": "Survey identifier"
+        },
+        "returns": {
+          "_0": "True if address owns the survey"
+        }
+      },
+      "surveyExists(string)": {
+        "details": "Check if a survey exists",
+        "params": {
+          "surveyId": "Survey identifier"
+        },
+        "returns": {
+          "_0": "True if survey exists"
+        }
+      },
+      "validateCard(string,bytes,string,string)": {
+        "details": "Validate card signature and check it was signed by survey owner",
+        "params": {
+          "batchId": "Batch identifier for this set of cards",
+          "nullifier": "Unique card identifier from QR code",
+          "signature": "Signature generated during card creation",
+          "surveyId": "Survey identifier"
+        }
+      }
+    },
+    "version": 1
+  },
+  "evm": {
+    "gasEstimates": {
+      "creation": {
+        "codeDepositCost": "1135000",
+        "executionCost": "1178",
+        "totalCost": "1136178"
+      },
+      "external": {
+        "batchCardCount(string,string)": "infinite",
+        "createSurvey(string,string)": "infinite",
+        "getBatchCount(string,string)": "infinite",
+        "getOwnerSurveyCount(address)": "2555",
+        "getOwnerSurveys(address)": "infinite",
+        "getSurvey(string)": "infinite",
+        "isNullifierUsed(string,string)": "infinite",
+        "isOwner(address,string)": "infinite",
+        "surveyExists(string)": "infinite",
+        "updateSurvey(string,string)": "infinite",
+        "usedNullifiers(bytes32)": "2460",
+        "validateCard(string,bytes,string,string)": "infinite"
+      },
+      "internal": {
+        "recoverSigner(bytes32,bytes memory)": "infinite"
+      }
+    }
+  },
+  "metadata": "{\"compiler\":{\"version\":\"0.8.28+commit.7893614a\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"InvalidSignature\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"NullifierAlreadyUsed\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"SignerNotSurveyOwner\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"SurveyAlreadyExists\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"SurveyNotFound\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"string\",\"name\":\"surveyId\",\"type\":\"string\"},{\"indexed\":true,\"internalType\":\"string\",\"name\":\"batchId\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"nullifier\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"newCount\",\"type\":\"uint256\"}],\"name\":\"CardValidated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"signer\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"messageHash\",\"type\":\"bytes32\"}],\"name\":\"SignatureValidated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"surveyId\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"ipfsCid\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"}],\"name\":\"SurveyCreated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"string\",\"name\":\"surveyId\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"newIpfsCid\",\"type\":\"string\"}],\"name\":\"SurveyUpdated\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"name\":\"batchCardCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"surveyId\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"ipfsCid\",\"type\":\"string\"}],\"name\":\"createSurvey\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"surveyId\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"batchId\",\"type\":\"string\"}],\"name\":\"getBatchCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"getOwnerSurveyCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"getOwnerSurveys\",\"outputs\":[{\"internalType\":\"string[]\",\"name\":\"\",\"type\":\"string[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"surveyId\",\"type\":\"string\"}],\"name\":\"getSurvey\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"ipfsCid\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"createdAt\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"nullifier\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"batchId\",\"type\":\"string\"}],\"name\":\"isNullifierUsed\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"authSigAddress\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"surveyId\",\"type\":\"string\"}],\"name\":\"isOwner\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"surveyId\",\"type\":\"string\"}],\"name\":\"surveyExists\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"surveyId\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"newIpfsCid\",\"type\":\"string\"}],\"name\":\"updateSurvey\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"usedNullifiers\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"nullifier\",\"type\":\"string\"},{\"internalType\":\"bytes\",\"name\":\"signature\",\"type\":\"bytes\"},{\"internalType\":\"string\",\"name\":\"batchId\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"surveyId\",\"type\":\"string\"}],\"name\":\"validateCard\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"createSurvey(string,string)\":{\"details\":\"Create a new survey with globally unique ID (generated client-side)\",\"params\":{\"ipfsCid\":\"IPFS content identifier for survey metadata\",\"surveyId\":\"Unique identifier (UUID or composite)\"}},\"getBatchCount(string,string)\":{\"details\":\"Get number of cards used from a specific batch\",\"params\":{\"batchId\":\"Batch identifier\",\"surveyId\":\"Survey identifier\"},\"returns\":{\"_0\":\"Number of cards validated from this batch\"}},\"getOwnerSurveyCount(address)\":{\"details\":\"Get number of surveys owned by an address\",\"params\":{\"owner\":\"Address to query\"},\"returns\":{\"_0\":\"Number of surveys\"}},\"getOwnerSurveys(address)\":{\"details\":\"Get all survey IDs owned by an address\",\"params\":{\"owner\":\"Address to query\"},\"returns\":{\"_0\":\"Array of survey IDs (does not reveal survey content)\"}},\"getSurvey(string)\":{\"details\":\"Get survey details by ID\",\"params\":{\"surveyId\":\"Survey identifier\"},\"returns\":{\"createdAt\":\"Creation timestamp\",\"ipfsCid\":\"IPFS content ID\",\"owner\":\"Survey owner address\"}},\"isNullifierUsed(string,string)\":{\"details\":\"Check if a specific card has been used\",\"params\":{\"batchId\":\"Batch identifier\",\"nullifier\":\"Card nullifier\"},\"returns\":{\"_0\":\"True if card has been used\"}},\"isOwner(address,string)\":{\"details\":\"Check if an address owns a specific survey\",\"params\":{\"authSigAddress\":\"Address to check\",\"surveyId\":\"Survey identifier\"},\"returns\":{\"_0\":\"True if address owns the survey\"}},\"surveyExists(string)\":{\"details\":\"Check if a survey exists\",\"params\":{\"surveyId\":\"Survey identifier\"},\"returns\":{\"_0\":\"True if survey exists\"}},\"validateCard(string,bytes,string,string)\":{\"details\":\"Validate card signature and check it was signed by survey owner\",\"params\":{\"batchId\":\"Batch identifier for this set of cards\",\"nullifier\":\"Unique card identifier from QR code\",\"signature\":\"Signature generated during card creation\",\"surveyId\":\"Survey identifier\"}}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project/src/SurveyStore/SurveyStore.sol\":\"S3ntimentSurveyStore\"},\"evmVersion\":\"cancun\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":999999},\"remappings\":[]},\"sources\":{\"project/src/SurveyStore/SurveyStore.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.0;\\n\\ncontract S3ntimentSurveyStore {\\n    struct Survey {\\n        string ipfsCid;\\n        address owner;\\n        uint256 createdAt;\\n    }\\n    \\n    // Global survey lookup by unique ID\\n    mapping(string => Survey) private surveys;\\n    \\n    // Owner's survey list (for enumeration)\\n    mapping(address => string[]) private ownerSurveys;\\n    \\n    // Card validation storage (nested by surveyId)\\n    mapping(string => mapping(string => uint256)) public batchCardCount; // surveyId -> batchId -> count\\n    mapping(bytes32 => bool) public usedNullifiers;\\n    \\n    // Events\\n    event SurveyCreated(\\n        address indexed owner,\\n        string surveyId,\\n        string ipfsCid,\\n        uint256 timestamp\\n    );\\n\\n    event SurveyUpdated(\\n        string surveyId, \\n        string newIpfsCid\\n    );\\n\\n    event CardValidated(\\n        string indexed surveyId,\\n        string indexed batchId,\\n        string nullifier,\\n        uint256 newCount\\n    );\\n    event SignatureValidated(address indexed signer, bytes32 messageHash);\\n\\n    // Errors\\n    error InvalidSignature();\\n    error NullifierAlreadyUsed();\\n    error SurveyNotFound();\\n    error SignerNotSurveyOwner();\\n    error SurveyAlreadyExists();\\n    \\n    /**\\n     * @dev Create a new survey with globally unique ID (generated client-side)\\n     * @param surveyId Unique identifier (UUID or composite)\\n     * @param ipfsCid IPFS content identifier for survey metadata\\n     */\\n    function createSurvey(\\n        string memory surveyId,\\n        string memory ipfsCid\\n    ) external {\\n        require(bytes(surveyId).length > 0, \\\"Survey ID cannot be empty\\\");\\n        require(bytes(ipfsCid).length > 0, \\\"IPFS CID cannot be empty\\\");\\n        \\n        if (surveys[surveyId].owner != address(0)) {\\n            revert SurveyAlreadyExists();\\n        }\\n        \\n        surveys[surveyId] = Survey({\\n            ipfsCid: ipfsCid,\\n            owner: msg.sender,\\n            createdAt: block.timestamp\\n        });\\n        \\n        // Add to owner's list\\n        ownerSurveys[msg.sender].push(surveyId);\\n        \\n        emit SurveyCreated(msg.sender, surveyId, ipfsCid, block.timestamp);\\n    }\\n\\n    function updateSurvey(string memory surveyId, string memory newIpfsCid) external {\\n        Survey storage survey = surveys[surveyId];\\n        require(survey.owner == msg.sender, \\\"Not owner\\\");\\n        survey.ipfsCid = newIpfsCid;\\n        emit SurveyUpdated(surveyId, newIpfsCid);\\n    }\\n    \\n    /**\\n     * @dev Validate card signature and check it was signed by survey owner\\n     * @param nullifier Unique card identifier from QR code\\n     * @param signature Signature generated during card creation\\n     * @param batchId Batch identifier for this set of cards\\n     * @param surveyId Survey identifier\\n     */\\n    function validateCard(\\n        string memory nullifier,\\n        bytes memory signature,\\n        string memory batchId,\\n        string memory surveyId\\n    ) external returns (bool) {\\n        // Lookup survey\\n        Survey memory survey = surveys[surveyId];\\n        if (survey.owner == address(0)) {\\n            revert SurveyNotFound();\\n        }\\n        \\n        // Reconstruct message and hash (must match card generation)\\n        string memory message = string(abi.encodePacked(nullifier, \\\"|\\\", batchId));\\n        bytes32 messageHash = keccak256(abi.encodePacked(message));\\n        bytes32 ethSignedMessageHash = keccak256(abi.encodePacked(\\n            \\\"\\\\x19Ethereum Signed Message:\\\\n32\\\", \\n            messageHash\\n        ));\\n        \\n        // Recover signer from signature\\n        address recoveredSigner = recoverSigner(ethSignedMessageHash, signature);\\n        \\n        // Verify signer is the survey owner\\n        if (recoveredSigner != survey.owner) {\\n            revert SignerNotSurveyOwner();\\n        }\\n        \\n        // Check if this card has already been used\\n        if (usedNullifiers[messageHash]) {\\n            revert NullifierAlreadyUsed();\\n        }\\n        \\n        // Mark nullifier as used\\n        usedNullifiers[messageHash] = true;\\n        \\n        // Increment batch counter for this survey\\n        batchCardCount[surveyId][batchId]++;\\n        \\n        emit CardValidated(surveyId, batchId, nullifier, batchCardCount[surveyId][batchId]);\\n        emit SignatureValidated(recoveredSigner, ethSignedMessageHash);\\n        \\n        return true;\\n    }\\n    \\n    /**\\n     * @dev Get all survey IDs owned by an address\\n     * @param owner Address to query\\n     * @return Array of survey IDs (does not reveal survey content)\\n     */\\n    function getOwnerSurveys(address owner) \\n        external \\n        view \\n        returns (string[] memory) \\n    {\\n        return ownerSurveys[owner];\\n    }\\n    \\n    /**\\n     * @dev Get number of surveys owned by an address\\n     * @param owner Address to query\\n     * @return Number of surveys\\n     */\\n    function getOwnerSurveyCount(address owner) \\n        external \\n        view \\n        returns (uint256) \\n    {\\n        return ownerSurveys[owner].length;\\n    }\\n    \\n    /**\\n     * @dev Get survey details by ID\\n     * @param surveyId Survey identifier\\n     * @return ipfsCid IPFS content ID\\n     * @return owner Survey owner address\\n     * @return createdAt Creation timestamp\\n     */\\n    function getSurvey(string memory surveyId) \\n        external \\n        view \\n        returns (string memory ipfsCid, address owner, uint256 createdAt) \\n    {\\n        Survey memory survey = surveys[surveyId];\\n        if (survey.owner == address(0)) {\\n            revert SurveyNotFound();\\n        }\\n        return (survey.ipfsCid, survey.owner, survey.createdAt);\\n    }\\n    \\n    /**\\n     * @dev Check if a survey exists\\n     * @param surveyId Survey identifier\\n     * @return True if survey exists\\n     */\\n    function surveyExists(string memory surveyId) \\n        external \\n        view \\n        returns (bool) \\n    {\\n        return surveys[surveyId].owner != address(0);\\n    }\\n\\n        /**\\n    * @dev Check if an address owns a specific survey\\n    * @param authSigAddress Address to check\\n    * @param surveyId Survey identifier\\n    * @return True if address owns the survey\\n    */\\n    function isOwner(address authSigAddress, string memory surveyId) \\n        external \\n        view \\n        returns (bool) \\n    {\\n        return surveys[surveyId].owner == authSigAddress;\\n    }\\n    \\n    /**\\n     * @dev Get number of cards used from a specific batch\\n     * @param surveyId Survey identifier\\n     * @param batchId Batch identifier\\n     * @return Number of cards validated from this batch\\n     */\\n    function getBatchCount(string memory surveyId, string memory batchId) \\n        external \\n        view \\n        returns (uint256) \\n    {\\n        return batchCardCount[surveyId][batchId];\\n    }\\n    \\n    /**\\n     * @dev Check if a specific card has been used\\n     * @param nullifier Card nullifier\\n     * @param batchId Batch identifier\\n     * @return True if card has been used\\n     */\\n    function isNullifierUsed(string memory nullifier, string memory batchId) \\n        external \\n        view \\n        returns (bool) \\n    {\\n        bytes32 cardHash = keccak256(abi.encodePacked(nullifier, \\\"|\\\", batchId));\\n        return usedNullifiers[cardHash];\\n    }\\n    \\n    /**\\n     * @dev Recover signer address from signature\\n     * @param messageHash Hash of the signed message\\n     * @param signature Signature bytes (r, s, v)\\n     * @return Address that created the signature\\n     */\\n    function recoverSigner(bytes32 messageHash, bytes memory signature) \\n        internal \\n        pure \\n        returns (address) \\n    {\\n        require(signature.length == 65, \\\"Invalid signature length\\\");\\n        \\n        bytes32 r;\\n        bytes32 s;\\n        uint8 v;\\n        \\n        assembly {\\n            r := mload(add(signature, 32))\\n            s := mload(add(signature, 64))\\n            v := byte(0, mload(add(signature, 96)))\\n        }\\n        \\n        // Handle legacy signature format\\n        if (v < 27) {\\n            v += 27;\\n        }\\n        \\n        require(v == 27 || v == 28, \\\"Invalid signature recovery value\\\");\\n        \\n        return ecrecover(messageHash, v, r, s);\\n    }\\n}\",\"keccak256\":\"0xe4cc28ecb5e4525243ff13d8b319bb3e7e16cf142e523d28995764d6713919ac\",\"license\":\"MIT\"}},\"version\":1}",
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 13,
+        "contract": "project/src/SurveyStore/SurveyStore.sol:S3ntimentSurveyStore",
+        "label": "surveys",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_mapping(t_string_memory_ptr,t_struct(Survey)8_storage)"
+      },
+      {
+        "astId": 18,
+        "contract": "project/src/SurveyStore/SurveyStore.sol:S3ntimentSurveyStore",
+        "label": "ownerSurveys",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_mapping(t_address,t_array(t_string_storage)dyn_storage)"
+      },
+      {
+        "astId": 24,
+        "contract": "project/src/SurveyStore/SurveyStore.sol:S3ntimentSurveyStore",
+        "label": "batchCardCount",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_mapping(t_string_memory_ptr,t_mapping(t_string_memory_ptr,t_uint256))"
+      },
+      {
+        "astId": 28,
+        "contract": "project/src/SurveyStore/SurveyStore.sol:S3ntimentSurveyStore",
+        "label": "usedNullifiers",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_mapping(t_bytes32,t_bool)"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_array(t_string_storage)dyn_storage": {
+        "base": "t_string_storage",
+        "encoding": "dynamic_array",
+        "label": "string[]",
+        "numberOfBytes": "32"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_bytes32": {
+        "encoding": "inplace",
+        "label": "bytes32",
+        "numberOfBytes": "32"
+      },
+      "t_mapping(t_address,t_array(t_string_storage)dyn_storage)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => string[])",
+        "numberOfBytes": "32",
+        "value": "t_array(t_string_storage)dyn_storage"
+      },
+      "t_mapping(t_bytes32,t_bool)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => bool)",
+        "numberOfBytes": "32",
+        "value": "t_bool"
+      },
+      "t_mapping(t_string_memory_ptr,t_mapping(t_string_memory_ptr,t_uint256))": {
+        "encoding": "mapping",
+        "key": "t_string_memory_ptr",
+        "label": "mapping(string => mapping(string => uint256))",
+        "numberOfBytes": "32",
+        "value": "t_mapping(t_string_memory_ptr,t_uint256)"
+      },
+      "t_mapping(t_string_memory_ptr,t_struct(Survey)8_storage)": {
+        "encoding": "mapping",
+        "key": "t_string_memory_ptr",
+        "label": "mapping(string => struct S3ntimentSurveyStore.Survey)",
+        "numberOfBytes": "32",
+        "value": "t_struct(Survey)8_storage"
+      },
+      "t_mapping(t_string_memory_ptr,t_uint256)": {
+        "encoding": "mapping",
+        "key": "t_string_memory_ptr",
+        "label": "mapping(string => uint256)",
+        "numberOfBytes": "32",
+        "value": "t_uint256"
+      },
+      "t_string_memory_ptr": {
+        "encoding": "bytes",
+        "label": "string",
+        "numberOfBytes": "32"
+      },
+      "t_string_storage": {
+        "encoding": "bytes",
+        "label": "string",
+        "numberOfBytes": "32"
+      },
+      "t_struct(Survey)8_storage": {
+        "encoding": "inplace",
+        "label": "struct S3ntimentSurveyStore.Survey",
+        "members": [
+          {
+            "astId": 3,
+            "contract": "project/src/SurveyStore/SurveyStore.sol:S3ntimentSurveyStore",
+            "label": "ipfsCid",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_string_storage"
+          },
+          {
+            "astId": 5,
+            "contract": "project/src/SurveyStore/SurveyStore.sol:S3ntimentSurveyStore",
+            "label": "owner",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address"
+          },
+          {
+            "astId": 7,
+            "contract": "project/src/SurveyStore/SurveyStore.sol:S3ntimentSurveyStore",
+            "label": "createdAt",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256"
+          }
+        ],
+        "numberOfBytes": "96"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "argsData": "0x",
+  "transaction": {
+    "hash": "0x1b75b8ed2bb64e3619de1171bb1758438d64aa8262834cb961eb6a193b995555",
+    "nonce": "0x17",
+    "origin": "0xb6ca51ca72c689b720235aca37e579f821fa05ee"
+  },
+  "receipt": {
+    "blockHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "blockNumber": "0x28676da",
+    "transactionIndex": "0x7d"
+  }
+}
