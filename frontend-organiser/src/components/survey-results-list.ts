@@ -1,6 +1,7 @@
 import { typograhyStyles } from '../styles/shared-typograhy-styles.js'
 import { colourStyles } from '../styles/shared-colour-styles.js'
 import { buttonStyles } from '../styles/shared-button-styles.js'
+import '../components/ui/loading-spinner.js'
 import { store } from '../state/store.js';
 import { router } from '../router.js';
 
@@ -44,9 +45,13 @@ class SurveyResultsList extends HTMLElement {
                 --green: rgb(42.9834254144, 112.6165745856, 98.0022099448)
             }
 
+            h1 { 
+                color: var(--green)
+            }
+
             .survey-table {
                 display: grid;
-                grid-template-columns: 2fr 1fr 2fr;  /* Survey ID | Date | Collection */
+                grid-template-columns: 1fr 2fr 1fr 1fr 1fr;  /* Survey ID | Date | Collection */
                 gap: 0;
                 border: 1px solid var(--green);
                 border-radius: 8px;
@@ -54,8 +59,6 @@ class SurveyResultsList extends HTMLElement {
             }
 
             .table-header {
-                // background: #f9fafb;
-                font-weight: 600;
                 padding: 1rem;
                 border-bottom: 1px solid var(--green);
             }
@@ -68,28 +71,38 @@ class SurveyResultsList extends HTMLElement {
             .table-row {
                 display: contents;  /* Makes children participate in parent grid */
                 cursor: pointer;
+
+                &:last-of-type  .table-cell {
+                border-bottom: none
+                }
             }
            
         </style>
 
         <div class="container">
-            <h1>Your surveys</h1>
+           
             
              ${surveys.length === 0 ? `
-        <div class="empty-state">No surveys found</div>
+        <loading-spinner></loading-spinner>
     ` : `
+        <h1>My surveys</h1>
         <div class="survey-table">
             <!-- Header Row -->
-            <div class="table-header">Survey ID</div>
+            <div class="table-header">Name</div>
+            <div class="table-header">ID</div>
             <div class="table-header">Created</div>
-            <div class="table-header">Collection ID</div>
+            <div class="table-header">Lit Network</div>
+            <div class="table-header">Safe</div>
+            
             
             <!-- Data Rows -->
             ${surveys.map(survey => `
                 <div class="table-row" data-survey-id="${survey.id}">
                     <div class="table-cell">${survey.title}...</div>
-                    <div class="table-cell">${survey.id.slice(0, 16)}...</div>
+                    <div class="table-cell">${survey.id}</div>
                     <div class="table-cell">${new Date(Number(survey.createdAt) * 1000).toLocaleDateString()}</div>
+                    <div class="table-cell">${survey.config.litNetwork}</div>
+                    <div class="table-cell">${survey.config.safe}</div>
                     
                 </div>
             `).join('')}

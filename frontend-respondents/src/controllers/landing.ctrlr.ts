@@ -84,8 +84,6 @@ export class LandingController {
       <div id="landing-content"></div>
     `;
 
-    console.log("yo")
-
     const view = reactive('#landing-content', () => {
       const { currentStep, cardUsageState } = store.ui;
 
@@ -103,7 +101,7 @@ export class LandingController {
         case 'onboarding':
           return `
             ${this.renderOnboardingMessage(cardUsageState)}
-            <security-questions-form></security-questions-form>
+            onboarding
           `;
         
         case 'wallet-creation':
@@ -181,9 +179,11 @@ export class LandingController {
 
     try {
 
-      await this.services.waap.login();
+      const loginType = await this.services.waap.login();
 
-      store.setUI({ currentStep: 'wallet-creation' });
+      console.log(loginType)
+
+      // store.setUI({ currentStep: 'wallet-creation' });
     
       let success = false;
 
@@ -191,19 +191,21 @@ export class LandingController {
 
         console.log("validating card")
 
-        const txResponse = await this.services.waap.writeContract(SURVEYSTORE, surveyStoreAbi, 'validateCard', [card.nullifier, card.signature, card.batchId, card.surveyId], { waitForReceipt: true, confirmations: 2 });
+        const txResponse = await this.services.waap.write(import.meta.env.VITE_SURVEYSTORE_CONTRACT as `0x{string}`, surveyStoreAbi, 'validateCard', [card.nullifier, card.signature, card.batchId, card.surveyId], { waitForReceipt: true, confirmations: 2 });
 
-        // if (txResponse.receipt?.status === 'success') {
-        //   success = true;
-        //   console.log('✅ Card validated');
-        // } else {
-        //   alert('❌ Card validation failed');
-        // }
+        if (txResponse.receipt?.status === 'success') {
+          success = true;
+          console.log('✅ Card validated');
+        } else {
+          alert('❌ Card validation failed');
+        }
           
         if (success) {
 
-          this.setSurveyListener(card);
-          store.setUI({ currentStep: 'survey' });
+          console.log("success")
+
+          // this.setSurveyListener(card);
+          // store.setUI({ currentStep: 'survey' });
         } 
       }
 
@@ -220,18 +222,23 @@ export class LandingController {
 
     if (card) {
 
-      console.log(card);
+      console.log('📇 Card detected:', card);
 
-      // const surveyInfo = await this.services.waap.readContract(SURVEYSTORE, surveyStoreAbi, 'getSurvey',[card.surveyId]);
-      const surveyCid = ""; // surveyInfo[0]
-      // const surveyDiD = surveyInfo[1]
+      const surveyInfo = await this.services.waap.read(
+        import.meta.env.VITE_SURVEYSTORE_CONTRACT as `0x{string}`, 
+        surveyStoreAbi, 
+        'getSurvey',
+        [card.surveyId]
+      );
+
+      console.log(surveyInfo)
+      const surveyCid = surveyInfo[0]
+      
 
       this.renderTemplate(surveyCid, card.surveyId);
     
-      console.log('📇 Card detected:', card);
-
-      const cardIsUsed = await this.services.waap.readContract(
-        SURVEYSTORE, 
+      const cardIsUsed = await this.services.waap.read(
+        import.meta.env.VITE_SURVEYSTORE_CONTRACT as `0x{string}`, 
         surveyStoreAbi, 
         "isNullifierUsed", 
         [card.nullifier, card.batchId]

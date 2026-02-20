@@ -130,8 +130,8 @@ class SurveyFormBatches extends HTMLElement {
             }
 
             .batch-card.existing {
-                background: #f9fafb;
-                border-style: solid;
+                // background: #f9fafb;
+                border: none;
             }
 
             .batch-card.new {
@@ -199,11 +199,11 @@ class SurveyFormBatches extends HTMLElement {
             }
 
             .readonly-value {
-                padding: 0.75rem;
-                background: #f3f4f6;
-                border-radius: 8px;
+                // padding: 0.75rem;
+                // background: #f3f4f6;
+                // border-radius: 8px;
                 font-size: 1rem;
-                color: #374151;
+                color: var(--green)
             }
 
             .empty-state {
@@ -248,7 +248,7 @@ class SurveyFormBatches extends HTMLElement {
 
         <div class="form-container">
             ${this._existingBatches.length > 0 ? `
-                <div class="section-title">Existing Batches</div>
+       
                 ${this._existingBatches.map((batch) => `
                     <div class="batch-card existing">
                         <div class="form-row">

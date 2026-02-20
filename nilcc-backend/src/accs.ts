@@ -5,14 +5,14 @@ const surveyOwner = (surveyId: string, contract: string) => ({
   functionName: "isOwner",
   functionParams: [":userAddress", surveyId],
   functionAbi: {
+    type: "function",
     name: "isOwner",
+    stateMutability: "view",
     inputs: [
       { name: "authSigAddress", type: "address" },
       { name: "surveyId", type: "string" },
     ],
     outputs: [{ name: "", type: "bool" }],
-    stateMutability: "view",
-    type: "function",
   },
   returnValueTest: {
     key: "",
@@ -28,14 +28,14 @@ const user = (contract: string) => ({
   functionName: "isNullifierUsed",
   functionParams: [":nullifier", ":batchId"],
   functionAbi: {
+    type: "function",
     name: "isNullifierUsed",
+    stateMutability: "view",
     inputs: [
       { name: "nullifier", type: "string" },
       { name: "batchId", type: "string" },
     ],
     outputs: [{ name: "", type: "bool" }],
-    stateMutability: "view",
-    type: "function",
   },
   returnValueTest: {
     key: "",

@@ -12,8 +12,10 @@ export class LitService {
     async init () {
 
         this.client = await createLitClient({
-            network: nagaTest // nagaDev,
+            network: process.env.LIT_NETWORK == 'nagaTest' ? nagaTest : nagaDev,
         });
+
+        console.log("lit network:", this.client.networkName)
 
     }
 

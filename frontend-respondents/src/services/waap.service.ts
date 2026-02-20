@@ -1,8 +1,8 @@
 import { AuthenticationMethod, initWaaP } from "@human.tech/waap-sdk";
 import type { SilkEthereumProviderInterface } from '@human.tech/waap-sdk';
-import { AnyARecord } from "node:dns";
+
 import { createPublicClient, createWalletClient, custom, http, parseAbi } from "viem";
-import type { WalletClient, PublicClient, Hash, TransactionReceipt} from 'viem';
+import type { WalletClient, Hash, TransactionReceipt} from 'viem';
 import { base } from 'viem/chains';
 
 declare global {
@@ -10,6 +10,12 @@ declare global {
         waap: SilkEthereumProviderInterface;
     }
 }
+
+interface LoginResult {
+    walletClient: WalletClient;
+    address: `0x${string}`;
+}
+
 
 interface TxOptions {
     deploy?: boolean;
@@ -38,15 +44,19 @@ interface InternalTransaction {
 }
 
 const initConfig = {
-  config: {
-    allowedSocials: [],
-    authenticationMethods: ['email', 'phone'] as AuthenticationMethod[],
-    styles: { darkMode: false },
-  },
-  useStaging: false,
-  walletConnectProjectId: "<PROJECT_ID>", // Required if 'wallet' in authenticationMethods
-  referralCode: "", // Optional
-};
+    config: {
+        allowedSocials: [],
+        authenticationMethods: ['email', 'phone'] as AuthenticationMethod[],
+        styles: { darkMode: false },
+    },
+    project: {
+        name: 'S3ntiment',
+        logo: ''
+    },
+    useStaging: false,
+    walletConnectProjectId: "", 
+    referralCode: "", 
+}
 
 
 export class WaapService { 
@@ -62,7 +72,9 @@ export class WaapService {
     }
 
     async initWaap() { 
+        
         await initWaaP(initConfig);
+        await this.createWallet()
     }
 
     initPublicClient() {
@@ -72,21 +84,45 @@ export class WaapService {
         });
     }
 
-    async login() {
+    async createWallet() {
 
-        try {
-            // Open the WaaP login modal
-            const loginType = await window.waap.login();
-            // loginType: 'human' | 'walletconnect' | 'injected' | null
-            
-            // Get the user's wallet addresses
-            const accounts :any = await window.waap.request({ method: 'eth_requestAccounts' }); // { method: 'eth_requestAccounts' }
-            this.address = accounts[0];         
+        const accounts:any = await window.waap.request({ method: 'eth_requestAccounts' }); 
+
+        await window.waap.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: '0x2105' }] // 8453 in hex
+        });
+
+
+
+        if (accounts[0]) {
+            this.address = accounts[0];  
+            console.log("address set", this.address)       
             this.walletClient = createWalletClient({
                 account: this.address as `0x${string}`,
-                chain: base, // or your chain
+                chain: base, 
                 transport: custom(window.waap)
             });
+        }
+
+        return this.walletClient 
+    
+    }
+
+    async login() : Promise<LoginResult> {
+
+        try {
+          
+            const loginType = await window.waap.login();
+            await this.createWallet();
+           
+            if (!this.address) {
+                throw new Error('Failed to get wallet address');
+            }
+
+            if (!this.walletClient) {
+                throw new Error('Failed to create wallet client');
+            }
             
             return { 
                 walletClient: this.walletClient, 
@@ -95,8 +131,13 @@ export class WaapService {
  
         } catch (error) {
             console.error(error)
+            throw error
         }
 
+    }
+
+    async logout() {
+        await window.waap.logout();
     }
 
     getWalletClient() {
@@ -132,7 +173,7 @@ export class WaapService {
 
        
 
-    async writeContract(
+    async write(
         contractAddress: `0x${string}`, 
         abi: any, 
         functionName: string, 
@@ -185,7 +226,7 @@ export class WaapService {
         return result;
     }
 
-    async readContract<T = any>(
+    async read<T = any>(
         contractAddress: `0x${string}`, 
         abi: any, 
         functionName: string, 

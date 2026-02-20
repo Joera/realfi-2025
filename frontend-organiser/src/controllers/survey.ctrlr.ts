@@ -7,7 +7,8 @@ import '../components/survey-detail-config.js';
 import '../components/survey-forms/survey-form-questions.js';
 import '../components/survey-forms/survey-form-batches.js';
 import { router } from "../router.js";
-import { fetchSurvey } from "../factories/survey.factory.js";
+import { createBatch, fetchSurvey } from "../factories/survey.factory.js";
+import { generateCardSecrets } from "../factories/invitation.factory.js";
 
 export class SurveyController {
     private reactiveViews: any[] = [];
@@ -229,21 +230,39 @@ export class SurveyController {
 
         document.addEventListener('batch-create', async (e) => {
             const event = e as CustomEvent
-            const { batch, index } = event.detail
-            // ...
-            // Register on contract
-            // const contractBatchId = await this.registerBatchOnContract(batch)
-            
-            // // Generate invitations
-            // await this.generateInvitations(contractBatchId, batch.amount)
-            
-            // Update UI
-            // const batchesForm = document.querySelector('survey-form-batches') as any
-            // batchesForm.markBatchCreated(index, contractBatchId)
+            const { batch, index, surveyId } = event.detail;
+
+            // update contract!!
+            // const authContext = this.services.lit.createAuthContext(this.services.waap.getWalletClient())
+            // const survey = await fetchSurvey(this.services, authContext, surveyId);
+            // survey.batches.push(batch);
+
+            // const abi =     {
+            //     "inputs": [
+            //         {
+            //         "internalType": "string",
+            //         "name": "surveyId",
+            //         "type": "string"
+            //         },
+            //         {
+            //         "internalType": "string",
+            //         "name": "newIpfsCid",
+            //         "type": "string"
+            //         }
+            //     ],
+            //     "name": "updateSurveyCid",
+            //     "outputs": [],
+            //     "stateMutability": "nonpayable",
+            //     "type": "function"
+            //     };
+            // // oh we moeten ook encrypten en pinnen ... update endpoint on nil cc ... MAAAAAR is dit weel zo efficient .. toch niet hier encrypten ?????? 
+            // this.services.waap.write(import.meta.env.VITE_SURVEYSTORE_CONTRACT as any, abi, 'updateSurveyCid', [], {})
+
+            await createBatch(this.services, batch, surveyId)
+
+            const test = await generateCardSecrets(this.services, "test", 1, surveyId);
+
+            console.log(test)
         })
-
-
     }
-
-    
 }

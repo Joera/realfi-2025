@@ -15,7 +15,6 @@ export interface SurveyAnswer {
   scaleRange?: { min: number; max: number; minLabel: string; maxLabel: string }
 }
 
-
 export interface Question {
     id: string
     question: string
@@ -44,11 +43,19 @@ export interface Batch {
     createdAt: number
 }
 
-export interface SurveyConfig {
+export interface Config {
+    safe?: string
+    chainId?: number
+    litNetwork?: string
+}
+
+export interface Survey {
+    id?: string
     title?: string
     introduction?: string
     groups?: QuestionGroup[]
     batches?: Batch[]
+    config?: Config
 }
 
 // Event detail types

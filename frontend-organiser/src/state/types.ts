@@ -1,7 +1,7 @@
-import { SurveyConfig } from "../types";
+import { Survey } from "../types";
 
 export interface DraftMeta {
-  config: SurveyConfig;
+  config: Survey;
   createdAt: number;
   updatedAt: number;
 }
@@ -18,7 +18,7 @@ export interface UIState {
 
 export interface AppState {
   ui: UIState;
-  surveys: any[];
-  surveyDraft: SurveyConfig;
+  surveys: Survey[];
+  surveyDraft: Survey;
   currentDraftId: string | null;
 }

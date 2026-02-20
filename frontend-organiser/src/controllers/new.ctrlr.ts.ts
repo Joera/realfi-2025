@@ -2,7 +2,7 @@
 
 
 import '../components/draft-survey-editor.js';
-import { createZipFile, generateCardSecrets } from '../factories/invitation.factory.js';
+import { createBatch} from '../factories/survey.factory.js';
 import { IServices } from '../services/container.js';
 
 export class NewSurveyController {
@@ -49,9 +49,25 @@ export class NewSurveyController {
 
       const surveyId = crypto.randomUUID();
 
-      const authContext = this.services.lit.createAuthContext(await this.services.waap.getWalletClient())
+      const authContext = this.services.lit.createAuthContext(await this.services.waap.getWalletClient());
 
+      // predict safe for survey 
+      const safeAddress = ""; // await this.services.safe.connectToFreshSafe(surveyId);
 
+      const config = {
+        safe: safeAddress,
+        chainId: import.meta.env.VITE_L2 == 'base' ? 8543 : 1,
+        litNetwork: import.meta.env.VITE_LIT_NETWORK
+      }
+
+      const surveyConfig =  {
+            id: surveyId,
+            title: survey.title,
+            introduction: survey.introduction,
+            groups: survey.groups,
+            batches: survey.batches,
+            config
+          }
 
       let res: any = await fetch(`${import.meta.env.VITE_BACKEND}/api/create-survey`, {
         method: 'POST',
@@ -60,13 +76,7 @@ export class NewSurveyController {
         },
         body: JSON.stringify({ 
           authContext,         
-          surveyConfig: {
-            id: surveyId,
-            title: survey.title,
-            introduction: survey.introduction,
-            groups: survey.groups,
-            batches: survey.batches
-          }
+          surveyConfig
         })
       });
 
@@ -75,28 +85,17 @@ export class NewSurveyController {
 
       // check if combination owner + survey id was used before ! .. update pattern 
 
-      // predict safe for survey 
-      // await this.services.safe.connectToFreshSafe(surveyId);
-
       const abi = [{ "inputs": [{ "internalType": "string", "name": "surveyId", "type": "string" }, { "internalType": "string", "name": "ipfsCid", "type": "string" }], "name": "createSurvey", "outputs": [], "stateMutability": "nonpayable", "type": "function" }];
       const args = [surveyId, surveyCid.toString()];
 
-      // const receipt = await this.services.waap.write(import.meta.env.VITE_SURVEYSTORE_CONTRACT as any, abi, 'createSurvey', args, {});
-      // console.log(receipt);
+      const receipt = await this.services.waap.write(import.meta.env.VITE_SURVEYSTORE_CONTRACT as any, abi, 'createSurvey', args, {});
+      console.log(receipt);
 
       for (const batch of survey.batches) {
 
-          const cards: any[] = await generateCardSecrets(this.services.viem, batch.id, batch.amount, surveyId);
+        await createBatch(this.services, batch, surveyId)
 
-          if (batch.medium == 'zip-file') {
-
-              await createZipFile(cards, surveyId)
-          }
       }
-
-      const test = await generateCardSecrets(this.services.viem, "test", 1, surveyId);
-
-      console.log(test)
   
     });
   }

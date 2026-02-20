@@ -4,8 +4,8 @@ import { typograhyStyles } from '../../styles/shared-typograhy-styles.js'
 
 class LoadingSpinner extends HTMLElement {
   private message: string = 'Loading...'
-  private size: number = 48
-  private color: string = '#FFF'
+  private size: number = 160
+  private color: string = 'rgb(42.9834254144, 112.6165745856, 98.0022099448)'
 
   constructor() {
     super()
@@ -25,7 +25,7 @@ class LoadingSpinner extends HTMLElement {
         this.message = newValue
         break
       case 'size':
-        this.size = parseInt(newValue, 10) || 48
+        this.size = parseInt(newValue, 10) || 160
         break
       case 'color':
         this.color = newValue
@@ -50,6 +50,8 @@ class LoadingSpinner extends HTMLElement {
           display: block;
           width: 100%;
           text-align: center;
+          --green: rgb(42.9834254144, 112.6165745856, 98.0022099448)
+          min-height: 240px;
         }
 
         .spinner-container {

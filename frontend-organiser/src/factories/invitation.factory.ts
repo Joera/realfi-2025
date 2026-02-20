@@ -11,6 +11,7 @@ interface CardData {
   nullifier: string
   signature: string
   batchId: string
+  url: string
 }
 
 
@@ -26,20 +27,11 @@ function generateRandomNullifier() {
   return base64;
 }
 
-async function generateQRCodeSVG(cardData: CardData, surveyId: string): Promise<string> {
-  const { nullifier, batchId, signature } = cardData
-  
-  // Secure URL - only nullifier and batch in QR
-  const qrUrl = `${baseUrl}?n=${nullifier}&b=${batchId}&sig=${signature}&s=${surveyId}`;
-  console.log(qrUrl);
-
-  // Generate filename
-  const filename = `${batchId}_${nullifier}.svg`
-//   const filepath = path.join(outputDir, filename)
+async function generateQRCodeSVG(url: string): Promise<string> {
   
   try {
 
-    return await QRCode.toString(qrUrl, {
+    return await QRCode.toString(url, {
       type: 'svg',
       width: 500,
       margin: 2,
@@ -50,12 +42,12 @@ async function generateQRCodeSVG(cardData: CardData, surveyId: string): Promise<
       errorCorrectionLevel: 'M'
     })
   } catch (error) {
-    console.error(`Error generating QR code for ${nullifier}:`, error)
+    console.error(`Error generating QR code for ${url}:`, error)
     throw error
   }
 }
 
-export const generateCardSecrets = async (viem: any, batchId: string, batchSize: number, surveyId: string) => {
+export const generateCardSecrets = async (services: any, batchId: string, batchSize: number, surveyId: string) => {
   const cards: any[] = [];
  
   
@@ -64,25 +56,16 @@ export const generateCardSecrets = async (viem: any, batchId: string, batchSize:
     const nullifier = generateRandomNullifier()
     const message = `${nullifier}|${batchId}`
     
-    // Hash the message first, then sign the hash
-    const messageHash = keccak256(toHex(message));
-
-    console.log(message)
-    console.log(messageHash)
-   
-    // Sign the hash with EIP-191 prefix
-    const signature = await viem.signMessage(messageHash);
-
-    console.log(signature)
-    console.log(viem.walletClient.account.address)
+    const signature = await services.waap.signMessage(message);
     
     const card: any = {
       nullifier,
       batchId: batchId,
       signature: signature,
+      url:`${baseUrl}?n=${nullifier}&b=${batchId}&sig=${signature}&s=${surveyId}`
     };
   
-    card.svgString = await generateQRCodeSVG(card, surveyId)
+    card.svgString = await generateQRCodeSVG(card.url)
    
     cards.push(card)
   }

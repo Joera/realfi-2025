@@ -36,11 +36,11 @@ export const parseCardURL = async (): Promise<CardData | null> => {
     }
 
     const msg: string = `${decodeURIComponent(nullifier)}|${decodeURIComponent(batchId)}`;
-    const msgHash = keccak256(toHex(msg));
+    // const msgHash = keccak256(toHex(msg));
     const s: any = decodeURIComponent(signature) as `0x${string}` 
 
     const recoveredAddress = await recoverMessageAddress({
-      message: { raw: msgHash },
+      message: msg,
       signature: s
     });
 

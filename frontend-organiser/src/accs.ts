@@ -1,18 +1,18 @@
 const surveyOwner = (surveyId: string, contract: string) => ({
   conditionType: "evmContract" as const,
-  chain: "base" as const,
   contractAddress: contract,
+  chain: "base" as const,
   functionName: "isOwner",
   functionParams: [":userAddress", surveyId],
   functionAbi: {
+    type: "function",
     name: "isOwner",
+    stateMutability: "view",
     inputs: [
       { name: "authSigAddress", type: "address" },
       { name: "surveyId", type: "string" },
     ],
     outputs: [{ name: "", type: "bool" }],
-    stateMutability: "view",
-    type: "function",
   },
   returnValueTest: {
     key: "",
@@ -23,19 +23,21 @@ const surveyOwner = (surveyId: string, contract: string) => ({
 
 const user = (contract: string) => ({
   conditionType: "evmContract" as const,
-  chain: "base" as const,
   contractAddress: contract,
+  chain: "base" as const,
   functionName: "isNullifierUsed",
   functionParams: [":nullifier", ":batchId"],
   functionAbi: {
+    type: "function",
     name: "isNullifierUsed",
+    stateMutability: "view",
     inputs: [
       { name: "nullifier", type: "string" },
       { name: "batchId", type: "string" },
     ],
     outputs: [{ name: "", type: "bool" }],
-    stateMutability: "view",
-    type: "function",
+    
+    
   },
   returnValueTest: {
     key: "",

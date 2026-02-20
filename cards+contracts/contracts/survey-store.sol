@@ -34,10 +34,9 @@ contract S3ntimentSurveyStore {
     event CardValidated(
         string indexed surveyId,
         string indexed batchId,
-        string nullifier,
         uint256 newCount
     );
-    event SignatureValidated(address indexed signer, bytes32 messageHash);
+    
 
     // Errors
     error InvalidSignature();
@@ -94,41 +93,39 @@ contract S3ntimentSurveyStore {
         string memory batchId,
         string memory surveyId
     ) external returns (bool) {
-        // Lookup survey
         Survey memory survey = surveys[surveyId];
         if (survey.owner == address(0)) {
             revert SurveyNotFound();
         }
         
-        // Reconstruct message and hash (must match card generation)
+        // Reconstruct message (plain string)
         string memory message = string(abi.encodePacked(nullifier, "|", batchId));
-        bytes32 messageHash = keccak256(abi.encodePacked(message));
+        bytes memory messageBytes = bytes(message);
+        
+        // EIP-191: prefix + length + message
         bytes32 ethSignedMessageHash = keccak256(abi.encodePacked(
-            "\x19Ethereum Signed Message:\n32", 
-            messageHash
+            "\x19Ethereum Signed Message:\n",
+            toString(messageBytes.length),
+            message
         ));
         
-        // Recover signer from signature
         address recoveredSigner = recoverSigner(ethSignedMessageHash, signature);
         
-        // Verify signer is the survey owner
         if (recoveredSigner != survey.owner) {
             revert SignerNotSurveyOwner();
         }
         
-        // Check if this card has already been used
-        if (usedNullifiers[messageHash]) {
+        // Use message hash for nullifier tracking (not the signed hash)
+        bytes32 nullifierHash = keccak256(messageBytes);
+        if (usedNullifiers[nullifierHash]) {
             revert NullifierAlreadyUsed();
         }
         
-        // Mark nullifier as used
-        usedNullifiers[messageHash] = true;
-        
-        // Increment batch counter for this survey
+        usedNullifiers[nullifierHash] = true;
         batchCardCount[surveyId][batchId]++;
         
-        emit CardValidated(surveyId, batchId, nullifier, batchCardCount[surveyId][batchId]);
-        emit SignatureValidated(recoveredSigner, ethSignedMessageHash);
+        emit CardValidated(surveyId, batchId, batchCardCount[surveyId][batchId]);
+    
         
         return true;
     }
@@ -265,5 +262,23 @@ contract S3ntimentSurveyStore {
         require(v == 27 || v == 28, "Invalid signature recovery value");
         
         return ecrecover(messageHash, v, r, s);
+    }
+
+    // Helper: uint to string
+    function toString(uint256 value) internal pure returns (string memory) {
+        if (value == 0) return "0";
+        uint256 temp = value;
+        uint256 digits;
+        while (temp != 0) {
+            digits++;
+            temp /= 10;
+        }
+        bytes memory buffer = new bytes(digits);
+        while (value != 0) {
+            digits--;
+            buffer[digits] = bytes1(uint8(48 + (value % 10)));
+            value /= 10;
+        }
+        return string(buffer);
     }
 }

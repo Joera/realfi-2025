@@ -56,7 +56,8 @@ export class SurveyController {
             surveyId: surveyConfig.id,
             nilDid: surveyOwnerDid.didString,
             encryptedNilKey: encryptedKey,
-            surveyConfig: encryptedSurveyConfig
+            surveyConfig: encryptedSurveyConfig,
+            config: surveyConfig.config
         };
 
         console.log('📦 Survey config:', config);

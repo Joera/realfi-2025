@@ -3,7 +3,7 @@ import hre from "hardhat";
 
 async function main() {
   // Your deployed contract address
-  const contractAddress = "0xbc865D412fAA8Ca3Be49E72fcA40986D7cbF4555";
+  const contractAddress = "0x97eCf531654F38e920106B90846f97b7dBE76af3";
   
   console.log("Verifying SurveyStore at:", contractAddress);
   console.log("Network:", hre.network.name);

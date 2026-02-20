@@ -13,6 +13,7 @@ interface ImportMetaEnv {
   readonly VITE_SURVEYSTORE_CONTRACT: string
   readonly VITE_L2: string
   readonly VITE_KUBO_ENDPOINT: string
+  readonly VITE_LIT_NETWORK: string
 }
 
 interface ImportMeta {
