@@ -4,11 +4,9 @@ import { formStyles } from '../shared-form-styles.js'
 import { typograhyStyles } from '../shared-typograhy-styles.js'
 import { colourStyles } from '../shared-colour-styles.js'
 import { buttonStyles } from '../shared-button-styles'
-import { store } from '../services/store.service';
-import { fromPinata } from "../ipfs.factory";
 import { SurveyAnswer, SurveyConfig, SurveyConfigRaw, SurveyQuestion } from "../types";
-import LITCtrlr from "../services/lit.ctrlr";
 import { CardData } from "../card.factory";
+import { surveyStore, uiStore, userStore } from "../state";
 
 
 
@@ -25,29 +23,9 @@ class Survey extends HTMLElement {
     super()
     this.attachShadow({ mode: 'open' })
     this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, colourStyles, buttonStyles]
-    this.lit = new LITCtrlr();
     
   } 
 
-  async init(card: CardData) {
-
-    // this.lit.init(pk)
-
-    const configAttr = this.getAttribute('config');
-    this.slug = this.getAttribute('slug') || undefined;
-    const configRaw: SurveyConfigRaw = configAttr ? JSON.parse(await fromPinata(configAttr)) : minaSurveyConfig;
-    console.log(configRaw);
-
-    const accs = this.canDecryptConfig(card.nullifier, card.batchId) 
-    this.lit.decrypt()
-    
-    this.initialized = true // Set flag when done
-  
-  }
-
-  private canDecryptConfig(nullifier: string, batchId: string) {
-    
-  }
 
   private renderLoading() {
     if (!this.shadowRoot) return
@@ -69,64 +47,59 @@ class Survey extends HTMLElement {
 
   async connectedCallback(surveySlug: string) {
 
+    const surveyId = this.getAttribute('survey-id');
+    if (!surveyId) return;
+
     this.renderLoading()
 
-    await this.init();
-
-    // Check if returning user and load previous answers
-    const cardUsageState = store.ui.cardUsageState;
-    if (cardUsageState === 'returning') {
-      console.log('🔄 Returning user - loading previous answers');
-      await this.loadPreviousAnswers(surveySlug);
+    const existing = surveyStore.get(surveyId);
+    if (existing?.questions?.length) {
+        console.log('🔄 Returning user — restoring previous answers');
+        // await this.loadPreviousAnswers(existing);
     }
     
     this.render()
     this.attachEventListeners()
   }
 
-  async loadPreviousAnswers(surveySlug: string) {
-    try {
-      const nillionService = store.getService('nillion');``
-      
-      if (!nillionService) {
-        console.warn('⚠️ Nillion service not available');
-        return;
-      }
+  // async loadPreviousAnswers(surveySlug: string) {
+  //   try {
+   
 
-      const userId = store.user.signerAddress || store.user.nullifier;
+  //     const userId = store.user.signerAddress || store.user.nullifier;
    
       
-      console.log('Fetching previous answers for user:', userId);
+  //     console.log('Fetching previous answers for user:', userId);
       
-      const previousResult = await nillionService.getUserSurveyAnswers(surveySlug);
+  //     const previousResult = await nillionService.getUserSurveyAnswers(surveySlug);
 
-      // console.log("xxxx", previousResult)
+  //     // console.log("xxxx", previousResult)
       
-      if (previousResult && previousResult.answers) {
-        console.log('Found previous submission:', previousResult);
-        this.previousDocument = previousResult._id;
+  //     if (previousResult && previousResult.answers) {
+  //       console.log('Found previous submission:', previousResult);
+  //       this.previousDocument = previousResult._id;
         
-        this.answers = previousResult.answers.map((prevAnswer: any) => {
-          const parsedAnswer = this.parseAnswerFromShare(prevAnswer.answer);
+  //       this.answers = previousResult.answers.map((prevAnswer: any) => {
+  //         const parsedAnswer = this.parseAnswerFromShare(prevAnswer.answer);
           
-          return {
-            questionId: prevAnswer.questionId,
-            questionText: prevAnswer.questionText,
-            questionType: prevAnswer.questionType,
-            // For checkbox type, ALWAYS ensure it's an array
-            answer: prevAnswer.questionType === 'checkbox' && !Array.isArray(parsedAnswer)
-              ? [parsedAnswer] // Wrap single value in array
-              : parsedAnswer,
-            ...(prevAnswer.scaleRange && { scaleRange: prevAnswer.scaleRange })
-          };
-        });
-      }
+  //         return {
+  //           questionId: prevAnswer.questionId,
+  //           questionText: prevAnswer.questionText,
+  //           questionType: prevAnswer.questionType,
+  //           // For checkbox type, ALWAYS ensure it's an array
+  //           answer: prevAnswer.questionType === 'checkbox' && !Array.isArray(parsedAnswer)
+  //             ? [parsedAnswer] // Wrap single value in array
+  //             : parsedAnswer,
+  //           ...(prevAnswer.scaleRange && { scaleRange: prevAnswer.scaleRange })
+  //         };
+  //       });
+  //     }
 
-    } catch (error) {
-      console.error('❌ Failed to load previous answers:', error);
-      // Continue with empty answers - not critical
-    }
-  }
+  //   } catch (error) {
+  //     console.error('❌ Failed to load previous answers:', error);
+  //     // Continue with empty answers - not critical
+  //   }
+  // }
 
   parseAnswerFromShare(answerObj: any): string | string[] | number {
     let value = answerObj;
@@ -417,10 +390,6 @@ class Survey extends HTMLElement {
         ` : `
           <div class="completion-screen">
             <h2>Thank you for your feedback!</h2>
-            <p>Your responses ${store.ui.cardUsageState === 'returning' ? 'have been updated' : 'will help us improve the Web3 onboarding experience'}.</p>
-
-            <h3>by the way ....</h3> 
-            <p>In the process a safe was created for you on Base Sepolia that is controlled by the private key constructed from the card and the answer to your security answer. <a href="https://app.safe.global/home?safe=basesep:${store.user.safeAddress}" target="_link">Link to UI here.</a> As much as this is an interesting survey, it is also an experiment to see how we can onboard people into a crypto / web3 experience with less friction or none at all. What do you think?</a 
           </div>
         `}
       </div>

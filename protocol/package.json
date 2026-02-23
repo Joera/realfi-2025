@@ -1,10 +1,13 @@
 {
+	"name": "@s3ntiment/protocol",
+	"version": "0.0.1",
 	"dependencies": {
 		"@lit-protocol/auth-helpers": "^8.2.1",
 		"@lit-protocol/lit-client": "^8.3.1",
 		"@lit-protocol/networks": "^8.4.1",
 		"@lit-protocol/types": "^8.0.4",
 		"dotenv": "^17.3.1",
+		"tsx": "^4.21.0",
 		"viem": "^2.46.1"
 	}
 }

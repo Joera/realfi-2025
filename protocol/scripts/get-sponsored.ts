@@ -14,7 +14,7 @@ async function main() {
 
     console.log(process.argv)
 
-    const userAddr = getAddress(process.argv[2]); 
+    const userAddr = getAddress(process.argv[2] || "0x609E288979c68d1486B600f82ea8E278B3e88148"); 
 
     console.log("user", userAddr)
     

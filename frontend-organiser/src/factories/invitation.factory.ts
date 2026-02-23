@@ -1,7 +1,9 @@
 import QRCode from 'qrcode'
-import { keccak256, toHex } from 'viem'
+import { encodePacked, keccak256, toBytes, toHex } from 'viem'
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { privateKeyToAccount } from 'viem/accounts';
+import { Batch } from '../types';
 // import { v4 as uuidv4 } from 'uuid';
 
 
@@ -47,29 +49,37 @@ async function generateQRCodeSVG(url: string): Promise<string> {
   }
 }
 
-export const generateCardSecrets = async (services: any, batchId: string, batchSize: number, surveyId: string) => {
-  const cards: any[] = [];
- 
-  
-  for (let i = 0; i < batchSize; i++) {
 
-    const nullifier = generateRandomNullifier()
-    const message = `${nullifier}|${batchId}`
-    
-    const signature = await services.waap.signMessage(message);
-    
-    const card: any = {
-      nullifier,
-      batchId: batchId,
-      signature: signature,
-      url:`${baseUrl}?n=${nullifier}&b=${batchId}&sig=${signature}&s=${surveyId}`
-    };
+
+export const createBatchWallet = async (services: any) => {
+  const seed = crypto.randomUUID();
+  const batchSignature = await services.waap.signMessage({ message: `batch:${seed}` });
+  const batchPrivKey = keccak256(toBytes(batchSignature));
+  const batchAccount = privateKeyToAccount(batchPrivKey);
   
-    card.svgString = await generateQRCodeSVG(card.url)
-   
-    cards.push(card)
-  }
-  
+  return {
+    batchId: batchAccount.address,
+    batchAccount, // kept in memory, never persisted
+  };
+}
+
+export const generateCardSecrets = async (
+  batchAccount: any,
+  batch: Batch,
+) => {
+  const cards = await Promise.all(
+    Array.from({ length: batch.amount }, async () => {
+      const nullifier = generateRandomNullifier();
+      const message = encodePacked(
+          ["string", "string", "address"],
+          [nullifier, "|", batch.id as `0x${string}`]
+      );
+      const messageHash = keccak256(message);
+      const signature = await batchAccount.signMessage({ message: { raw: messageHash } });
+      const url = `${baseUrl}?n=${nullifier}&b=${batch.id}&sig=${signature}&s=${batch.survey}`;
+      return { nullifier, signature, url, svgString: await generateQRCodeSVG(url) };
+    })
+  );
   return cards;
 }
 

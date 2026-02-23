@@ -16,7 +16,7 @@ export default deployScript(
 
 		// Example: interact with the deployed contract using viem
 		const contract = env.viem.getContract(deployment);
-		const message = await contract.read.getOwnerSurveyCount([deployer]);
+		const message = await contract.read.surveyExists(['0']);
 		console.log(`Current survey count for deployer: "${message}"`);
 	},
 	// Tags allow selective deployment (e.g., --tags GreetingsRegistry)

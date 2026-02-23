@@ -6,7 +6,8 @@ import '../components/landing-choice.js';
 import '../components/ui/loading-spinner.js'
 import { store } from '../state/store.js';
 import { reactive } from '../utils/reactive.js';
-import { IServices } from '../services/container.js';
+import { IServices } from '../services/services.js';
+import { base } from 'viem/chains';
 
 export class LandingController {
   private reactiveViews: any[] = [];
@@ -83,10 +84,12 @@ export class LandingController {
         
     document.addEventListener('ready-to-login', async (event: any) => {
 
-        const { walletClient, address } = await this.services.waap.login();
-
+        const { walletClient, address } = await this.services.waap.login(base);
+        
         if (walletClient && address) {
 
+          await this.services.account.updateSigner(walletClient);
+          if (import.meta.env.VITE_USE_SAFE == 'true') { await this.services.safe.updateSigner(walletClient); }
           console.log("logged in")
    
         }

@@ -3,8 +3,13 @@ import { defineConfig } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import { config } from 'dotenv';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Load root .env first, then local .env overrides
+config({ path: path.resolve(__dirname, '../.env') });
+config(); // loads local .env
 
 export default defineConfig({
   root: '.',

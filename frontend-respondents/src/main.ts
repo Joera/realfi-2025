@@ -1,11 +1,11 @@
 import './styles/main.scss';
-import { initRouter } from './router';
-import { getServices } from './services/container';
+import { initRouter } from './router.js';
+import { getServices } from './services.js';
 
 
 const onPagePainted = () => {
 
-  console.log("piant");
+  console.log("paint");
   const header = document.querySelector('#header') as HTMLElement;
   console.log(header);
   header!.style.display = "flex";

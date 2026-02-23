@@ -47,7 +47,8 @@ class LoadingSpinner extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
-          display: block;
+          min-height: 60vh;
+          display: flex;
           width: 100%;
           text-align: center;
           --green: rgb(42.9834254144, 112.6165745856, 98.0022099448)

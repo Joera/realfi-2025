@@ -1,5 +1,5 @@
 
-import { IServices } from "../services/container.js";
+import { IServices } from "../services/services.js";
 import { store } from "../state/store.js";
 import { reactive } from "../utils/reactive.js";
 import '../components/survey-detail-responses.js';
@@ -9,6 +9,9 @@ import '../components/survey-forms/survey-form-batches.js';
 import { router } from "../router.js";
 import { createBatch, fetchSurvey } from "../factories/survey.factory.js";
 import { generateCardSecrets } from "../factories/invitation.factory.js";
+import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
+import { capabilityDelegation } from "../cap.js";
+
 
 export class SurveyController {
     private reactiveViews: any[] = [];
@@ -176,7 +179,7 @@ export class SurveyController {
          if (!this.survey) {
             console.log('Survey not in store, fetching...');
             
-            const authContext = await this.services.lit.createAuthContext(this.services.waap.getWalletClient());
+            const authContext = await this.services.lit.createAuthContext(this.services.waap.getWalletClient(), capabilityDelegation);
             this.survey = await fetchSurvey(this.services, authContext, this.surveyId)
             console.log(this.survey)
             store.addSurvey(this.survey);
@@ -260,9 +263,9 @@ export class SurveyController {
 
             await createBatch(this.services, batch, surveyId)
 
-            const test = await generateCardSecrets(this.services, "test", 1, surveyId);
+            // const test = await generateCardSecrets(this.services, { id: '', name: "test", amount: 1, survey: surveyId  }, surveyId);
 
-            console.log(test)
+            // console.log(test)
         })
     }
 }

@@ -1,5 +1,5 @@
 {
-  "name": "frontend-organiser",
+  "name": "@s3ntiment/frontend-organiser",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -30,22 +30,20 @@
     "@nillion/nuc": "^2.0.0",
     "@types/file-saver": "^2.0.7",
     "@types/qrcode": "^1.5.6",
+    "dotenv": "^17.3.1",
     "ethers": "^5.8.0",
     "file-saver": "^2.0.5",
     "jszip": "^3.10.1",
     "navigo": "^8.11.1",
     "permissionless": "^0.3.4",
     "qrcode": "^1.5.4",
+    "s3ntiment-contracts": "workspace:../contracts",
+    "@s3ntiment/shared": "workspace:*",
     "slugify": "^1.6.6",
     "terser": "^5.46.0",
     "uuid": "^13.0.0",
     "viem": "^2.45.1",
     "vite-plugin-node-polyfills": "^0.25.0",
     "wagmi": "^3.4.1"
-  },
-  "pnpm": {
-    "overrides": {
-      "@lit-protocol/networks": "8.3.2"
-    }
   }
 }

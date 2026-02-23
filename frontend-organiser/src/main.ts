@@ -1,6 +1,6 @@
 import './styles/main.scss';
 import { initRouter } from './router';
-import { getServices } from './services/container';
+import { getServices } from './services/services';
 
 const onPagePainted = () => {
 

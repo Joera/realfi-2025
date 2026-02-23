@@ -3,7 +3,7 @@
 import Navigo from 'navigo';
 import type { Match } from 'navigo';
 import { LandingController } from './controllers/landing.ctrlr';
-import { IServices } from './services/container';
+import { IServices } from './services/services.ts';
 import { SurveyListController } from './controllers/survey-list.ts';
 import { SurveyController } from './controllers/survey.ctrlr.ts';
 import { NewSurveyController } from './controllers/new.ctrlr.ts';

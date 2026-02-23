@@ -1,0 +1,26 @@
+import { createPublicClient, http } from "viem";
+import type { Chain } from "viem";
+import { getRPCUrl } from "./chains.factory";
+
+export class ViemService {
+
+    public publicClient: any;
+    private chain: Chain;
+
+    constructor(chain: Chain, alchemyKey: string) {
+        this.chain = chain;
+        this.publicClient = createPublicClient({
+            chain,
+            transport: http(getRPCUrl(chain.id, alchemyKey)),
+        });
+    }
+
+    async read(address: `0x${string}`, abi: any, functionName: string, args: any[] = []): Promise<any> {
+        return await this.publicClient.readContract({
+            address,
+            abi,
+            functionName,
+            args,
+        });
+    }
+}

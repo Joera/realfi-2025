@@ -1,9 +1,13 @@
 /// <reference types="vite/client" />
 
 
+import { capabilityDelegation } from '../cap.js';
 import '../components/draft-survey-editor.js';
-import { createBatch} from '../factories/survey.factory.js';
-import { IServices } from '../services/container.js';
+import { createBatchWallet } from '../factories/invitation.factory.js';
+import { createBatch, deploySafe} from '../factories/survey.factory.js';
+import { IServices } from '../services/services.js';
+import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
+
 
 export class NewSurveyController {
   private reactiveViews: any[] = [];
@@ -49,16 +53,17 @@ export class NewSurveyController {
 
       const surveyId = crypto.randomUUID();
 
-      const authContext = this.services.lit.createAuthContext(await this.services.waap.getWalletClient());
+      const authContext = this.services.lit.createAuthContext(await this.services.waap.getWalletClient(), capabilityDelegation);
 
-      // predict safe for survey 
-      const safeAddress = ""; // await this.services.safe.connectToFreshSafe(surveyId);
-
+       const safeAddress = import.meta.env.VITE_USE_SAFE == 'true' ? await this.services.safe.predictSafeAddress(surveyId) : "";
+  
       const config = {
         safe: safeAddress,
         chainId: import.meta.env.VITE_L2 == 'base' ? 8543 : 1,
         litNetwork: import.meta.env.VITE_LIT_NETWORK
       }
+
+      console.log(config)
 
       const surveyConfig =  {
             id: surveyId,
@@ -82,21 +87,28 @@ export class NewSurveyController {
 
       const surveyCid = await res.text();
       console.log(surveyCid);
-
-      // check if combination owner + survey id was used before ! .. update pattern 
-
-      const abi = [{ "inputs": [{ "internalType": "string", "name": "surveyId", "type": "string" }, { "internalType": "string", "name": "ipfsCid", "type": "string" }], "name": "createSurvey", "outputs": [], "stateMutability": "nonpayable", "type": "function" }];
       const args = [surveyId, surveyCid.toString()];
 
-      const receipt = await this.services.waap.write(import.meta.env.VITE_SURVEYSTORE_CONTRACT as any, abi, 'createSurvey', args, {});
-      console.log(receipt);
+      console.log(import.meta.env)
+
+      if(import.meta.env.VITE_USE_SAFE == 'true') {
+        // check if combination owner + survey id was used before ! .. update pattern 
+
+        const _safeAddress = await deploySafe(this.services, surveyId);
+        console.log('deployed safe', safeAddress, _safeAddress)
+        if (safeAddress != _safeAddress) { console.log('deployed wrong safe', safeAddress, _safeAddress); return; }
+        await this.services.safe.connectToExistingSafe(safeAddress);
+        const receipt = await this.services.safe.write(surveyStore.address, surveyStore.abi, 'createSurvey', args, { waitForReceipt: true});
+        console.log(receipt);
+      } else {
+        const receipt = await this.services.account.write(surveyStore.address, surveyStore.abi, 'createSurvey', args, { waitForReceipt: true});
+        console.log(receipt);
+      }
 
       for (const batch of survey.batches) {
-
-        await createBatch(this.services, batch, surveyId)
-
+        const cards = await createBatch(this.services, batch, surveyId);
+        console.log(cards)
       }
-  
     });
   }
 }

@@ -1,6 +1,6 @@
 
 import { router } from "../router.js";
-import { IServices } from "../services/container.js";
+import { IServices } from "../services/services.js";
 
 export class LogoutController {
     private reactiveViews: any[] = [];

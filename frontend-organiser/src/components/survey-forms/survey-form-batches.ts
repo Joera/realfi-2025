@@ -24,8 +24,9 @@ class SurveyFormBatches extends HTMLElement {
         // In draft mode, ensure there's always one batch to fill in
         if (this._mode === 'draft' && this._newBatches.length === 0) {
             this._newBatches.push({
-                id: crypto.randomUUID(),
+                id: '',
                 name: '',
+                survey: this._surveyId,
                 amount: 50,
                 medium: 'zip-file',
                 createdAt: Date.now()
@@ -62,8 +63,9 @@ class SurveyFormBatches extends HTMLElement {
         // In draft mode, ensure there's always one batch
         if (this._mode === 'draft' && this._newBatches.length === 0) {
             this._newBatches.push({
-                id: crypto.randomUUID(),
+                id: '',
                 name: '',
+                survey: this._surveyId,
                 amount: 50,
                 medium: 'zip-file',
                 createdAt: Date.now()
@@ -317,8 +319,9 @@ class SurveyFormBatches extends HTMLElement {
         // Add batch
         this.shadowRoot?.querySelector('#add-batch')?.addEventListener('click', () => {
             this._newBatches.push({ 
-                id: crypto.randomUUID(),
+                id: '',
                 name: '', 
+                survey: this._surveyId,
                 amount: 50, 
                 medium: 'zip-file',
                 createdAt: Date.now()

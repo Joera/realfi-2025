@@ -1,59 +1,85 @@
-import { hashMessage, keccak256, recoverAddress, recoverMessageAddress, toHex, verifyMessage } from "viem"
+import { recoverMessageAddress } from "viem";
+import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' };
+import { IServices } from './services.js';
 
+console.log('surveyStore import:', surveyStore);
+console.log('address:', surveyStore.address);
 
 export interface CardData {
-  nullifier: string
-  batchId: string
-  signature: string
-  surveyOwner: string
-  surveyId: string
+    nullifier: string;
+    batchId: string;
+    signature: string;
+    surveyOwner: string;
+    surveyId: string;
 }
 
-/**
- * Parse card data from URL query parameters
- * Expected format: https://s3ntiment.eth.link?s=secret&b=batchId&sig=signature
- */
 export const parseCardURL = async (): Promise<CardData | null> => {
-  try {
-    // Get current URL
-    const url = new URL(window.location.href)
-    const params = url.searchParams
-    
-    // Extract parameters
-    const nullifier = params.get('n')
-    const batchId = params.get('b') 
-    const signature = params.get('sig')
-    const surveyId = params.get('s')
-    
-    // Validate all required parameters are present
-    if (!nullifier || !batchId || !signature || !surveyId) {
-      console.error('Missing required parameters:', {
-        nullifier: !!nullifier,
-        batchId: !!batchId,
-        signature: !!signature
-      })
-      return null
+
+    try {
+        const params = new URL(window.location.href).searchParams;
+
+        const nullifier  = params.get('n');
+        const batchId    = params.get('b');
+        const signature  = params.get('sig');
+        const surveyId   = params.get('s');
+
+        if (!nullifier || !batchId || !signature || !surveyId) {
+            console.error('Missing required card parameters');
+            return null;
+        }
+
+        const decodedNullifier  = decodeURIComponent(nullifier);
+        const decodedBatchId    = decodeURIComponent(batchId);
+        const decodedSignature  = decodeURIComponent(signature) as `0x${string}`;
+        const decodedSurveyId   = decodeURIComponent(surveyId);
+
+        const surveyOwner = await recoverMessageAddress({
+            message: `${decodedNullifier}|${decodedBatchId}`,
+            signature: decodedSignature,
+        });
+
+        return {
+            nullifier:   decodedNullifier,
+            batchId:     decodedBatchId,
+            signature:   decodedSignature,
+            surveyOwner,
+            surveyId:    decodedSurveyId,
+        };
+
+    } catch (error) {
+        console.error('Error parsing card URL:', error);
+        return null;
+    }
+};
+
+export class Card {
+
+    public data: CardData;
+
+    constructor(data: CardData) {
+        this.data = data;
     }
 
-    const msg: string = `${decodeURIComponent(nullifier)}|${decodeURIComponent(batchId)}`;
-    // const msgHash = keccak256(toHex(msg));
-    const s: any = decodeURIComponent(signature) as `0x${string}` 
-
-    const recoveredAddress = await recoverMessageAddress({
-      message: msg,
-      signature: s
-    });
-
-    return {
-      nullifier: decodeURIComponent(nullifier),
-      batchId: decodeURIComponent(batchId),
-      signature: decodeURIComponent(signature),
-      surveyOwner: recoveredAddress,
-      surveyId: decodeURIComponent(surveyId)
+    async isUsed(services: IServices): Promise<boolean> {
+        return await services.viem.read(
+            surveyStore.address as `0x${string}`,
+            surveyStore.abi,
+            "isNullifierUsed",
+            [this.data.nullifier, this.data.batchId]
+        );
     }
-    
-  } catch (error) {
-    console.error('Error parsing URL:', error)
-    return null
-  }
+
+    async validate(services: IServices) {
+        return await services.account.write(
+            surveyStore.address as `0x${string}`,
+            surveyStore.abi,
+            'validateCard',
+            [this.data.nullifier, this.data.signature, this.data.batchId, this.data.surveyId],
+            { waitForReceipt: true, confirmations: 2 }
+        );
+    }
+
+    get surveyId() { return this.data.surveyId; }
+    get nullifier() { return this.data.nullifier; }
+    get batchId()   { return this.data.batchId; }
 }
