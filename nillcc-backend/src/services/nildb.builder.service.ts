@@ -3,7 +3,7 @@ import {
   Builder,
   Signer,
   Did,
-  Command,
+  Codec
 } from '@nillion/nuc';
 
 import {
@@ -43,7 +43,6 @@ export class NilDBBuilderService {
 
     async initBuilder () {
 
-    
         this.builderDid = await this.builderSigner.getDid();
         console.log('Builder DID:', this.builderDid.didString);
 
@@ -101,35 +100,63 @@ export class NilDBBuilderService {
     // }
 
     async createSurveyCollection(rawSchema: any, surveyOwnerDid: any) {
-
         try {
-
-        
-            await this.builderClient.createCollection({
+            const result = await this.builderClient.createCollection({
                 _id: rawSchema._id,
                 name: rawSchema.name,
                 type: rawSchema.type,
-                schema: rawSchema.schema,  // Het nested schema object
-                owner: surveyOwnerDid,
+                schema: rawSchema.schema,
+                owner: this.builderDid!.didString  // surveyOwnerDid,
             });
-
-        } catch (e) {
-
-            console.log(JSON.stringify(e))
-            console.log(JSON.stringify(e.body, null, 2));
+            console.log("collection created", result);
+            return rawSchema._id;
+        } catch (e: any) {
+            console.log("error message", e?.message);
+            console.log("error status", e?.status);
+            console.log("error body", e?.body);
+            console.log("error response", e?.response);
+            throw e; // don't swallow it
         }
-
-        return rawSchema._id;
     }
 
-    async getDelegation(surveyOwnerDid: any, collectionId: string) {
+    async getUserWriteDelegation(didString: string, surveyId: string) {
 
+
+        console.log('builderRootToken:', this.builderClient.rootToken ? 'present' : 'MISSING');
+        console.log('builderSigner:', this.builderSigner ? 'present' : 'MISSING');
+
+        console.log('collection', surveyId)
+
+        const userDid = Did.parse(didString);
+
+        console.log('issuing delegation to DID:', userDid);
+
+        const delegation = await Builder.delegationFrom(this.builderClient.rootToken)
+            .audience(userDid)
+            .command(NucCmd.nil.db.data.create)
+            .expiresIn(3600)
+            .sign(this.builderSigner);
+
+        const serialized = Codec.serializeBase64Url(delegation);
+
+        const parts = serialized.split('/');
+        const payloadB64 = parts[0].split('.')[1];
+        const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString());
+        console.log('delegation payload:', JSON.stringify(payload, null, 2));
+        console.log('proof chain length:', parts.length);
+
+        return serialized;
+    
+    }
+
+    
+
+    async getOwnerReadDelegation(surveyOwnerDid: Did, surveyId: string) {
         return await Builder.delegation()
             .audience(surveyOwnerDid)
             .command("/nil/db/data/read")
             .policy([
-                ["==", ".command", "/nil/db/data/read"],
-                ["==", ".args.collection", collectionId]  // Constrain via policy instead
+                ["==", ".args.collection", surveyId]
             ])
             .expiresIn(365 * 24 * 3600)
             .sign(this.builderSigner);

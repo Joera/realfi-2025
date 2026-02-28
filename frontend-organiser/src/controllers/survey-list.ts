@@ -3,10 +3,9 @@ import { IServices } from "../services/services.js";
 import { store } from "../state/store.js";
 import { reactive } from "../utils/reactive.js";
 import '../components/survey-results-list.js';
-import { isCid, isDid } from "../utils/regex.js";
-import { fetchSurvey } from "../factories/survey.factory.js";
 import { capabilityDelegation } from "../cap.js";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
+import { fetchAndDecryptSurvey } from "@s3ntiment/shared";
 
 
 export class SurveyListController {
@@ -50,19 +49,16 @@ export class SurveyListController {
     
     async process() {
 
-        const userAddress = this.services.waap.getAddress();
-        console.log("useraddress", userAddress)
+        const accountAddress = this.services.account.getAddress();
 
-        // who owns the surveys now/   signer or safe? 
-        const _surveys = await this.services.viem.read(surveyStore.address as `0x${string}`, surveyStore.abi,'getOwnerSurveys',[userAddress]);
+        let _surveys = await this.services.viem.read(surveyStore.address as `0x${string}`, surveyStore.abi,'getOwnerSurveys',[accountAddress]);
+        // _surveys = _surveys.filter( (s: string) => s == '3fd2377d-ba7d-4066-8401-efd89e1275c0');
 
-        console.log("MY S", _surveys)
-
-        const authContext = await this.services.lit.createAuthContext(this.services.waap.getWalletClient(), capabilityDelegation);
+        const authContext = await this.services.lit.createAuthContext(this.services.waap.getWalletClient(), capabilityDelegation, window.location.host);
 
         let surveys = await Promise.all(
             _surveys.map(async (surveyId: string) => {
-               return await fetchSurvey(this.services, authContext, surveyId)
+               return await fetchAndDecryptSurvey(this.services, surveyStore, surveyId, authContext)
             })
         );
 

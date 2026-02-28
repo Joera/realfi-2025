@@ -20,7 +20,7 @@ export class LitService {
         });
     }
 
-    async createAuthContext(waapWalletClient: any, capabilityDelegation: any): Promise<any> {
+    async createAuthContext(waapWalletClient: any, capabilityDelegation: any, domain: string): Promise<any> {
 
         if (!this.litClient) throw new Error("Lit client not initialized — call init() first");
 
@@ -41,16 +41,18 @@ export class LitService {
             }),
         });
 
+        console.log(capabilityDelegation)
+
         return await authManager.createEoaAuthContext({
             config: {
                 account: wrappedAccount,
             },
             authConfig: {
-                domain: window.location.host,
+                domain,
                 statement: "I authorize S3ntiment to access encrypted survey data",
                 expiration: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
                 resources: [
-                    ["access-control-condition-decryption", "*"],
+                  ["access-control-condition-decryption", "*"],
                 ],
                 capabilityAuthSigs: [capabilityDelegation],
             },
@@ -59,6 +61,9 @@ export class LitService {
     }
 
     async encrypt(toEncrypt: any, accs: any[]): Promise<any> {
+
+        console.log("b4 encryptin", this.litClient.networkName, accs)
+
         return await this.litClient.encrypt({
             dataToEncrypt: toEncrypt,
             unifiedAccessControlConditions: accs,
@@ -67,6 +72,9 @@ export class LitService {
     }
 
     async decrypt(encryptedData: any, authContext: any, accs: any[]): Promise<any> {
+
+        console.log("b4 decryptin", this.litClient.networkName, accs)
+
         return await this.litClient.decrypt({
             data: encryptedData,
             unifiedAccessControlConditions: accs,

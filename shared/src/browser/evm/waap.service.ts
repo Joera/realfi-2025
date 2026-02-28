@@ -2,7 +2,7 @@ import { AuthenticationMethod, initWaaP } from "@human.tech/waap-sdk";
 import type { SilkEthereumProviderInterface } from "@human.tech/waap-sdk";
 import { createPublicClient, createWalletClient, custom, http, keccak256, toBytes, toHex } from "viem";
 import type { Chain, WalletClient } from "viem";
-import { TxOptions, TxResult } from "./tx.types";
+import { TxOptions, TxResult } from "../../shared/evm/tx.types";
 
 declare global {
     interface Window {
@@ -75,6 +75,8 @@ export class WaapService {
         } else {
             console.warn("No accounts returned from WaaP — user may not be logged in yet");
         }
+
+        console.log("signer address", this.address);
 
         return this.walletClient;
     }
@@ -156,26 +158,8 @@ export class WaapService {
     }
 
     async createNillDBSeed() {
-
-          const signature = await this.walletClient!.signTypedData({
-            account: this.address || '0x',
-            domain: {
-                name: 'S3ntiment',
-                version: '1',
-                chainId: 8453, // Base
-                verifyingContract: '0x0000000000000000000000000000000000000000' // Dummy address
-            },
-            types: {
-                NillionAuth: [
-                    { name: 'action', type: 'string' }
-                ]
-            },
-            primaryType: 'NillionAuth',
-            message: {
-                action: 'Connect to blind computer for private responses'
-            }
-        });
-              
+        const signature = await this.signMessage('Connect to blind computer for private responses');
         return keccak256(toBytes(signature)).slice(2);
     }
+
 }

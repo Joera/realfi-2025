@@ -1,3 +1,5 @@
+import { CardData, CardSecret } from "../invites/index.js"
+
 export interface SurveyQuestion {
   id: string
   question: string
@@ -35,6 +37,7 @@ export interface QuestionGroup {
     questions: Question[]
 }
 
+
 export interface Batch {
     id: string
     name: string
@@ -42,6 +45,7 @@ export interface Batch {
     amount: number
     medium: 'zip-file' | 'cdn'
     createdAt: number
+    cards?: CardSecret[]
 }
 
 export interface Config {

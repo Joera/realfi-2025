@@ -1,7 +1,7 @@
-import { userStore, surveyStore, uiStore } from '../state/store.js';
+import { userStore, surveysStore, uiStore } from '../state/store.js';
 
 type TemplateFunction = () => string;
-type AnyStore = typeof userStore | typeof surveyStore | typeof uiStore;
+type AnyStore = typeof userStore | typeof surveysStore | typeof uiStore;
 
 class Reactive {
 

@@ -1,5 +1,5 @@
 import { Observable, Listener } from './observable.js';
-import { SurveyConfig } from '../types.js';
+import { Survey } from '@s3ntiment/shared';
 import { DraftMeta, DraftsMap } from './types.js';
 import {
   loadDraftsFromStorage,
@@ -10,7 +10,7 @@ import {
 } from './storage.js';
 
 export class DraftsStore {
-  private draftObservable: Observable<SurveyConfig>;
+  private draftObservable: Observable<Survey>;
   private currentIdObservable: Observable<string | null>;
 
   constructor() {
@@ -20,7 +20,7 @@ export class DraftsStore {
       ? drafts[currentDraftId].config
       : {};
 
-    this.draftObservable = new Observable<SurveyConfig>(currentDraft);
+    this.draftObservable = new Observable<Survey>(currentDraft);
     this.currentIdObservable = new Observable<string | null>(currentDraftId);
 
     // Auto-save on changes
@@ -29,7 +29,7 @@ export class DraftsStore {
     });
   }
 
-  get draft(): SurveyConfig {
+  get draft(): Survey {
     return this.draftObservable.get();
   }
 
@@ -37,14 +37,14 @@ export class DraftsStore {
     return this.currentIdObservable.get();
   }
 
-  update(updates: Partial<SurveyConfig>): void {
+  update(updates: Partial<Survey>): void {
     this.draftObservable.update(current => ({
       ...current,
       ...updates,
     }));
   }
 
-  subscribe(listener: Listener<SurveyConfig>): () => void {
+  subscribe(listener: Listener<Survey>): () => void {
     return this.draftObservable.subscribe(listener);
   }
 
@@ -103,7 +103,7 @@ export class DraftsStore {
     }
   }
 
-  private generateId(draft: SurveyConfig): string {
+  private generateId(draft: Survey): string {
     if (draft.title && draft.title.trim()) {
       const slug = slugify(draft.title);
       return `${slug}-${Date.now()}`;
@@ -111,7 +111,7 @@ export class DraftsStore {
     return `draft-${Date.now()}`;
   }
 
-  private saveCurrent(draft: SurveyConfig): void {
+  private saveCurrent(draft: Survey): void {
     let draftId = this.currentIdObservable.get();
     const now = Date.now();
     const drafts = loadDraftsFromStorage();

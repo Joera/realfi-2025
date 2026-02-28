@@ -1,15 +1,15 @@
 import { Observable } from './observable.js';
 import { CardState } from '../controllers/landing.ctrlr.js';
+import { Survey } from '@s3ntiment/shared';
 
-export interface SurveyEntry {
-    surveyId: string;
-    questions: number[];
+export interface SurveyEntry extends Survey {
+    answeredQuestions: number[];
     cardState?: CardState;
 }
 
 type SurveyMap = Record<string, SurveyEntry>;
 
-class SurveyStore {
+class SurveysStore {
 
     private observable: Observable<SurveyMap>;
     private _activeSurveyId: string | null = null;
@@ -33,15 +33,26 @@ class SurveyStore {
         if (!this.all[surveyId]) {
             this.observable.update(current => ({
                 ...current,
-                [surveyId]: { surveyId, questions: [] },
+                [surveyId]: { id: surveyId, answeredQuestions: [] },
             }));
         }
     }
 
-    update(surveyId: string, update: Partial<Omit<SurveyEntry, 'surveyId'>>) {
+    setData(surveyId: string, data: Survey) {
         this.observable.update(current => ({
             ...current,
-            [surveyId]: { ...current[surveyId], ...update, surveyId },
+            [surveyId]: { ...current[surveyId], ...data, id: surveyId },
+        }));
+    }
+
+    getData(surveyId: string): Survey | null {
+        return this.all[surveyId] ?? null;
+    }
+
+    update(surveyId: string, update: Partial<Omit<SurveyEntry, 'id'>>) {
+        this.observable.update(current => ({
+            ...current,
+            [surveyId]: { ...current[surveyId], ...update, id: surveyId },
         }));
     }
 
@@ -54,7 +65,13 @@ class SurveyStore {
     }
 
     persist() {
-        localStorage.setItem('surveys', JSON.stringify(this.all));
+        const stripped = Object.fromEntries(
+            Object.entries(this.all).map(([k, v]) => {
+                const { groups, batches, config, title, introduction, ...rest } = v;
+                return [k, rest];
+            })
+        );
+        localStorage.setItem('surveys', JSON.stringify(stripped));
     }
 
     clear(surveyId?: string) {
@@ -73,4 +90,4 @@ class SurveyStore {
     }
 }
 
-export const surveyStore = new SurveyStore();
+export const surveysStore = new SurveysStore();

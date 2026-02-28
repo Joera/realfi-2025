@@ -1,41 +1,12 @@
 import { getAddress, http, keccak256, toBytes } from "viem";
-import { accsForOwnerOrUser } from "@s3ntiment/shared/lit";
-import { Batch } from "@s3ntiment/shared/survey";
+import { accsForOwnerOrUser } from "@s3ntiment/shared";
+import { Batch } from "@s3ntiment/shared";
 
 import { isCid } from "../utils/regex";
 import { createBatchWallet, createZipFile, generateCardSecrets } from "./invitation.factory";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
 import { toSafeSmartAccount } from "permissionless/accounts";
 
-
-
-export const fetchSurvey = async (services: any, authContext: any, surveyId: string) => {
-
-    const s = await services.viem.readSurveyContract('getSurvey', [surveyId]);
-
-    let d: any = {}
-
-    if (isCid(s[0])) {
-
-        let c = JSON.parse(await services.ipfs.fetchFromPinata(s[0]));
-        const accs = accsForOwnerOrUser(surveyId, surveyStore.address);
-
-        console.log("b4 decryptin", services.lit.litClient.networkName)
-
-        try { 
-            const data = await services.lit.decrypt(c.surveyConfig, authContext, accs);
-            d = data.convertedData;
-        } catch (error){
-            console.log(error);
-        }
-
-        return {
-        id: surveyId,
-        createdAt: s[2],
-        ...d
-        }
-    }
-}
 
 export const createBatch = async (services: any, batch: Batch, surveyId: string) => {
 
@@ -44,17 +15,18 @@ export const createBatch = async (services: any, batch: Batch, surveyId: string)
     const { batchId, batchAccount } = await createBatchWallet(services);
     batch.id = getAddress(batchId);
     batch.survey = surveyId;
+    batch.cards = await generateCardSecrets(batchAccount, batch);
+    return batch;
+}
 
-    const cards = await generateCardSecrets(batchAccount, batch);
+export const createInvitations = async (batch: Batch) => {
+
+    if (batch.cards == undefined) return;
 
     if (batch.medium == 'zip-file') {
 
-        await createZipFile(cards, surveyId)
+        await createZipFile(batch.cards, batch.survey)
     }
-
-    await registerBatch(services, batch);
-
-    return cards;
 }
 
 
@@ -69,11 +41,7 @@ export const registerBatch = async (services: any, batch: Batch) => {
         waitForReceipt: true
     }
 
-    console.log(surveyStore.abi, args)
-
-    const registerBatch = await services.account.write(surveyStore.address, surveyStore.abi,"registerBatch", args, options);
-
-    console.log("batch", registerBatch,)
+    return await services.account.write(surveyStore.address, surveyStore.abi, "registerBatch", args, options);
 }
 
 export const deploySafe = async (services: any, salt: string): Promise<string> => {

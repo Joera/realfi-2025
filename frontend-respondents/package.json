@@ -20,18 +20,19 @@
   },
   "dependencies": {
     "@holonym-foundation/mishtiwasm": "^0.3.2",
-    "@human.tech/waap-sdk": "^1.0.3",
+    "@human.tech/waap-sdk": "^1.2.0",
     "@lit-protocol/auth": "^8.2.2",
     "@lit-protocol/lit-client": "^8.3.0",
     "@lit-protocol/networks": "^8.4.0",
     "@nillion/nuc": "^0.1.1",
     "@nillion/secretvaults": "^0.1.7",
+    "@s3ntiment/shared": "workspace:../shared",
     "dotenv": "^17.2.3",
+    "libsodium-wrappers-sumo": "0.7.13",
     "navigo": "^8.11.1",
     "permissionless": "^0.2.57",
-    "viem": "^2.45.0",
-    "vite-plugin-node-polyfills": "^0.24.0",
     "s3ntiment-contracts": "workspace:../contracts",
-    "@s3ntiment/shared": "workspace:../shared"
+    "viem": "^2.45.0",
+    "vite-plugin-node-polyfills": "^0.24.0"
   }
 }

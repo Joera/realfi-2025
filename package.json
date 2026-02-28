@@ -2,14 +2,17 @@
   "private": true,
   "scripts": {
     "build:shared": "pnpm --filter @s3ntiment/shared build",
-    "dev": "pnpm --filter frontend-organiser dev"
+    "dev": "pnpm --parallel -F frontend-organiser -F frontend-respondents -F nillcc-backend dev",
+    "sponsor": "npx tsx .protocol/scripts/get-sponsored.ts"
   },
   "pnpm": {
     "overrides": {
       "@lit-protocol/networks": "8.4.1",
       "viem": "2.46.2",
+      "libsodium-sumo": "0.7.13",
       "libsodium-wrappers-sumo": "0.7.13",
-      "@nillion/nuc": "^2.0.0"
+      "@nillion/nuc": "^2.0.0",
+      "@nillion/secretvaults": "2.0.0"
     }
   }
 }

@@ -92,24 +92,26 @@ export class IPFSMethods {
 
     async uploadToPinata(content: string | Blob, filename: string): Promise<string> {
 
+        console.log(this);
+
         const formData = new FormData();
         
         if (typeof content === 'string') {
-        formData.append('file', new Blob([content]), filename);
+            formData.append('file', new Blob([content]), filename);
         } else {
-        formData.append('file', content, filename);
+            formData.append('file', content, filename);
         }
 
         const response = await fetch(`https://api.pinata.cloud/pinning/pinFileToIPFS`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${this.pinataJWT}`
-        },
-        body: formData
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${this.pinataJWT}`
+            },
+            body: formData
         });
 
         if (!response.ok) {
-        throw new Error(`Pinata upload failed: ${response.statusText}`);
+            throw new Error(`Pinata upload failed: ${response.statusText}`);
         }
 
         const data: any = await response.json();

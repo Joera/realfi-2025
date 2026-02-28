@@ -2,35 +2,20 @@
   "name": "@s3ntiment/shared",
   "version": "0.0.1",
   "main": "dist/index.js",
+  "type": "module",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "import": "./src/shared/index.ts",
+      "types": "./src/shared/index.ts"
     },
-    "./evm": {
-      "types": "./dist/evm/index.d.ts",
-      "default": "./dist/evm/index.js"
+    "./browser": {
+      "import": "./src/browser/index.ts",
+      "types": "./src/browser/index.ts"
     },
-    "./evm/server": {
-      "types": "./dist/evm/server/index.d.ts",
-      "default": "./dist/evm/server/index.js"
-    },
-    "./lit": {
-      "types": "./dist/lit/index.d.ts",
-      "default": "./dist/lit/index.js"
-    },
-    "./ipfs": {
-      "types": "./dist/ipfs/index.d.ts",
-      "default": "./dist/ipfs/index.js"
-    },
-    "./nillion": {
-      "types": "./dist/nillion/index.d.ts",
-      "default": "./dist/nillion/index.js"
-    },
-    "./survey": {
-      "types": "./dist/survey/index.d.ts",
-      "default": "./dist/survey/index.js"
+    "./node": {
+      "import": "./src/node/index.ts",
+      "types": "./src/node/index.ts"
     }
   },
   "files": [
@@ -42,20 +27,24 @@
   },
   "peerDependencies": {
     "@human.tech/waap-sdk": "^1.2.0",
-    "permissionless": "^0.3.4",
-    "viem": "^2.46.2",
     "@lit-protocol/auth": "^8.2.3",
     "@lit-protocol/lit-client": "^8.3.1",
     "@lit-protocol/networks": "8.4.1",
     "@nillion/nuc": "^2.0.0",
-    "@nillion/secretvaults": "^2.0.0"
+    "@nillion/secretvaults": "^2.0.0",
+    "permissionless": "^0.3.4",
+    "viem": "^2.46.2"
+    
   },
   "devDependencies": {
     "@human.tech/waap-sdk": "^1.2.0",
-    "permissionless": "^0.3.4",
-    "viem": "^2.46.2",
     "@lit-protocol/auth": "^8.2.3",
     "@lit-protocol/lit-client": "^8.3.1",
-    "@lit-protocol/networks": "8.4.1"
+    "@lit-protocol/networks": "8.4.1",
+    "@nillion/nuc": "^2.0.0",
+    "@nillion/secretvaults": "^2.0.0",
+    "permissionless": "^0.3.4",
+    "viem": "^2.46.2"
   }
+
 }

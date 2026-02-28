@@ -1,10 +1,11 @@
 /// <reference types="vite/client" />
 
 
+import { Batch } from '@s3ntiment/shared';
 import { capabilityDelegation } from '../cap.js';
 import '../components/draft-survey-editor.js';
 import { createBatchWallet } from '../factories/invitation.factory.js';
-import { createBatch, deploySafe} from '../factories/survey.factory.js';
+import { createBatch, createInvitations, deploySafe} from '../factories/survey.factory.js';
 import { IServices } from '../services/services.js';
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
 
@@ -53,7 +54,7 @@ export class NewSurveyController {
 
       const surveyId = crypto.randomUUID();
 
-      const authContext = this.services.lit.createAuthContext(await this.services.waap.getWalletClient(), capabilityDelegation);
+      const authContext = this.services.lit.createAuthContext(await this.services.waap.getWalletClient(), capabilityDelegation, window.location.host);
 
        const safeAddress = import.meta.env.VITE_USE_SAFE == 'true' ? await this.services.safe.predictSafeAddress(surveyId) : "";
   
@@ -79,18 +80,22 @@ export class NewSurveyController {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          authContext,         
-          surveyConfig
+        body: JSON.stringify({         
+          surveyConfig,
+          smartAccountAddress: this.services.account.getAddress()
         })
       });
 
       const surveyCid = await res.text();
-      console.log(surveyCid);
-      const args = [surveyId, surveyCid.toString()];
+  
+      for (let batch of survey.batches) {
+        batch = await createBatch(this.services, batch, surveyId);
+         console.log(batch);
+      }
 
-      console.log(import.meta.env)
+      const args = [surveyId, surveyCid.toString(), survey.batches.map( (b: Batch) => b.id)];
 
+      
       if(import.meta.env.VITE_USE_SAFE == 'true') {
         // check if combination owner + survey id was used before ! .. update pattern 
 
@@ -105,9 +110,9 @@ export class NewSurveyController {
         console.log(receipt);
       }
 
-      for (const batch of survey.batches) {
-        const cards = await createBatch(this.services, batch, surveyId);
-        console.log(cards)
+      for (let batch of survey.batches) {
+        batch = await createInvitations(batch);
+       
       }
     });
   }

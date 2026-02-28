@@ -1,7 +1,7 @@
 import { reactive } from '../utils/reactive.js';
 import { Card, CardData, parseCardURL } from "../card.factory.js";
 import '../components/loading-spinner.js';
-import '../components/survey.js';
+import '../components/survey-questions.js';
 import { IServices } from '../services.js';
 import { uiStore, userStore } from '../state/store.js';
 import { base } from 'viem/chains';
@@ -101,6 +101,7 @@ export class LandingController {
 
             case CardState.RETURNING:
                 await this.services.waap.login(base);
+                await this.services.account.updateSigner(this.services.waap.walletClient);
                 router.navigate('/surveys/' + card.surveyId);
                 break;
 
@@ -111,6 +112,7 @@ export class LandingController {
                 userStore.set({ nullifier: card.nullifier, batchId: card.batchId });
                 userStore.persist();
                 await this.services.waap.login(base);
+                await this.services.account.updateSigner(this.services.waap.walletClient);
                 const tx = await card.validate(this.services);
                 if (tx.receipt?.status === 'success') {
                     router.navigate('/surveys/' + card.surveyId);

@@ -1,4 +1,4 @@
-import { Question, Survey } from '@s3ntiment/shared/survey';
+import { Question, Survey } from '@s3ntiment/shared';
 import { randomUUID } from 'crypto';
 
 
@@ -7,7 +7,7 @@ export const surveyCollectionSchema = (surveySlug: string) => {
     return {
         _id: randomUUID(),                 
         name: `survey-${surveySlug}`,
-        type: "standard",                  
+        type: "owned",                  
         schema: {
             type: "object",
             properties: {
@@ -41,7 +41,7 @@ export const createSurveyCollectionSchema = (config: Survey) => {
         return {
             _id: config.id,
             name: config.id || config.title || 'untitled',
-            type: "standard",
+            type: "owned",
             schema: { type: "object", properties }
         };
     }
@@ -55,7 +55,7 @@ export const createSurveyCollectionSchema = (config: Survey) => {
     return {
         _id: config.id,
         name: config.id || config.title || 'untitled',
-        type: "standard",
+        type: "owned",
         schema: { type: "object", properties }
     };
 }

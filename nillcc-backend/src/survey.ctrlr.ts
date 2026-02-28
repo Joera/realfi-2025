@@ -2,119 +2,70 @@ import { Builder, Codec, Signer } from "@nillion/nuc";
 import { secp256k1 } from "@noble/curves/secp256k1.js";
 import { bytesToHex, recoverMessageAddress, Signature, verifyMessage } from "viem";
 import { createSurveyCollectionSchema } from "./collection.factory.js";
-import { accsForSurveyOwner, accsForOwnerOrUser } from "@s3ntiment/shared/lit"
+import { accsForSurveyOwner, accsForOwnerOrUser } from "@s3ntiment/shared/node";
+import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 
 
 export class SurveyController {
     private nildb: any;
     private lit: any;
-    private pinata: any;
+    private ipfs: any;
     private viem: any;
 
-    constructor(nildb: any, lit: any, pinata: any, viem: any) {
+    constructor(nildb: any, lit: any, ipfs: any, viem: any) {
         this.nildb = nildb;
         this.lit = lit; 
-        this.pinata = pinata;
+        this.ipfs = ipfs;
         this.viem = viem;
     }
 
 
     async create(body: any) {
 
-        // signerAddress,
-        // authContext
-
-        const { surveyConfig } = body;
-
-        console.log(0)
+        const { surveyConfig, smartAccountAddress } = body;
         
         // Generate survey-specific keypair
-        const privateKeyBytes = secp256k1.utils.randomSecretKey();
-        const privateKeyHex = bytesToHex(privateKeyBytes).slice(2);
-        const surveyOwner = Signer.fromPrivateKey(privateKeyHex, 'key');
-        const surveyOwnerDid = await surveyOwner.getDid();
+        // const privateKeyBytes = secp256k1.utils.randomSecretKey();
+        // const privateKeyHex = bytesToHex(privateKeyBytes).slice(2);
+        // const surveyOwner = Signer.fromPrivateKey(privateKeyHex, 'key');
+        // const surveyOwnerDid = await surveyOwner.getDid();
 
-        console.log(1, surveyOwnerDid.didString)
+        // we're going to replace this with a PKP ... and use lit actions to assign delegations
 
         // // Create collection
         const rawSchema = createSurveyCollectionSchema(surveyConfig);
 
-        const collectionId = await this.nildb.createSurveyCollection(rawSchema, surveyOwnerDid.didString);
-        console.log(collectionId)
+        const collectionId = await this.nildb.createSurveyCollection(rawSchema, this.nildb.builderDid.didString);
+        console.log("collection id", collectionId)
 
-        const contract = process.env.SURVEY_STORE_ADDRESS || "";
+        const contract = surveyStore.address;
 
-        // Encrypt everything
-        const [encryptedSurveyConfig, encryptedKey] = await Promise.all([
-            this.lit.encrypt(surveyConfig, accsForOwnerOrUser(surveyConfig.id, contract)),
-            this.lit.encrypt(privateKeyHex, accsForSurveyOwner(surveyConfig.id, contract))
+        // Encrypt everything // we can now do this in FE i desired ... 
+        const [ encryptedSurveyConfig] = await Promise.all([ // encryptedKey
+            this.lit.encrypt(surveyConfig, accsForOwnerOrUser(surveyConfig.id, contract, smartAccountAddress)),
+            // this.lit.encrypt(privateKeyHex, accsForSurveyOwner(surveyConfig.id, contract, smartAccountAddress))
         ]);
 
         const config = {
             surveyId: surveyConfig.id,
-            nilDid: surveyOwnerDid.didString,
-            encryptedNilKey: encryptedKey,
+            nilDid: this.nildb.builderDid.didString, // surveyOwnerDid.didString,
+            // encryptedNilKey: encryptedKey,
             surveyConfig: encryptedSurveyConfig,
             config: surveyConfig.config
         };
 
         console.log('📦 Survey config:', config);
 
-        const res = await this.pinata.uploadJSON(config);
-
-        return res.IpfsHash;
+        return await this.ipfs.uploadToPinata(JSON.stringify(config));
     }
 
     async requestDelegation(body: any) {
 
         const { 
-            surveyId,
-            requestorDid,
-            signature,     
-            message  
+            did,
+            signature,
+            surveyId
         } = body;
-
-
-        const [ ipfsCid, owner, createdAt] = this.viem.readContract('getSurvey', surveyId)
-
-        const surveyConfig: any = JSON.parse(this.pinata.get(ipfsCid));
-
-        
-        // Path A: Direct owner
-        const isDirectOwner = await this.verifyOwnership(
-            owner,
-            requestorDid,
-            message,
-            signature
-        );
-
-        // Path B: Safe signer
-        // let isSafeSigner = false;
-        // if (safeAddress) {
-        //     isSafeSigner = await this.verifySafeSigner(
-        //         safeAddress,
-        //         owner,
-        //         requestorDid,
-        //         message,
-        //         signature
-        //     );
-        // }
-
-        if (!isDirectOwner) { //  && !isSafeSigner
-            return { 
-                error: 'Not authorized: must be survey owner or Safe signer' 
-            };
-        }
-
-        // 3. Create delegation (builder signs)
-        const delegation = this.nildb.getDelegation(owner, surveyConfig.collectionID) 
-        
-
-        // 4. Return serialized delegation
-        return {
-            delegation: Codec.serializeBase64Url(delegation),
-            expiresAt: Date.now() + (30 * 24 * 3600 * 1000)
-        };
 
     }
 

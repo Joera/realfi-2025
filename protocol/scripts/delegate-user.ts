@@ -12,7 +12,9 @@ async function main() {
 
   console.log(process.env.PRIVATE_KEY)
 
-    const userAddr = getAddress(process.argv[2]); 
+    const userAddr = getAddress(process.argv[2]) || "0x609E288979c68d1486B600f82ea8E278B3e88148"; 
+
+    console.log(userAddr);
     
     const litClient = await createLitClient({
         network: nagaTest,

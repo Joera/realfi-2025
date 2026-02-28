@@ -15,5 +15,8 @@
     "useUnknownInCatchVariables": false
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist"],
+  "paths": {
+    "@s3ntiment/shared": ["../shared/src/node/index.ts"]
+  }
 }

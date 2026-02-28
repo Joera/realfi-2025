@@ -3,8 +3,7 @@ import { encodePacked, keccak256, toBytes, toHex } from 'viem'
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { privateKeyToAccount } from 'viem/accounts';
-import { Batch } from '../types';
-// import { v4 as uuidv4 } from 'uuid';
+import { Batch, CardSecret } from '@s3ntiment/shared';
 
 
 const baseUrl = "http://localhost:9999"; // https://s3ntiment.composible.io";
@@ -66,7 +65,7 @@ export const createBatchWallet = async (services: any) => {
 export const generateCardSecrets = async (
   batchAccount: any,
   batch: Batch,
-) => {
+) : Promise<CardSecret[]> => {
   const cards = await Promise.all(
     Array.from({ length: batch.amount }, async () => {
       const nullifier = generateRandomNullifier();
@@ -80,6 +79,8 @@ export const generateCardSecrets = async (
       return { nullifier, signature, url, svgString: await generateQRCodeSVG(url) };
     })
   );
+
+  console.log('cards', cards)
   return cards;
 }
 

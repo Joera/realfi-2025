@@ -7,10 +7,11 @@ import '../components/survey-detail-config.js';
 import '../components/survey-forms/survey-form-questions.js';
 import '../components/survey-forms/survey-form-batches.js';
 import { router } from "../router.js";
-import { createBatch, fetchSurvey } from "../factories/survey.factory.js";
+import { createBatch } from "../factories/survey.factory.js";
 import { generateCardSecrets } from "../factories/invitation.factory.js";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
 import { capabilityDelegation } from "../cap.js";
+import { fetchAndDecryptSurvey } from "@s3ntiment/shared";
 
 
 export class SurveyController {
@@ -179,8 +180,8 @@ export class SurveyController {
          if (!this.survey) {
             console.log('Survey not in store, fetching...');
             
-            const authContext = await this.services.lit.createAuthContext(this.services.waap.getWalletClient(), capabilityDelegation);
-            this.survey = await fetchSurvey(this.services, authContext, this.surveyId)
+            const authContext = await this.services.lit.createAuthContext(this.services.waap.getWalletClient(), capabilityDelegation, window.location.host);
+            this.survey = await fetchAndDecryptSurvey(this.services, surveyStore, this.surveyId, authContext)
             console.log(this.survey)
             store.addSurvey(this.survey);
         }

@@ -1,23 +1,23 @@
 import { Observable, Listener } from './observable.js';
-import { SurveyConfig } from '../types.js';
+import { Survey } from '@s3ntiment/shared';
 
 export class SurveysStore {
-  private observable: Observable<SurveyConfig[]>;
+  private observable: Observable<Survey[]>;
 
   constructor() {
-    this.observable = new Observable<SurveyConfig[]>([]);
+    this.observable = new Observable<Survey[]>([]);
   }
 
-  get all(): SurveyConfig[] {
+  get all(): Survey[] {
     return this.observable.get();
   }
 
-  set(surveys: SurveyConfig[]): void {
+  set(surveys: Survey[]): void {
     console.log('hello')
     this.observable.set(surveys);
   }
 
-  add(survey: SurveyConfig): void {
+  add(survey: Survey): void {
     this.observable.update(current => [...current, survey]);
   }
 
@@ -29,7 +29,7 @@ export class SurveysStore {
     this.observable.set([]);
   }
 
-  subscribe(listener: Listener<SurveyConfig[]>): () => void {
+  subscribe(listener: Listener<Survey[]>): () => void {
     return this.observable.subscribe(listener);
   }
 }

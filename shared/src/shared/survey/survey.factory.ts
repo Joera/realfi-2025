@@ -1,8 +1,8 @@
 import { base } from 'viem/chains';
-import { accsForOwnerOrUser } from '../lit/';
+import { accsForOwnerOrUser } from '../lit/index.js';
 
 
-export const fetchAndDecryptSurvey = async (services: any, deployment: any, surveyId: string, capabilityDelegation: any) => {
+export const fetchAndDecryptSurvey = async (services: any, deployment: any, surveyId: string, authContext: any) => {
 
     const surveyInfo = await services.viem.read(
       deployment.address as `0x{string}`, 
@@ -13,11 +13,8 @@ export const fetchAndDecryptSurvey = async (services: any, deployment: any, surv
     
     const config = JSON.parse(await services.ipfs.fetchFromPinata(surveyInfo[0]));
 
-    const accs = accsForOwnerOrUser(surveyId, deployment.address);
-    
+    const accs = accsForOwnerOrUser(surveyId, deployment.address, services.account.getAddress());
     console.log("b4 decryptin", services.lit.litClient.networkName)
-
-    const authContext = await services.lit.createAuthContext(services.waap.walletClient, capabilityDelegation)
 
     let d: any;
 
@@ -31,9 +28,12 @@ export const fetchAndDecryptSurvey = async (services: any, deployment: any, surv
     return {
     id: surveyId,
     createdAt: surveyInfo[2],
-    ...d
+    ...d,
+    ...config
     }
+}
 
+export const encryptAndStoreSurvey = async () => {
 
-
+    // encryption part happens inside a promise.all 
 }

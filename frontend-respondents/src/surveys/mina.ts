@@ -1,4 +1,4 @@
-import { SurveyConfig } from "../components/survey";
+import { SurveyConfig } from "../components/survey-questions";
 
 export const minaSurveyConfig: SurveyConfig = {
   title: "Our 1st survey",

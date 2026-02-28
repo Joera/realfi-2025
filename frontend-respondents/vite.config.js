@@ -15,7 +15,7 @@ export default defineConfig({
   root: '.',
   server: {
     port: 9999,
-    open: true
+    open: false
   },
   build: {
     outDir: 'dist',
@@ -41,10 +41,9 @@ export default defineConfig({
   resolve: {
     alias: {
       buffer: 'buffer',
-      'libsodium-wrappers-sumo': path.resolve(
-        __dirname,
-        'node_modules/.pnpm/libsodium-wrappers-sumo@0.7.16/node_modules/libsodium-wrappers-sumo/dist/modules-sumo/libsodium-wrappers.js'
-      )
+      'react': path.resolve(__dirname, 'src/empty-module.ts'),
+      'react-dom': path.resolve(__dirname, 'src/empty-module.ts'),
+      'libsodium-wrappers-sumo': 'libsodium-wrappers-sumo'
     },
   },
   optimizeDeps: {

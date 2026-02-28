@@ -7,9 +7,8 @@ import { base } from 'viem/chains';
 // import { NilAIService } from './nillai.service.js';
 
 import { SurveyController } from './survey.ctrlr.js';
-import { ViemService } from '@s3ntiment/shared/evm/server';
-import { LitService } from '@s3ntiment/shared/lit';
-import { IPFSMethods } from '@s3ntiment/shared/ipfs';
+import { ViemService, LitService, IPFSMethods } from "@s3ntiment/shared";
+import { Codec } from '@nillion/nuc';
 
 const app = express();
 app.use(cors());
@@ -17,6 +16,8 @@ app.use(express.json());
 
 const PINATA_KEY = process.env.VITE_PINATA_KEY || "";
 const PINATA_SECRET = process.env.VITE_PINATA_SECRET || "";
+const PINATA_JWT = process.env.VITE_PINATA_JWT || "";
+const PINATA_GATEWAY = process.env.VITE_PINATA_GATEWAY || "";
 const KUBO_ENDPOINT = process.env.VITE_KUBO_ENDPOINT || "";
 const ALCHEMY_KEY = process.env.VITE_ALCHEMY_KEY || "";
 const LIT_NETWORK = process.env.VITE_LIT_NETWORK || "";
@@ -25,8 +26,9 @@ const viem = new ViemService(base, ALCHEMY_KEY);
 const nildb = new NilDBBuilderService();
 // const nilai: any;
 const lit = new LitService(LIT_NETWORK);
-const ipfs = new IPFSMethods(KUBO_ENDPOINT,PINATA_KEY, PINATA_SECRET);
+const ipfs = new IPFSMethods(KUBO_ENDPOINT,PINATA_JWT, PINATA_GATEWAY);
 const survey = new SurveyController(nildb, lit, ipfs, viem);
+await nildb.initBuilder();
 await lit.init(); 
 
 app.post('/api/create-survey', async (req, res) => {
@@ -38,20 +40,16 @@ app.post('/api/create-survey', async (req, res) => {
 
 });
 
-app.post('/api/request-delegation', async (req, res) => {
+app.post('/api/request-user-delegation', async (req, res) => {
 
+  const { didString, surveyId, signature} = req.body;
 
-    // const delegation = await survey.requestDelegation(req.body)
+    // check signature againt isParticipant
 
-    // // 1. Fetch survey from contract
-    // // const survey = await surveyContract.getSurvey(collectionId);
-    
+    const delegation =  await nildb.getUserWriteDelegation(didString, surveyId);
 
-    // // 4. Return serialized delegation
-    // res.json({
-    //     delegation: Codec.serializeBase64Url(delegation),
-    //     expiresAt: Date.now() + (30 * 24 * 3600 * 1000)
-    // });
+    res.json({ delegation });
+
 });
 
 

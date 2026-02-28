@@ -1,13 +1,14 @@
 import { toSimpleSmartAccount } from "permissionless/accounts";
-import { createSmartAccountClient } from "permissionless";
+import { createSmartAccountClient, SmartAccountClient } from "permissionless";
 import { createPimlicoClient } from "permissionless/clients/pimlico";
 import { createPublicClient, encodeFunctionData, http, parseEther, Transport } from "viem";
 import type { Chain } from "viem";
-import { getRPCUrl } from "./chains.factory";
-import { TxOptions, TxResult } from "./tx.types";
-import { extractDeployedAddress } from "./contract-address.factory";
+
+import { getRPCUrl, TxOptions, TxResult } from "@s3ntiment/shared";
+import { extractDeployedAddress } from "@s3ntiment/shared";
 
 export interface IPermissionlessSimpleService {
+    getSmartAccountClient: () => SmartAccountClient;
     updateSigner: (signer: any) => Promise<string>;
     connectToAccount: () => Promise<void>;
     write: (address: string, abi: any, method: string, args: any[], options?: TxOptions) => Promise<TxResult>;
@@ -46,6 +47,10 @@ export class PermissionlessSimpleService implements IPermissionlessSimpleService
         });
     }
 
+    getSmartAccountClient() {
+        return this.smartAccountClient;
+    }
+
     async updateSigner(waapWalletClient: any): Promise<string> {
         this.signer = waapWalletClient;
         await this.connectToAccount();
@@ -70,6 +75,12 @@ export class PermissionlessSimpleService implements IPermissionlessSimpleService
                     (await this.pimlicoClient.getUserOperationGasPrice()).fast,
             },
         });
+
+        console.log("account address", this.smartAccount.address)
+    }
+
+    getAddress(): `0x${string}` {
+        return this.smartAccount.address;
     }
 
     async write(

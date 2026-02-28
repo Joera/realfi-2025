@@ -1,17 +1,11 @@
 import { recoverMessageAddress } from "viem";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' };
 import { IServices } from './services.js';
+import { CardData } from "@s3ntiment/shared";
 
 console.log('surveyStore import:', surveyStore);
-console.log('address:', surveyStore.address);
+console.log('contract address:', surveyStore.address);
 
-export interface CardData {
-    nullifier: string;
-    batchId: string;
-    signature: string;
-    surveyOwner: string;
-    surveyId: string;
-}
 
 export const parseCardURL = async (): Promise<CardData | null> => {
 

@@ -1,5 +1,5 @@
 
-import { nagaTest } from "@lit-protocol/networks";
+import { nagaDev, nagaTest } from "@lit-protocol/networks";
 import { createLitClient, type LitClient } from "@lit-protocol/lit-client";
 import { Account, privateKeyToAccount } from "viem/accounts";
 import dotenv from "dotenv";
@@ -19,7 +19,7 @@ async function main() {
     console.log("user", userAddr)
     
     const litClient = await createLitClient({
-        network: nagaTest,
+        network: nagaDev,
       });
     
     const sponsorAccount: Account = privateKeyToAccount(

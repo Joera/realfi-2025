@@ -1,11 +1,15 @@
 import { 
   ViemService,
-  WaapService,
   PermissionlessSimpleService,
   LitService,
   IPFSMethods,
   NillDBUserService
 } from "@s3ntiment/shared";
+
+import {
+  WaapService
+} from "@s3ntiment/shared/browser";
+
 import { base } from "viem/chains";
 
 export interface IServices {

@@ -1,19 +1,19 @@
 import { reactive } from '../utils/reactive.js';
 
 import '../components/loading-spinner.js';
-import '../components/survey.js';
+import '../components/survey-questions.js';
 import { IServices } from '../services.js';
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
-import { fetchAndDecryptSurvey } from '@s3ntiment/shared';
+import { fetchAndDecryptSurvey, Survey } from '@s3ntiment/shared';
 import { capabilityDelegation } from '../cap.js';
-
-
+import { surveysStore } from '../state/surveys.store.js';
 
 export class SurveyController {
   private reactiveViews: any[] = [];
   documentId: any;
   services: IServices;
   surveyId: string;
+  config?: Survey;
 
   constructor(services: IServices, surveyId: string) {
 
@@ -27,18 +27,15 @@ export class SurveyController {
     if (!app) return;
 
     app.innerHTML = `
-      <div id="survey-content"></div>
+      <div id="survey-content" class="container"></div>
     `;
 
     const view = reactive('#survey-content', () => {
-      
-        return `<survey-questions survey-id=${this.surveyId}></survey-questions>`;
-        
+        return `<survey-questions class="container constainer-small" survey-id="${this.surveyId}"></survey-questions>`;
     });
 
     if (view) {
-    //   view.bind(uiStore);
-    //   view.bind(userStore);       
+      view.bind(surveysStore);       
       this.reactiveViews.push(view);
     }
   }
@@ -50,10 +47,13 @@ export class SurveyController {
 
   async render() {
 
-    const survey = await fetchAndDecryptSurvey(this.services, surveyStore, this.surveyId, capabilityDelegation)
+    const authContext = await this.services.lit.createAuthContext(this.services.waap.getWalletClient(), capabilityDelegation, window.location.host);
+    const survey = await fetchAndDecryptSurvey(this.services, surveyStore, this.surveyId, authContext)
+    this.config = survey;
     console.log("SURVEY", survey)
-
+    surveysStore.setData(this.surveyId, survey)
     this.renderTemplate();
+    this.setSurveyListener();
     
   }
 
@@ -63,18 +63,20 @@ export class SurveyController {
   }
 
 
-  async setSurveyListener(surveyId: string) {
+  async setSurveyListener() {
     document.addEventListener('survey-complete', async (event: any) => {
       console.log('Survey completed!');
       console.log('event:', event);
 
-      const seed = await this.services.waap.createNillDBSeed()
+      const seed = await this.services.waap.createNillDBSeed();
       await this.services.nillDB.init(seed);
-      
+          
+      const delegationToken = await this.services.nillDB.getUserDelegationToken("", this.surveyId, import.meta.env.VITE_BACKEND);
+
       if (event.detail.documentId != undefined) {
-        await this.services.nillDB.update(event.detail.answers, surveyId, event.detail.documentId);
+        await this.services.nillDB.update(this.config!, event.detail.answers, this.surveyId, delegationToken, event.detail.documentId);
       } else {
-        await this.services.nillDB.store(event.detail.answers, surveyId);
+        await this.services.nillDB.store(this.config!, event.detail.answers, this.surveyId, delegationToken);
       }
     });
   }

@@ -1,4 +1,4 @@
-import { SurveyConfig } from "../components/survey";
+import { SurveyConfig } from "../components/survey-questions";
 
 export const defaultSurveyConfig: SurveyConfig = {
   title: "Web3 Onboarding Experience",

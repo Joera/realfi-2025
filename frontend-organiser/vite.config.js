@@ -14,7 +14,7 @@ export default defineConfig({
   root: '.',
   server: {
     port: 7783,
-    open: true
+    open: false
   },
   build: {
     outDir: 'dist',
@@ -40,6 +40,8 @@ export default defineConfig({
   resolve: {
     alias: {
       buffer: 'buffer',
+      'react': path.resolve(__dirname, 'src/empty-module.ts'),
+      'react-dom': path.resolve(__dirname, 'src/empty-module.ts')
     },
   },
   optimizeDeps: {
