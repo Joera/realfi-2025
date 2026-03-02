@@ -27,11 +27,11 @@ export class SurveyController {
     if (!app) return;
 
     app.innerHTML = `
-      <div id="survey-content" class="container"></div>
+      <div id="survey-content" class="container centered"></div>
     `;
 
     const view = reactive('#survey-content', () => {
-        return `<survey-questions class="container constainer-small" survey-id="${this.surveyId}"></survey-questions>`;
+        return `<survey-questions class="container container-small" survey-id="${this.surveyId}"></survey-questions>`;
     });
 
     if (view) {

@@ -5,9 +5,11 @@ import { Account, privateKeyToAccount } from "viem/accounts";
 import dotenv from "dotenv";
 import { getAddress } from "viem";
 import { createPaymentDelegationAuthSig } from '@lit-protocol/auth-helpers';
+import path from 'path';
 
 // Load environment variables
 dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 
 async function main() {
@@ -17,6 +19,8 @@ async function main() {
     const userAddr = getAddress(process.argv[2] || "0x609E288979c68d1486B600f82ea8E278B3e88148"); 
 
     console.log("user", userAddr)
+
+    console.log(process.env)
     
     const litClient = await createLitClient({
         network: nagaDev,

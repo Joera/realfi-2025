@@ -1,7 +1,7 @@
 import { typograhyStyles } from '../../styles/shared-typograhy-styles.js'
 import { colourStyles } from '../../styles/shared-colour-styles.js'
 import { buttonStyles } from '../../styles/shared-button-styles.js'
-import type { Question } from '../../types.js'
+import type { Question } from '@s3ntiment/shared'
 import './scale-config.js'
 import './options-editor.js'
 
@@ -62,7 +62,7 @@ class QuestionCard extends HTMLElement {
         this.shadowRoot.innerHTML = `
         <style>
             :host {
-                --green: rgb(42.9834254144, 112.6165745856, 98.0022099448);
+                --green: #3473ab;
                 display: block;
                 margin-bottom: 1.5rem;
             }

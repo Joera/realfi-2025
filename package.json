@@ -3,7 +3,7 @@
   "scripts": {
     "build:shared": "pnpm --filter @s3ntiment/shared build",
     "dev": "pnpm --parallel -F frontend-organiser -F frontend-respondents -F nillcc-backend dev",
-    "sponsor": "npx tsx .protocol/scripts/get-sponsored.ts"
+    "sponsor": "npx tsx ./protocol/scripts/get-sponsored.ts"
   },
   "pnpm": {
     "overrides": {

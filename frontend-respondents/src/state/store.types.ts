@@ -12,7 +12,7 @@ export interface SurveyState {
     cardState?: CardState;
 }
 
-export type CardView = 'nocard' | 'blocked' | 'survey';
+export type CardView = 'nocard' | 'blocked' | 'survey' | 'welcomeback' | 'login';
 
 export interface UIState {
     cardView: CardView;

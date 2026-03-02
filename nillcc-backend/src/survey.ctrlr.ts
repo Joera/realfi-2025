@@ -35,6 +35,8 @@ export class SurveyController {
         // // Create collection
         const rawSchema = createSurveyCollectionSchema(surveyConfig);
 
+        console.log(JSON.stringify(rawSchema))
+
         const collectionId = await this.nildb.createSurveyCollection(rawSchema, this.nildb.builderDid.didString);
         console.log("collection id", collectionId)
 

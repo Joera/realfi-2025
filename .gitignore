@@ -3,3 +3,5 @@
 **/output
 **/dist
 **/package-lock.json
+node
+cards

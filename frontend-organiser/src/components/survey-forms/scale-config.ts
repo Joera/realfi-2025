@@ -57,7 +57,7 @@ class ScaleConfig extends HTMLElement {
         this.shadowRoot.innerHTML = `
         <style>
             :host {
-                --green: rgb(42.9834254144, 112.6165745856, 98.0022099448);
+                --green: #3473ab;
                 display: block;
             }
 

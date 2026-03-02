@@ -2,7 +2,7 @@ import { typograhyStyles } from '../../styles/shared-typograhy-styles.js'
 import { colourStyles } from '../../styles/shared-colour-styles.js'
 import { buttonStyles } from '../../styles/shared-button-styles.js'
 import { store } from '../../state/store.js'
-import type { Batch } from '../../types.js'
+import type { Batch } from '@s3ntiment/shared'
 
 class SurveyFormBatches extends HTMLElement {
     private _existingBatches: Batch[] = []  // from contract, read-only
@@ -105,7 +105,7 @@ class SurveyFormBatches extends HTMLElement {
         this.shadowRoot.innerHTML = `
         <style>
             :host {
-                --green: rgb(42.9834254144, 112.6165745856, 98.0022099448);
+                --green: #3473ab;
                 display: block;
             }
 

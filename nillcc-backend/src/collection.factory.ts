@@ -2,39 +2,39 @@ import { Question, Survey } from '@s3ntiment/shared';
 import { randomUUID } from 'crypto';
 
 
-export const surveyCollectionSchema = (surveySlug: string) => {
+// export const surveyCollectionSchema = (surveySlug: string) => {
 
-    return {
-        _id: randomUUID(),                 
-        name: `survey-${surveySlug}`,
-        type: "owned",                  
-        schema: {
-            type: "object",
-            properties: {
-                _id: { type: "string", format: "uuid" },
-                surveyId: { type: "string" },
-                answers: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        properties: {
-                            questionId: { type: "string" },
-                            answer: {
-                                type: "object",
-                                properties: { "%share": { type: "string" } }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    };
-};
+//     return {
+//         _id: randomUUID(),                 
+//         name: `survey-${surveySlug}`,
+//         type: "owned",                  
+//         schema: {
+//             type: "object",
+//             properties: {
+//                 _id: { type: "string", format: "uuid" },
+//                 surveyId: { type: "string" },
+//                 answers: {
+//                     type: "array",
+//                     items: {
+//                         type: "object",
+//                         properties: {
+//                             questionId: { type: "string" },
+//                             answer: {
+//                                 type: "object",
+//                                 properties: { "%share": { type: "string" } }
+//                             }
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//     };
+// };
 
 export const createSurveyCollectionSchema = (config: Survey) => {
     const properties: Record<string, any> = {
         _id: { type: "string", format: "uuid" },
-        surveyId: { type: "string" },
+        // surveyId: { type: "string" },
     };
 
     if (!config.groups) {

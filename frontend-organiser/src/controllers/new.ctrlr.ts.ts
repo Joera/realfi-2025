@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
 
-import { Batch } from '@s3ntiment/shared';
+import { Batch, CardData } from '@s3ntiment/shared';
 import { capabilityDelegation } from '../cap.js';
 import '../components/draft-survey-editor.js';
 import { createBatchWallet } from '../factories/invitation.factory.js';
@@ -90,7 +90,7 @@ export class NewSurveyController {
   
       for (let batch of survey.batches) {
         batch = await createBatch(this.services, batch, surveyId);
-         console.log(batch);
+         console.log(JSON.stringify(batch.cards.map( (c: any ) => c.url)));
       }
 
       const args = [surveyId, surveyCid.toString(), survey.batches.map( (b: Batch) => b.id)];

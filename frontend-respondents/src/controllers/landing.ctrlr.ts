@@ -1,11 +1,12 @@
 import { reactive } from '../utils/reactive.js';
-import { Card, CardData, parseCardURL } from "../card.factory.js";
+import { Card, parseCardURL } from "../card.factory.js";
 import '../components/loading-spinner.js';
 import '../components/survey-questions.js';
 import { IServices } from '../services.js';
 import { uiStore, userStore } from '../state/store.js';
 import { base } from 'viem/chains';
 import { router } from '../router.js';
+import { CardData } from '@s3ntiment/shared';
 
 export enum CardState {
     FIRST_TIME = 'first-time',
@@ -40,12 +41,28 @@ export class LandingController {
         const app = document.querySelector('#app');
         if (!app) return;
 
-        app.innerHTML = `<div id="landing-content"></div>`;
+        app.innerHTML = `<div id="landing-content" class="centered"></div>`;
 
         const view = reactive('#landing-content', () => {
             const { cardView } = uiStore.state;
 
             switch (cardView) {
+                case 'login':
+                    return `
+                        <div class="onboarding-message">
+                            <h2>Welcome</h2>
+                            <p>Use your e-mail to sign in</p>
+                        </div>
+                    `;
+
+                case 'welcomeback':
+                    return `
+                        <div class="onboarding-message">
+                            <h2>Welcome back!</h2>
+                            <p>We're taking you to the survey ... </p>
+                        </div>
+                    `;
+
                 case 'nocard':
                     return `
                         <div class="onboarding-message">
@@ -61,7 +78,7 @@ export class LandingController {
                         </div>
                     `;
                 case 'survey':
-                    return `<survey-questions survey-id=${surveyId}></survey-questions>`;
+                    return `<survey-questions survey-id=${surveyId} class="centered"></survey-questions>`;
                 default:
                     return '';
             }
@@ -100,12 +117,14 @@ export class LandingController {
                 break;
 
             case CardState.RETURNING:
+                uiStore.set({ cardView: 'welcomeback' });
                 await this.services.waap.login(base);
                 await this.services.account.updateSigner(this.services.waap.walletClient);
                 router.navigate('/surveys/' + card.surveyId);
                 break;
 
             case CardState.FIRST_TIME:
+                uiStore.set({ cardView: 'login' });
                 if (userStore.nullifier && userStore.nullifier !== card.nullifier) {
                     userStore.clear();
                 }

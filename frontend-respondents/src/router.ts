@@ -5,6 +5,7 @@ import { LandingController } from './controllers/landing.ctrlr.js';
 import { IServices } from './services.js';
 import { AboutController } from './controllers/about.ctrlr.js';
 import { SurveyController } from './controllers/survey.ctrlr.js';
+import { LogoutController } from './components/logout.ctrlr.js';
 
 const router = new Navigo('/');
 
@@ -27,6 +28,11 @@ export const initRouter = (services: IServices) => {
       }
       
       currentController = new SurveyController(services, surveyId);
+      currentController.render();
+    })
+    .on('/logout', () => {
+      if (currentController?.destroy) currentController.destroy();
+      currentController = new LogoutController(services);
       currentController.render();
     })
     .on('/about', () => {

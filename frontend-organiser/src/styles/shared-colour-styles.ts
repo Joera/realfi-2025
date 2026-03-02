@@ -47,7 +47,7 @@ function adjustLightness(hex: string, lightnessChange: number): string {
   const toHex = (x: number) => Math.round(x * 255).toString(16).padStart(2, '0');
   return `#${toHex(newR)}${toHex(newG)}${toHex(newB)}`;
 }
-const bg =  "#7ccdbc";
+const bg =  "#b3cfe8";
 const bgLightest =  (adjustLightness(bg, 15));
 const bgLighter =  (adjustLightness(bg, 5));
 const bgDarker =  (adjustLightness(bg, -10));
