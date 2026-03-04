@@ -6,6 +6,22 @@ import { CardData } from "@s3ntiment/shared";
 // console.log('surveyStore import:', surveyStore);
 console.log('contract address:', surveyStore.address);
 
+const encodeNullifierBatchCombo = (decodedNullifier: string, decodedBatchId: string) => {
+
+    const encoder = new TextEncoder();
+    const nullifierBytes = encoder.encode(decodedNullifier);
+    const pipeBytes = encoder.encode("|");
+    const addressBytes = decodedBatchId.slice(2);
+
+    const hexStr = Array.from(nullifierBytes)
+    .concat(Array.from(pipeBytes))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('') + addressBytes;
+
+    const packedMessage = ('0x' + hexStr) as `0x${string}`;
+    return keccak256(packedMessage);
+}
+
 
 export const parseCardURL = async (): Promise<CardData | null> => {
 
@@ -28,16 +44,9 @@ export const parseCardURL = async (): Promise<CardData | null> => {
         const decodedSignature  = decodeURIComponent(signature) as `0x${string}`;
         const decodedSurveyId   = decodeURIComponent(surveyId);
 
-        const encoder = new TextEncoder();
-        const nullifierBytes = encoder.encode(decodedNullifier);
-        const pipeBytes = encoder.encode("|");
+        const messageHash = encodeNullifierBatchCombo(decodedNullifier, decodedBatchId);
 
-        const nullifierHex = Array.from(nullifierBytes).map(b => b.toString(16).padStart(2, '0')).join('');
-        const pipeHex = Array.from(pipeBytes).map(b => b.toString(16).padStart(2, '0')).join('');
-        const addressHex = decodedBatchId.slice(2).toLowerCase();
-
-        const packedMessage = ('0x' + nullifierHex + pipeHex + addressHex) as `0x${string}`;
-        const messageHash = keccak256(packedMessage);
+        console.log("encoded combo", messageHash)
 
         const surveyOwner = await recoverMessageAddress({
             message: { raw: messageHash },

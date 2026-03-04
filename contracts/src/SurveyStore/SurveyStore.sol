@@ -223,7 +223,7 @@ contract S3ntimentSurveyStore {
     ) external {
         if (surveys[surveyId].owner == address(0)) revert SurveyNotFound();
         if (batches[surveyId][batchId].createdAt == 0) revert BatchNotFound();
-
+ 
         bytes32 messageHash = keccak256(abi.encodePacked(nullifier, "|", batchId));
         
         // NO Ethereum prefix - organiser signed raw hash
@@ -233,7 +233,7 @@ contract S3ntimentSurveyStore {
         if (usedNullifiers[messageHash]) revert NullifierAlreadyUsed();
 
         usedNullifiers[messageHash] = true;
-        batches[surveyId][batchId].cardCount++;
+        batches[surgit logsveyId][batchId].cardCount++;
 
         if (!surveyParticipants[surveyId][msg.sender]) {
             surveyParticipants[surveyId][msg.sender] = true;
