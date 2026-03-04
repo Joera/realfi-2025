@@ -76,6 +76,8 @@ contract S3ntimentSurveyStore {
     error NullifierAlreadyUsed();
     error SignerNotBatchWallet();
     error AlreadyParticipant();
+    error InvalidSignature();
+
 
     // =========================================================================
     // Survey management
@@ -212,33 +214,30 @@ contract S3ntimentSurveyStore {
      * @param batchId    Batch wallet address this card belongs to
      * @param surveyId   Survey this card is for
      */
+
     function validateCard(
-        string memory nullifier,
-        bytes memory signature,
+        string memory surveyId,
+        bytes32 nullifier,
         address batchId,
-        string memory surveyId
-    ) external returns (bool) {
+        bytes memory signature
+    ) external {
         if (surveys[surveyId].owner == address(0)) revert SurveyNotFound();
+        if (usedNullifiers[nullifier]) revert NullifierAlreadyUsed();
+        if (batches[surveyId][batchId].createdAt == 0) revert BatchNotFound();
 
-        Batch storage batch = batches[surveyId][batchId];
-        if (batch.createdAt == 0) revert BatchNotFound();
+        bytes32 messageHash = keccak256(abi.encodePacked(nullifier));
+        bytes32 ethSignedHash = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash)
+        );
 
-        string memory message = string(abi.encodePacked(nullifier, "|", batchId));
-        bytes32 messageHash = keccak256(abi.encodePacked(message));
-        bytes32 ethSignedMessageHash = keccak256(abi.encodePacked(
-            "\x19Ethereum Signed Message:\n32",
-            messageHash
-        ));
+        address signer = recoverSigner(ethSignedHash, signature);
+        if (signer != batchId) revert InvalidSignature();
 
-        address recoveredSigner = recoverSigner(ethSignedMessageHash, signature);
-        if (recoveredSigner != batchId) revert SignerNotBatchWallet();
+        usedNullifiers[nullifier] = true;
 
-        if (usedNullifiers[messageHash]) revert NullifierAlreadyUsed();
-
-        usedNullifiers[messageHash] = true;
-        batch.cardCount++;
-
-        return true;
+        if (!surveyParticipants[surveyId][msg.sender]) {
+            surveyParticipants[surveyId][msg.sender] = true;
+        }
     }
 
     function isNullifierUsed(string memory nullifier, address batchId) external view returns (bool) {
@@ -246,22 +245,6 @@ contract S3ntimentSurveyStore {
         return usedNullifiers[cardHash];
     }
 
-    // =========================================================================
-    // Participant registration
-    // =========================================================================
-
-    /**
-     * @dev Register msg.sender as a participant for a survey.
-     *      Called by the survey-scoped child wallet after validateCard().
-     *      Lit Protocol reads isParticipant() as an access condition.
-     *
-     * @param surveyId  Survey to register participation for
-     */
-    function registerParticipant(string memory surveyId) external {
-        if (surveys[surveyId].owner == address(0)) revert SurveyNotFound();
-        if (surveyParticipants[surveyId][msg.sender]) revert AlreadyParticipant();
-        surveyParticipants[surveyId][msg.sender] = true;
-    }
 
     /**
      * @dev Check if an address is a registered participant for a survey.
