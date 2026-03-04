@@ -133,7 +133,9 @@ export class LandingController {
                 await this.services.waap.login(base);
                 await this.services.account.updateSigner(this.services.waap.walletClient);
                 const tx = await card.validate(this.services);
+                console.log(11111)
                 if (tx.receipt?.status === 'success') {
+                    console.log(22222222)
                     router.navigate('/surveys/' + card.surveyId);
                 } else {
                     alert('❌ Card validation failed');

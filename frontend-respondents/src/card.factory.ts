@@ -1,4 +1,4 @@
-import { keccak256, recoverMessageAddress, toHex } from "viem";
+import { encodePacked, keccak256, recoverMessageAddress, toHex } from "viem";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' };
 import { IServices } from './services.js';
 import { CardData } from "@s3ntiment/shared";
@@ -27,8 +27,20 @@ export const parseCardURL = async (): Promise<CardData | null> => {
         const decodedSignature  = decodeURIComponent(signature) as `0x${string}`;
         const decodedSurveyId   = decodeURIComponent(surveyId);
 
+        const message = encodePacked(
+            ["string", "string", "address"],
+            [decodedNullifier, "|", decodedBatchId as `0x${string}`]
+        );
+
+        const messageHash = keccak256(message);
+        const ethSignedHash = keccak256(
+            encodePacked(
+                ["string", "bytes32"],
+                ["\x19Ethereum Signed Message:\n32", messageHash]
+            )
+        );
         const surveyOwner = await recoverMessageAddress({
-            message: `${decodedNullifier}|${decodedBatchId}`,
+            message: { raw: ethSignedHash },
             signature: decodedSignature,
         });
 
@@ -55,28 +67,33 @@ export class Card {
     }
 
     async isUsed(services: IServices): Promise<boolean> {
-    const nullifierHash = keccak256(toHex(this.data.nullifier));
-    return await services.viem.read(
-        surveyStore.address as `0x${string}`,
-        surveyStore.abi,
-        "isNullifierUsed",
-        [nullifierHash]
-    );
-}
-
+        const message = `${this.data.nullifier}|${this.data.batchId}`;
+        const nullifierHash = keccak256(toHex(message));
+        
+        return await services.viem.read(
+            surveyStore.address as `0x${string}`,
+            surveyStore.abi,
+            "isNullifierUsed",
+            [nullifierHash]
+        );
+    }
 
     async validate(services: IServices) {
-        const nullifierHash = keccak256(toHex(this.data.nullifier));
-        return await services.account.write(
-                surveyStore.address as `0x${string}`,
-                surveyStore.abi,
-                'validateCard',
-                [this.data.surveyId, nullifierHash, this.data.batchId, this.data.signature],
-                { waitForReceipt: true, confirmations: 2 }
-            );
-    }
-    
+        const message = `${this.data.nullifier}|${this.data.batchId}`;
+        const nullifierHash = keccak256(toHex(message));
+        
+        const res =  await services.account.write(
+            surveyStore.address as `0x${string}`,
+            surveyStore.abi,
+            'validateCard',
+            [this.data.surveyId, nullifierHash, this.data.batchId, this.data.signature],
+            { waitForReceipt: true, confirmations: 2 }
+        );
 
+        console.log("CARD VALIDATION && REGISTRATION", res)
+
+        return res;
+    }
 
     get surveyId() { return this.data.surveyId; }
     get nullifier() { return this.data.nullifier; }
