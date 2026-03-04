@@ -28,12 +28,12 @@ export const parseCardURL = async (): Promise<CardData | null> => {
         const decodedSignature  = decodeURIComponent(signature) as `0x${string}`;
         const decodedSurveyId   = decodeURIComponent(surveyId);
 
-        // Match organiser's encoding exactly
-        const message = encodePacked(
-            ["string", "string", "address"],
-            [decodedNullifier, "|", decodedBatchId]
-        );
-        const messageHash = keccak256(message);
+        const nullifierHex = toHex(decodedNullifier) as `0x${string}`;
+        const pipeHex = toHex("|") as `0x${string}`;
+        const addressHex = decodedBatchId;
+
+        const packedMessage = (nullifierHex + pipeHex.slice(2) + addressHex.slice(2)) as `0x${string}`;
+        const messageHash = keccak256(packedMessage);
 
         const surveyOwner = await recoverMessageAddress({
             message: { raw: messageHash },

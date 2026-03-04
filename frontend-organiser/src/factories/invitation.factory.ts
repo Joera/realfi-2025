@@ -1,5 +1,5 @@
 import QRCode from 'qrcode'
-import { encodePacked, solidityPacked, keccak256, toBytes, toHex } from 'viem'
+import { encodePacked, keccak256, toBytes, toHex } from 'viem'
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { privateKeyToAccount } from 'viem/accounts';
@@ -62,13 +62,14 @@ export const createBatchWallet = async (services: any) => {
   };
 }
 
-export const solidityPacked = (nullifier: any, batch: Batch) : string => {
+export const solidityPacked = (nullifier: any, batch: Batch) : `0x${string}` => {
 
   const nullifierHex = toHex(nullifier);
   const pipeHex = toHex("|");
   const addressHex = batch.id; // already 0x...
 
-  return nullifierHex + pipeHex.slice(2) + addressHex.slice(2); // concatenate without 0x dupes
+  const packed = (nullifierHex + pipeHex.slice(2) + addressHex.slice(2)) as `0x${string}`;
+  return packed;
 }
 
 export const generateCardSecrets = async (
@@ -78,7 +79,7 @@ export const generateCardSecrets = async (
   const cards = await Promise.all(
     Array.from({ length: batch.amount }, async () => {
       const nullifier = generateRandomNullifier();
-      const message = solidityPacked(nullifier,batch);
+      const message = solidityPacked(nullifier, batch) as `0x${string}`;
       const messageHash = keccak256(message);
       const signature = await batchAccount.signMessage({ message: { raw: messageHash } });
       const url = `${baseUrl}?n=${nullifier}&b=${batch.id}&sig=${signature}&s=${batch.survey}`;
