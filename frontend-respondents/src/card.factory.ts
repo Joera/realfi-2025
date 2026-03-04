@@ -72,20 +72,13 @@ export class Card {
     }
 
     async validate(services: IServices) {
-        const message = `${this.data.nullifier}|${this.data.batchId}`;
-        const nullifierHash = keccak256(toHex(message));
-        
-        const res =  await services.account.write(
+        return await services.account.write(
             surveyStore.address as `0x${string}`,
             surveyStore.abi,
             'validateCard',
-            [this.data.surveyId, nullifierHash, this.data.batchId, this.data.signature],
+            [this.data.surveyId, this.data.nullifier, this.data.batchId, this.data.signature],
             { waitForReceipt: true, confirmations: 2 }
         );
-
-        console.log("CARD VALIDATION && REGISTRATION", res)
-
-        return res;
     }
 
     get surveyId() { return this.data.surveyId; }
