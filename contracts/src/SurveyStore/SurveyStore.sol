@@ -240,9 +240,8 @@ contract S3ntimentSurveyStore {
         }
     }
 
-    function isNullifierUsed(string memory nullifier, address batchId) external view returns (bool) {
-        bytes32 cardHash = keccak256(abi.encodePacked(nullifier, "|", batchId));
-        return usedNullifiers[cardHash];
+    function isNullifierUsed(bytes32 nullifier) external view returns (bool) {
+        return usedNullifiers[nullifier];
     }
 
 

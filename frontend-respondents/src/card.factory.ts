@@ -1,4 +1,4 @@
-import { recoverMessageAddress } from "viem";
+import { keccak256, recoverMessageAddress, toHex } from "viem";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' };
 import { IServices } from './services.js';
 import { CardData } from "@s3ntiment/shared";
@@ -55,23 +55,28 @@ export class Card {
     }
 
     async isUsed(services: IServices): Promise<boolean> {
-        return await services.viem.read(
-            surveyStore.address as `0x${string}`,
-            surveyStore.abi,
-            "isNullifierUsed",
-            [this.data.nullifier, this.data.batchId]
-        );
-    }
+    const nullifierHash = keccak256(toHex(this.data.nullifier));
+    return await services.viem.read(
+        surveyStore.address as `0x${string}`,
+        surveyStore.abi,
+        "isNullifierUsed",
+        [nullifierHash]
+    );
+}
+
 
     async validate(services: IServices) {
+        const nullifierHash = keccak256(toHex(this.data.nullifier));
         return await services.account.write(
-            surveyStore.address as `0x${string}`,
-            surveyStore.abi,
-            'validateCard',
-            [this.data.nullifier, this.data.signature, this.data.batchId, this.data.surveyId],
-            { waitForReceipt: true, confirmations: 2 }
-        );
+                surveyStore.address as `0x${string}`,
+                surveyStore.abi,
+                'validateCard',
+                [this.data.surveyId, nullifierHash, this.data.batchId, this.data.signature],
+                { waitForReceipt: true, confirmations: 2 }
+            );
     }
+    
+
 
     get surveyId() { return this.data.surveyId; }
     get nullifier() { return this.data.nullifier; }
