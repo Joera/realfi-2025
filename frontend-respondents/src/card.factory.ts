@@ -3,7 +3,7 @@ import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveySto
 import { IServices } from './services.js';
 import { CardData } from "@s3ntiment/shared";
 
-console.log('surveyStore import:', surveyStore);
+// console.log('surveyStore import:', surveyStore);
 console.log('contract address:', surveyStore.address);
 
 
@@ -14,6 +14,7 @@ export const parseCardURL = async (): Promise<CardData | null> => {
 
         const nullifier  = params.get('n');
         const batchId    = params.get('b');
+
         const signature  = params.get('sig');
         const surveyId   = params.get('s');
 
@@ -23,24 +24,19 @@ export const parseCardURL = async (): Promise<CardData | null> => {
         }
 
         const decodedNullifier  = decodeURIComponent(nullifier);
-        const decodedBatchId    = decodeURIComponent(batchId);
+        const decodedBatchId    = decodeURIComponent(batchId) as `0x${string}`;
         const decodedSignature  = decodeURIComponent(signature) as `0x${string}`;
         const decodedSurveyId   = decodeURIComponent(surveyId);
 
+        // Match organiser's encoding exactly
         const message = encodePacked(
             ["string", "string", "address"],
-            [decodedNullifier, "|", decodedBatchId as `0x${string}`]
+            [decodedNullifier, "|", decodedBatchId]
         );
-
         const messageHash = keccak256(message);
-        const ethSignedHash = keccak256(
-            encodePacked(
-                ["string", "bytes32"],
-                ["\x19Ethereum Signed Message:\n32", messageHash]
-            )
-        );
+
         const surveyOwner = await recoverMessageAddress({
-            message: { raw: ethSignedHash },
+            message: { raw: messageHash },
             signature: decodedSignature,
         });
 
@@ -48,7 +44,7 @@ export const parseCardURL = async (): Promise<CardData | null> => {
             nullifier:   decodedNullifier,
             batchId:     decodedBatchId,
             signature:   decodedSignature,
-            surveyOwner,
+            surveyOwner,            
             surveyId:    decodedSurveyId,
         };
 
