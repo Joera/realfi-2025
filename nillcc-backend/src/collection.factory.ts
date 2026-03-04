@@ -2,36 +2,38 @@ import { Question, Survey } from '@s3ntiment/shared';
 import { randomUUID } from 'crypto';
 
 
-// export const surveyCollectionSchema = (surveySlug: string) => {
+export const createStandardSurveyCollectionSchema = (config: Survey) => {
+    
+    
+    const properties: Record<string, any> = {
+        _id: { type: "string", format: "uuid" },
+        // surveyId: { type: "string" },
+    };
 
-//     return {
-//         _id: randomUUID(),                 
-//         name: `survey-${surveySlug}`,
-//         type: "owned",                  
-//         schema: {
-//             type: "object",
-//             properties: {
-//                 _id: { type: "string", format: "uuid" },
-//                 surveyId: { type: "string" },
-//                 answers: {
-//                     type: "array",
-//                     items: {
-//                         type: "object",
-//                         properties: {
-//                             questionId: { type: "string" },
-//                             answer: {
-//                                 type: "object",
-//                                 properties: { "%share": { type: "string" } }
-//                             }
-//                         }
-//                     }
-//                 }
-//             }
-//         }
-//     };
-// };
+    if (!config.groups) {
+        return {
+            _id: config.id,
+            name: config.id || config.title || 'untitled',
+            type: "standard",
+            schema: { type: "object", properties }
+        };
+    }
 
-export const createSurveyCollectionSchema = (config: Survey) => {
+    for (const group of config.groups) {
+        for (const question of group.questions) {
+            addQuestionProperties(properties, question);
+        }
+    }
+
+    return {
+        _id: config.id,
+        name: config.id || config.title || 'untitled',
+        type: "owned",
+        schema: { type: "object", properties }
+    };
+}
+
+export const createOwnedSurveyCollectionSchema = (config: Survey) => {
     const properties: Record<string, any> = {
         _id: { type: "string", format: "uuid" },
         // surveyId: { type: "string" },
@@ -58,6 +60,25 @@ export const createSurveyCollectionSchema = (config: Survey) => {
         type: "owned",
         schema: { type: "object", properties }
     };
+
+    // return {
+    //     _id: randomUUID(),
+    //     name: "test-owned",
+    //     type: "owned",
+    //     schema: {
+    //         type: "object",
+    //         properties: {
+    //             _id: { type: "string", format: "uuid" },
+    //             name: { type: "string" },
+    //             email: {
+    //                 type: "object",
+    //                 properties: { "%share": { type: "string" } },
+    //                 required: ["%share"]
+    //             }
+    //         },
+    //         required: ["_id"]
+    //     }
+    // }
 }
 
 function addQuestionProperties(properties: Record<string, any>, question: Question) {

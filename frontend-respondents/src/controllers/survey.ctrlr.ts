@@ -7,6 +7,7 @@ import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveySto
 import { fetchAndDecryptSurvey, Survey } from '@s3ntiment/shared';
 import { capabilityDelegation } from '../cap.js';
 import { surveysStore } from '../state/surveys.store.js';
+import { createUserDataObject } from '@s3ntiment/shared'
 
 export class SurveyController {
   private reactiveViews: any[] = [];
@@ -64,20 +65,32 @@ export class SurveyController {
 
 
   async setSurveyListener() {
+    
     document.addEventListener('survey-complete', async (event: any) => {
       console.log('Survey completed!');
       console.log('event:', event);
 
       const seed = await this.services.waap.createNillDBSeed();
       await this.services.nillDB.init(seed);
-          
-      const delegationToken = await this.services.nillDB.getUserDelegationToken("", this.surveyId, import.meta.env.VITE_BACKEND);
 
-      if (event.detail.documentId != undefined) {
-        await this.services.nillDB.update(this.config!, event.detail.answers, this.surveyId, delegationToken, event.detail.documentId);
-      } else {
-        await this.services.nillDB.store(this.config!, event.detail.answers, this.surveyId, delegationToken);
-      }
+      const userData = createUserDataObject(crypto.randomUUID(), event.detail.answers, this.surveyId);
+      const signature = await this.services.waap.signMessage(`s3ntiment:submit:${this.surveyId}`);
+      const s = this.services.waap.address;
+      const smc = this.services.account.getAddress()
+      console.log("addr", s)
+      console.log("smc", smc)
+      const result = await this.services.nillDB.storeStandard(import.meta.env.VITE_BACKEND, this.surveyId, userData, signature, s!, smc );
+      console.log(result)
+
+
+      // FLOW AS DESIGNED FOR OWNED COLLECTIONS    
+      // const delegationToken = await this.services.nillDB.getUserDelegationToken("", this.surveyId, import.meta.env.VITE_BACKEND);
+
+      // if (event.detail.documentId != undefined) {
+      //   await this.services.nillDB.updateOwned(this.config!, event.detail.answers, this.surveyId, delegationToken, event.detail.documentId);
+      // } else {
+      //   await this.services.nillDB.storeOwned(this.config!, event.detail.answers, this.surveyId, delegationToken);
+      // }
     });
   }
 }

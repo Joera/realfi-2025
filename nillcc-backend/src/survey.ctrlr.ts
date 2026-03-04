@@ -1,8 +1,8 @@
 import { Builder, Codec, Signer } from "@nillion/nuc";
 import { secp256k1 } from "@noble/curves/secp256k1.js";
 import { bytesToHex, recoverMessageAddress, Signature, verifyMessage } from "viem";
-import { createSurveyCollectionSchema } from "./collection.factory.js";
-import { accsForSurveyOwner, accsForOwnerOrUser } from "@s3ntiment/shared/node";
+import { createOwnedSurveyCollectionSchema, createStandardSurveyCollectionSchema } from "./collection.factory.js";
+import { accsForSurveyOwner, accsForOwnerOrUser } from "@s3ntiment/shared";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 
 
@@ -32,8 +32,9 @@ export class SurveyController {
 
         // we're going to replace this with a PKP ... and use lit actions to assign delegations
 
-        // // Create collection
-        const rawSchema = createSurveyCollectionSchema(surveyConfig);
+        // owned collections dont seem to work yet. 
+        // const rawSchema = createOwnedSurveyCollectionSchema(surveyConfig);
+        const rawSchema = createStandardSurveyCollectionSchema(surveyConfig);
 
         console.log(JSON.stringify(rawSchema))
 
@@ -121,6 +122,8 @@ export class SurveyController {
         
     //     return isSigner && message === expectedMessage;
     // }
+
+    
 
 
 }

@@ -275,9 +275,14 @@ class SurveyQuestions extends HTMLElement {
           text-decoration: none;
           border-bottom: 1px solid white;
         }
+
+        .container  {
+          width:  100%; 
+        }
+          
       </style>
 
-      <div class="survey-container">
+      <div class="survey-container container">
         ${this.currentStep < this.totalSteps ? `
           <h1>${this.config.title}</h1>
 

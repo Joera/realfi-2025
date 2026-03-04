@@ -2,7 +2,7 @@ import { toSimpleSmartAccount } from "permissionless/accounts";
 import { createSmartAccountClient, SmartAccountClient } from "permissionless";
 import { createPimlicoClient } from "permissionless/clients/pimlico";
 import { createPublicClient, encodeFunctionData, http, parseEther, Transport } from "viem";
-import type { Chain } from "viem";
+import type { Chain, Signature } from "viem";
 
 import { getRPCUrl, TxOptions, TxResult } from "@s3ntiment/shared";
 import { extractDeployedAddress } from "@s3ntiment/shared";
@@ -123,6 +123,15 @@ export class PermissionlessSimpleService implements IPermissionlessSimpleService
         }
 
         return result;
+    }
+
+    async signMessage (message: string) : Promise<Signature> {
+
+        const signature = await this.signer.signMessage({
+            message: typeof message === 'string' ? message : JSON.stringify(message),
+        });
+
+        return signature;
     }
 
     async writeRaw(to: string, data: `0x${string}`, options: TxOptions = {}): Promise<TxResult> {

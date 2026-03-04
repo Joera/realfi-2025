@@ -54,7 +54,7 @@ export class NewSurveyController {
 
       const surveyId = crypto.randomUUID();
 
-      const authContext = this.services.lit.createAuthContext(await this.services.waap.getWalletClient(), capabilityDelegation, window.location.host);
+      // const authContext = this.services.lit.createAuthContext(await this.services.waap.getWalletClient(), capabilityDelegation, window.location.host);
 
        const safeAddress = import.meta.env.VITE_USE_SAFE == 'true' ? await this.services.safe.predictSafeAddress(surveyId) : "";
   

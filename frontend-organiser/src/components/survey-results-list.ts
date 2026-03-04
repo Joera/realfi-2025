@@ -4,6 +4,7 @@ import { buttonStyles } from '../styles/shared-button-styles.js'
 import '../components/ui/loading-spinner.js'
 import { store } from '../state/store.js';
 import { router } from '../router.js';
+import { layoutStyles } from '../styles/shared-layout-styles.js';
 
 class SurveyResultsList extends HTMLElement {
    
@@ -12,7 +13,7 @@ class SurveyResultsList extends HTMLElement {
     constructor() {
         super()
         this.attachShadow({ mode: 'open' })
-        this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, colourStyles, buttonStyles]
+        this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, colourStyles, buttonStyles, layoutStyles]
     }
 
     connectedCallback() {
@@ -33,8 +34,6 @@ class SurveyResultsList extends HTMLElement {
     }
 
     private render(surveys: any[]) {
-        console.log
-
 
         if (!this.shadowRoot) return
 
@@ -42,7 +41,7 @@ class SurveyResultsList extends HTMLElement {
         <style>
 
             :host {
-                --green: rgb(42.9834254144, 112.6165745856, 98.0022099448)
+                --green: #3473ab;
             }
 
             h1 { 
@@ -51,7 +50,7 @@ class SurveyResultsList extends HTMLElement {
 
             .survey-table {
                 display: grid;
-                grid-template-columns: 1fr 2fr 1fr 1fr 1fr;  /* Survey ID | Date | Collection */
+                grid-template-columns: 1fr 2fr 1fr 1fr;  /* Survey ID | Date | Collection */
                 gap: 0;
                 border: 1px solid var(--green);
                 border-radius: 8px;
@@ -79,7 +78,7 @@ class SurveyResultsList extends HTMLElement {
            
         </style>
 
-        <div class="container">
+        <div class="container container-large">
            
             
              ${surveys.length === 0 ? `
@@ -91,7 +90,6 @@ class SurveyResultsList extends HTMLElement {
             <div class="table-header">Name</div>
             <div class="table-header">ID</div>
             <div class="table-header">Created</div>
-            <div class="table-header">Lit Network</div>
             <div class="table-header">Safe</div>
             
             
@@ -101,7 +99,6 @@ class SurveyResultsList extends HTMLElement {
                     <div class="table-cell">${survey.title}...</div>
                     <div class="table-cell">${survey.id}</div>
                     <div class="table-cell">${new Date(Number(survey.createdAt) * 1000).toLocaleDateString()}</div>
-                    <div class="table-cell">${survey.config.litNetwork}</div>
                     <div class="table-cell">${survey.config.safe}</div>
                     
                 </div>

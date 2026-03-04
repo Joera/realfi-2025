@@ -5,7 +5,7 @@ import { typograhyStyles } from '../../styles/shared-typograhy-styles.js'
 class LoadingSpinner extends HTMLElement {
   private message: string = 'Loading...'
   private size: number = 160
-  private color: string = 'rgb(42.9834254144, 112.6165745856, 98.0022099448)'
+  private color: string = '#3473ab;'
 
   constructor() {
     super()

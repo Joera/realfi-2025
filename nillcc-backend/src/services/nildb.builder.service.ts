@@ -11,6 +11,7 @@ import {
   SecretVaultUserClient,
   NucCmd
 } from '@nillion/secretvaults';
+import { Signature, verifyMessage } from "viem";
 
 
 
@@ -78,6 +79,10 @@ export class NilDBBuilderService {
                 .expiresIn(86400)  // Note: expiresIn is in SECONDS, not milliseconds
                 .signAndSerialize(this.builderSigner);
         }
+
+
+        // const meta = await this.builderClient.readCollection("43a92ac7-7f7b-4b95-837a-6c1bd7da31af");
+        // console.log('collection meta:', JSON.stringify(meta, null, 2));
     }
 
     // async createSurveyOwner(surveyOwner: Signer) {
@@ -117,6 +122,14 @@ export class NilDBBuilderService {
             console.log("error response", e?.response);
             throw e; // don't swallow it
         }
+    }
+
+    async submitResponseForUser (surveyId: string, userData: any) {
+   
+        return await  this.builderClient.createStandardData({
+            collection: surveyId,
+            data: [userData]
+        });
     }
 
     async getUserWriteDelegation(didString: string, surveyId: string) {

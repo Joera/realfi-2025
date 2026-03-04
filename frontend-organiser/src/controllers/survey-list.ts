@@ -23,7 +23,7 @@ export class SurveyListController {
         if (!app) return;
     
         app.innerHTML = `
-          <div id="survey-results"></div>
+          <div id="survey-results" class="centered"></div>
         `;
     
         const view = reactive('#survey-results', () => {
@@ -32,7 +32,7 @@ export class SurveyListController {
           // switch (landingStep) {
           //   case 'register':
               return `
-                <survey-results-list></survey-results-list>
+                <survey-results-list class="centered"></survey-results-list>
               `;
             
           //   default:

@@ -9,6 +9,8 @@ import { base } from 'viem/chains';
 import { SurveyController } from './survey.ctrlr.js';
 import { ViemService, LitService, IPFSMethods } from "@s3ntiment/shared";
 import { Codec } from '@nillion/nuc';
+import { verifyMessage } from 'viem';
+import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 
 const app = express();
 app.use(cors());
@@ -51,6 +53,45 @@ app.post('/api/request-user-delegation', async (req, res) => {
     res.json({ delegation });
 
 });
+
+app.post('/api/submit-survey', async (req, res) => {
+
+  const { surveyId, userData, signature, signer, smc } = req.body;
+
+  const isValidSignature = await verifyMessage({
+      message: `s3ntiment:submit:${surveyId}`,
+      signature,
+      address: signer
+  });
+
+  const isParticipant = await viem.read(
+      surveyStore.address as `0x${string}`,
+      surveyStore.abi,
+      'isParticipant',
+      [surveyId, smc]
+  );
+
+  const ownerAbi = [{
+      inputs: [],
+      name: "owner",
+      outputs: [{ name: "", type: "address" }],
+      stateMutability: "view",
+      type: "function"
+  }];
+
+  const owner = await viem.read(smc, ownerAbi, 'owner', []);
+  const isSigner = owner.toLowerCase() === signer.toLowerCase();
+
+  if (isValidSignature && isParticipant && isSigner) {
+      const result = await nildb.submitResponseForUser(surveyId, userData);
+      res.json({ success: true });
+  } else {
+      console.log("failed:", { isValidSignature, isParticipant, isSigner });
+      res.json({ success: false });
+  }
+});
+  
+
 
 
 // Get survey results by surveyId // usinng general nil did as in demo 

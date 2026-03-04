@@ -1,11 +1,15 @@
 import {
   Signer,
+  Did
 } from '@nillion/nuc';
 import {
+    NucCmd,
   SecretVaultBuilderClient,
   SecretVaultUserClient,
 } from '@nillion/secretvaults';
 import { Survey, SurveyAnswer } from '../survey/types.js';
+import { createUserDataObject } from '../survey/index.js';
+import { Signature, universalSignatureValidatorByteCode } from 'viem';
 
 
 
@@ -35,7 +39,7 @@ export class NillDBUserService {
     nilauth: any;
     builderDid: any;
  
-    constructor (builderDid: string, nilChainUrl: string, nilAuthUrl: string, nilDBNodes: string) { 
+    constructor (builderDid: any, nilChainUrl: string, nilAuthUrl: string, nilDBNodes: string) { 
 
         this.builderDid = builderDid;
         this.nilChainUrl = nilChainUrl;
@@ -77,64 +81,20 @@ export class NillDBUserService {
         this.user = await SecretVaultUserClient.from({
             baseUrls: this.nilDBNodes.split(','),
             signer: this.signer,
-            // blindfold: {
-            //     operation: 'store',
-            // },
+            blindfold: {
+                operation: 'store',
+            },
         });
 
         console.log("NILLION USER:", this.user);
+
+        console.log('owner (userDid):', this.userDidString);
+        console.log('grantee (builderDid):', this.builderDid);
+        console.log('signer DID type:', (await this.signer.getDid()).method);
+
     }
 
-    prepareAnswers(answers: any) {
-        return answers.map((answer: any) => {
-
-        const answerValue = Array.isArray(answer.answer)
-        ? answer.answer.join(',')
-        : String(answer.answer);
-
-        // Determine correct type based on question
-        if (answer.questionType === 'radio') {
-        // Radio: option index as integer
-            const optionIndex = parseInt(answerValue, 10);
-            return {
-                questionId: answer.questionId,
-                questionText: answer.questionText,
-                questionType: answer.questionType,
-            answer: { "%allot": optionIndex }
-            };
-        }
-        else if (answer.questionType === 'scale') {
-        // Scale: rating as integer
-            const rating = parseInt(answerValue, 10);
-            return {
-                questionId: answer.questionId,
-                questionText: answer.questionText,
-                questionType: answer.questionType,
-                answer: { "%allot": rating }
-            };
-        }
-        else if (answer.questionType === 'checkbox') {
-        // Checkbox: selected options array
-        // Schema has question_id_0, question_id_1, etc.
-            const selected = answerValue.split(',').map( (v: any) => parseInt(v.trim(), 10));
-            return {
-                questionId: answer.questionId,
-                questionText: answer.questionText,
-                questionType: answer.questionType,
-                answer: selected // Array of selected indices
-            };
-        }
-        else {
-        // Text: plain string
-            return {
-                questionId: answer.questionId,
-                questionText: answer.questionText,
-                questionType: answer.questionType,
-                answer: answerValue
-            };
-        }
-    });
-}
+   
 
 
     // prepareAnswers(answers: SurveyAnswer[], config: Survey) {
@@ -170,65 +130,41 @@ export class NillDBUserService {
     //     return result;
     // }
 
-    createUserDataObject(preparedAnswers: any, surveyId: string) {
 
-        const dataObject: Record<string, any> = {
-            _id: randomUUID(),
-            surveyId
-        };
 
-        preparedAnswers.forEach((answer: any) => {
-            if (answer.questionType === 'checkbox') {
-            // [0, 2] → question_id_0: { "%allot": 1 }, question_id_1: { "%allot": 0 }, etc.
-                const selectedIndices = answer.answer;
-                const maxIndex = Math.max(...selectedIndices, 0);
-                for (let i = 0; i <= maxIndex; i++) {
-                    const fieldName = `${answer.questionId}_${i}`;
-                    dataObject[fieldName] = { "%allot": selectedIndices.includes(i) ? 1 : 0 };
-                }
-            } else {
-                dataObject[answer.questionId] = answer.answer;
-            }
+    async storeStandard(backendUrl: string, surveyId: string, userData: any, signature: Signature | `0x${string}`, signer: string, smc: string) {
+
+        // possibly perform blindfold encryption here 
+
+        return await fetch(`${backendUrl}/api/submit-survey`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                surveyId,
+                userData,
+                signature,
+                signer,
+                smc
+            })
         });
-
-        return dataObject
-
-
     }
 
-    async store(config: Survey, answers: any, surveyId : string, delegationToken: string) {
+    async storeOwned(uuid: string, config: Survey, answers: any, surveyId : string, delegationToken: string) {
 
-            const preparedAnswers = this.prepareAnswers(answers);
-            const userPrivateData = {
-                _id: "f15287f3-861e-4eca-b44a-6f84e1dacbfe",
-                question_1772463502473: { "%share": 0 },
-            };
-            
-            console.log(userPrivateData)
+            const userPrivateData = createUserDataObject(uuid, answers, surveyId);
 
-
-            // console.log("📊 Full createData call:", {
-            //     owner: this.userDidString,
-            //     acl: { grantee: this.builderDid, read: true, execute: true },
-            //     collection: surveyId, // Should be "d2620c23-bb8f-4dcc-b5d7-ee8fd58693a0"
-            //     data: [userPrivateData]
-            // });
-            // console.log('surveyId', surveyId);
-            // console.log('userDidString', this.userDidString);
-            // console.log('builderDid', this.builderDid);
-
-            try {
-
+            try { 
+          
                 const uploadResults = await this.user.createData(
                     {
-                        owner: this.builderDid,
+                        owner: this.userDidString,
                         acl: {
                             grantee: this.builderDid,
                             read: true,
                             write: false,
                             execute: true,
                         },
-                        collection: surveyId,
+                        collection: "43a92ac7-7f7b-4b95-837a-6c1bd7da31af",
                         data: [userPrivateData],
                     },
                     { auth: { delegation: delegationToken } }
@@ -250,21 +186,9 @@ export class NillDBUserService {
 
     }
 
-    async update(config: Survey, answers: any, surveyId: string, delegationToken: string, documentId: string) {
+    async updateOwned(uuid: string, answers: any, surveyId: string, delegationToken: string, documentId: string) {
 
-        console.log("updatin")
-
-        const preparedAnswers = this.prepareAnswers(answers);
-
-        const userPrivateData = {
-            _id: documentId,
-            surveyId,
-            answers: preparedAnswers
-        };
-
-        // console.log(userPrivateData);
-        // console.log("builder", import.meta.env.VITE_NIL_BUILDER_DID)
-        // console.log("collection", import.meta.env.VITE_S3_COLLECTION_ID)
+        const userPrivateData = createUserDataObject(uuid, answers, surveyId);
 
         // Delete old data
         await this.user.deleteData({
@@ -289,8 +213,6 @@ export class NillDBUserService {
         );
 
         console.log("updated", uploadResults)
-
-  
     } 
 
     async getUserDelegationToken(signature: string, surveyId: string, backendUrl: string) {
@@ -361,4 +283,5 @@ export class NillDBUserService {
     }
     }
 }
+
 
