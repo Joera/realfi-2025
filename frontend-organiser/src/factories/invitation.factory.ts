@@ -1,5 +1,5 @@
 import QRCode from 'qrcode'
-import { encodePacked, keccak256, toBytes, toHex } from 'viem'
+import { encodePacked, solidityPacked, keccak256, toBytes, toHex } from 'viem'
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { privateKeyToAccount } from 'viem/accounts';
@@ -62,6 +62,15 @@ export const createBatchWallet = async (services: any) => {
   };
 }
 
+export const solidityPacked = (nullifier: any, batch: Batch) : string => {
+
+  const nullifierHex = toHex(nullifier);
+  const pipeHex = toHex("|");
+  const addressHex = batch.id; // already 0x...
+
+  return nullifierHex + pipeHex.slice(2) + addressHex.slice(2); // concatenate without 0x dupes
+}
+
 export const generateCardSecrets = async (
   batchAccount: any,
   batch: Batch,
@@ -69,10 +78,7 @@ export const generateCardSecrets = async (
   const cards = await Promise.all(
     Array.from({ length: batch.amount }, async () => {
       const nullifier = generateRandomNullifier();
-      const message = encodePacked(
-          ["string", "string", "address"],
-          [nullifier, "|", batch.id as `0x${string}`]
-      );
+      const message = solidityPacked(nullifier,batch);
       const messageHash = keccak256(message);
       const signature = await batchAccount.signMessage({ message: { raw: messageHash } });
       const url = `${baseUrl}?n=${nullifier}&b=${batch.id}&sig=${signature}&s=${batch.survey}`;
@@ -95,3 +101,4 @@ export const createZipFile = async (cards: any[], surveyId: string) => {
   const zipBlob = await zip.generateAsync({type: 'blob'});
   saveAs(zipBlob, `s3ntiment-qr-codes-${surveyId}.zip`);
 }
+
