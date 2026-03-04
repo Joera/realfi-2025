@@ -220,18 +220,14 @@ contract S3ntimentSurveyStore {
         string memory nullifier,
         address batchId,
         bytes memory signature
-        
     ) external {
-
         if (surveys[surveyId].owner == address(0)) revert SurveyNotFound();
         if (batches[surveyId][batchId].createdAt == 0) revert BatchNotFound();
 
         bytes32 messageHash = keccak256(abi.encodePacked(nullifier, "|", batchId));
-        bytes32 ethSignedHash = keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash)
-        );
-
-        address signer = recoverSigner(ethSignedHash, signature);
+        
+        // NO Ethereum prefix - organiser signed raw hash
+        address signer = recoverSigner(messageHash, signature);
         if (signer != batchId) revert InvalidSignature();
 
         if (usedNullifiers[messageHash]) revert NullifierAlreadyUsed();
@@ -242,7 +238,7 @@ contract S3ntimentSurveyStore {
         if (!surveyParticipants[surveyId][msg.sender]) {
             surveyParticipants[surveyId][msg.sender] = true;
         }
-}
+    }
 
     function isNullifierUsed(string memory nullifier, address batchId) external view returns (bool) {
         bytes32 cardHash = keccak256(abi.encodePacked(nullifier, "|", batchId));

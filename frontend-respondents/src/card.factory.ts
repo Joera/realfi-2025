@@ -67,14 +67,11 @@ export class Card {
     }
 
     async isUsed(services: IServices): Promise<boolean> {
-        const message = `${this.data.nullifier}|${this.data.batchId}`;
-        const nullifierHash = keccak256(toHex(message));
-        
         return await services.viem.read(
             surveyStore.address as `0x${string}`,
             surveyStore.abi,
             "isNullifierUsed",
-            [nullifierHash]
+            [this.data.nullifier, this.data.batchId]
         );
     }
 
