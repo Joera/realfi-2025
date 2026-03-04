@@ -28,11 +28,15 @@ export const parseCardURL = async (): Promise<CardData | null> => {
         const decodedSignature  = decodeURIComponent(signature) as `0x${string}`;
         const decodedSurveyId   = decodeURIComponent(surveyId);
 
-        const nullifierHex = toHex(decodedNullifier) as `0x${string}`;
-        const pipeHex = toHex("|") as `0x${string}`;
-        const addressHex = decodedBatchId;
+        const encoder = new TextEncoder();
+        const nullifierBytes = encoder.encode(decodedNullifier);
+        const pipeBytes = encoder.encode("|");
 
-        const packedMessage = (nullifierHex + pipeHex.slice(2) + addressHex.slice(2)) as `0x${string}`;
+        const nullifierHex = Array.from(nullifierBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+        const pipeHex = Array.from(pipeBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+        const addressHex = decodedBatchId.slice(2).toLowerCase();
+
+        const packedMessage = ('0x' + nullifierHex + pipeHex + addressHex) as `0x${string}`;
         const messageHash = keccak256(packedMessage);
 
         const surveyOwner = await recoverMessageAddress({

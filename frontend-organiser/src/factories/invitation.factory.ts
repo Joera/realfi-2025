@@ -62,14 +62,19 @@ export const createBatchWallet = async (services: any) => {
   };
 }
 
-export const solidityPacked = (nullifier: any, batch: Batch) : `0x${string}` => {
 
-  const nullifierHex = toHex(nullifier);
-  const pipeHex = toHex("|");
-  const addressHex = batch.id; // already 0x...
-
-  const packed = (nullifierHex + pipeHex.slice(2) + addressHex.slice(2)) as `0x${string}`;
-  return packed;
+export const solidityPacked = (nullifier: string, batch: Batch): `0x${string}` => {
+  // Encode as UTF-8 bytes (what Solidity does with strings)
+  const encoder = new TextEncoder();
+  const nullifierBytes = encoder.encode(nullifier);
+  const pipeBytes = encoder.encode("|");
+  
+  // Convert to hex
+  const nullifierHex = Array.from(nullifierBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  const pipeHex = Array.from(pipeBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  const addressHex = batch.id.slice(2).toLowerCase();
+  
+  return ('0x' + nullifierHex + pipeHex + addressHex) as `0x${string}`;
 }
 
 export const generateCardSecrets = async (
