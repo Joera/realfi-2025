@@ -217,12 +217,13 @@ contract S3ntimentSurveyStore {
 
     function validateCard(
         string memory surveyId,
-        bytes32 nullifier,
+        string memory nullifier,
         address batchId,
         bytes memory signature
+        
     ) external {
+
         if (surveys[surveyId].owner == address(0)) revert SurveyNotFound();
-        if (usedNullifiers[nullifier]) revert NullifierAlreadyUsed();
         if (batches[surveyId][batchId].createdAt == 0) revert BatchNotFound();
 
         bytes32 messageHash = keccak256(abi.encodePacked(nullifier, "|", batchId));
@@ -233,17 +234,20 @@ contract S3ntimentSurveyStore {
         address signer = recoverSigner(ethSignedHash, signature);
         if (signer != batchId) revert InvalidSignature();
 
-        usedNullifiers[nullifier] = true;
+        if (usedNullifiers[messageHash]) revert NullifierAlreadyUsed();
+
+        usedNullifiers[messageHash] = true;
+        batches[surveyId][batchId].cardCount++;
 
         if (!surveyParticipants[surveyId][msg.sender]) {
             surveyParticipants[surveyId][msg.sender] = true;
         }
-    }
+}
 
-    function isNullifierUsed(bytes32 nullifier) external view returns (bool) {
-        return usedNullifiers[nullifier];
+    function isNullifierUsed(string memory nullifier, address batchId) external view returns (bool) {
+        bytes32 cardHash = keccak256(abi.encodePacked(nullifier, "|", batchId));
+        return usedNullifiers[cardHash];
     }
-
 
     /**
      * @dev Check if an address is a registered participant for a survey.
