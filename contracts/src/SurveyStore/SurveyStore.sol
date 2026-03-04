@@ -225,7 +225,7 @@ contract S3ntimentSurveyStore {
         if (usedNullifiers[nullifier]) revert NullifierAlreadyUsed();
         if (batches[surveyId][batchId].createdAt == 0) revert BatchNotFound();
 
-        bytes32 messageHash = keccak256(abi.encodePacked(nullifier));
+        bytes32 messageHash = keccak256(abi.encodePacked(nullifier, "|", batchId));
         bytes32 ethSignedHash = keccak256(
             abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash)
         );
