@@ -172,35 +172,17 @@ export class NilDBBuilderService {
 
         const testCollectionId = "f1333bcd-5119-4729-8b57-83ff8117da6f"
 
-        // const meta = await this.builderClient.readCollection(testCollectionId);
+        const meta = await this.builderClient.readCollection(testCollectionId);
 
-        // console.log('collection meta:', JSON.stringify(meta, null, 2));
+        console.log('collection meta:', JSON.stringify(meta, null, 2));
 
-        // const testData = {
-        //     _id: crypto.randomUUID(),
-        //     title: 'Yo',
-        //     content: { '%allot': 'bla' }
-        // };
-
-        const mockUserData = [
+        const mockUserData = 
         {
             _id: "550e8400-e29b-41d4-a716-446655440001",
             surveyId: testCollectionId,
             question_1771609804874: { "%share": 3 },
             question_1772530986213: { "%share": 7 }
-        }];
-
-        // console.log(testData)
-
-        // const { key, clients } = (this.builderClient as any)._options;
-        // const body = {
-        //     collection: testCollectionId,
-        //     data: [{
-        //         _id: crypto.randomUUID(),
-        //         name: 'Test User',
-        //         email: { '%allot': 'test@example.com' }
-        //     }]
-        // };
+        };
 
         // const origFetch = globalThis.fetch;
         // globalThis.fetch = async (url, opts) => {
