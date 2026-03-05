@@ -216,7 +216,6 @@ export class SurveyController {
         });
 
         const talliedResults = await response.json();
-        console.log(talliedResults)
         this.survey.results = talliedResults;
     }
 

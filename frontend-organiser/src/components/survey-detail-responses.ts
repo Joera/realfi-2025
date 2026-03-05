@@ -38,6 +38,8 @@ class SurveyDetailResponses extends HTMLElement {
         
         const survey = surveys.find(s => s.id === this.surveyId);
 
+        console.log("IN COMPONENT", survey)
+
         this.shadowRoot.innerHTML = `
         <style>
             .survey-header {
