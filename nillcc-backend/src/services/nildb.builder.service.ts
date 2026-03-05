@@ -168,25 +168,15 @@ export class NilDBBuilderService {
         }
     }
 
-    ensureAllot(content: string | number | { "%allot": string | number }): { "%allot": string | number } {
-        if (content && typeof content === "object" && "%allot" in content) {
-            return content as { "%allot": string | number };
-        }
-        if (typeof content === "string" || typeof content === "number") {
-            return { "%allot": content };
-        }
-        return { "%allot": "" };
-    }
+
 
     async submitResponseForUser (surveyId: string, userData: any) {
 
         console.log(1);
 
-        const testCollectionId = "0d53ce98-c4cd-42f4-936a-e75cd4539490" // bd8eb5a2-115f-46b7-b5bb-35533b3f41be
-
         try {
 
-            const meta = await this.builderClient.readCollection(testCollectionId);
+            const meta = await this.builderClient.readCollection(surveyId);
             console.log('collection meta:', JSON.stringify(meta, null, 2));
 
         } catch (err) {
@@ -194,39 +184,13 @@ export class NilDBBuilderService {
             console.log('error reading collection', JSON.stringify(err.body))
         }
 
-        //
-
-
-
-        const mockUserData = 
-        {
-            _id: crypto.randomUUID(),
-            surveyId: testCollectionId,
-            question_1771609804874: this.ensureAllot("1"),
-            // question_1772530986213: this.ensureAllot(3)
-            // question_1771609804874: { "%share": 1 },  // Keep this as-is
-            // question_1772530986213: { "%share": 3 }
-        };
-
-        // const origFetch = globalThis.fetch;
-        // globalThis.fetch = async (url, opts) => {
-        // if (typeof url === 'string' && url.includes('/v1/data/standard')) {
-        //     console.log('RAW BODY TYPE:', typeof opts?.body);
-        //     // @ts-ignore
-        //     console.log('RAW BODY:', opts?.body?.substring?.(0, 500) || opts?.body);
-        // }
-        // return origFetch(url, opts);
-        // };
-
-
-        console.log(mockUserData);
+        console.log(userData);
    
         try {
             const res =  await this.builderClient.createStandardData({
-                collection: testCollectionId,
-                data: [mockUserData]
+                collection: surveyId,
+                data: [userData]
                 },
-                // { auth: { invocations: this.nildbTokens } }
             );
 
             console.log(res);
