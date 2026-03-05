@@ -50,28 +50,32 @@ export const prepareAnswers = (answers: any) => {
     });
 }
 
+const ensureAllot = (content: string | number | { "%allot": string | number }): { "%allot": string } => {
+    if (content && typeof content === "object" && "%allot" in content) {
+        return { "%allot": String(content["%allot"]) };
+    }
+    return { "%allot": String(content ?? "") };
+}
+
 export const createUserDataObject = (uuid: string, answers: any, surveyId: string) => {
-
-    const preparedAnswers = prepareAnswers(answers)
-
-    const dataObject: Record<string, any> = {
-        _id: uuid,
-        surveyId
-    };
-
+    const preparedAnswers = prepareAnswers(answers);
+    const dataObject: Record<string, any> = { _id: uuid, surveyId };
+    
     preparedAnswers.forEach((answer: any) => {
         if (answer.questionType === 'checkbox') {
-        // [0, 2] → question_id_0: { "%allot": 1 }, question_id_1: { "%allot": 0 }, etc.
             const selectedIndices = answer.answer;
             const maxIndex = Math.max(...selectedIndices, 0);
+
             for (let i = 0; i <= maxIndex; i++) {
                 const fieldName = `${answer.questionId}_${i}`;
-                dataObject[fieldName] = { "%allot": selectedIndices.includes(i) ? 1 : 0 };
+                dataObject[fieldName] = { 
+                    "%allot": selectedIndices.includes(i) ? "1" : "0"  // Strings, not integers
+                };
             }
         } else {
-            dataObject[answer.questionId] = answer.answer;
+            dataObject[answer.questionId] = ensureAllot(answer.answer);
         }
     });
-
-    return dataObject
+    
+    return dataObject;
 }
