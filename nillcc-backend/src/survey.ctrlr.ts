@@ -1,7 +1,7 @@
 import { Builder, Codec, Signer } from "@nillion/nuc";
 import { secp256k1 } from "@noble/curves/secp256k1.js";
 import { bytesToHex, recoverMessageAddress, Signature, verifyMessage } from "viem";
-import { createOwnedSurveyCollectionSchema, createStandardSurveyCollectionSchema, createTestCollectionschema } from "./collection.factory.js";
+import { createOwnedSurveyCollectionSchema, createSurveyCollectionSchema, createTestCollectionschema } from "./collection.factory.js";
 import { accsForSurveyOwner, accsForOwnerOrUser } from "@s3ntiment/shared";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 import { randomUUID } from "crypto";
@@ -37,7 +37,7 @@ export class SurveyController {
         // const rawSchema = createOwnedSurveyCollectionSchema(surveyConfig);
         // const rawSchema = createStandardSurveyCollectionSchema(surveyConfig);
 
-        const rawSchema = createTestCollectionschema();
+        const rawSchema = createSurveyCollectionSchema(surveyConfig, "standard");
 
         console.log(JSON.stringify(rawSchema))
 

@@ -30,37 +30,68 @@ export const createTestCollectionschema = () => {
     return NOTES_COLLECTION_SCHEMA;
 }
 
-
-export const createStandardSurveyCollectionSchema = (config: Survey) => {
-
-
+export const createSurveyCollectionSchema = (config: Survey, type: "owned" | "standard" = "standard") => {
     const properties: Record<string, any> = {
         _id: { type: "string", format: "uuid" },
-        // surveyId: { type: "string" },
+        surveyId: { type: "string" },
     };
 
-    if (!config.groups) {
-        return {
-            _id: config.id,
-            name: config.id || config.title || 'untitled',
-            type: "standard",
-            schema: { type: "object", properties }
-        };
-    }
-
-    for (const group of config.groups) {
-        for (const question of group.questions) {
-            addQuestionProperties(properties, question);
+    if (config.groups) {
+        for (const group of config.groups) {
+            for (const question of group.questions) {
+                addQuestionProperties(properties, question);
+            }
         }
     }
 
     return {
         _id: config.id,
         name: config.id || config.title || 'untitled',
-        type: "standard",
-        schema: { type: "object", properties }
+        type,
+        schema: {
+            $schema: "http://json-schema.org/draft-07/schema#",
+            type: "array",
+            uniqueItems: true,
+            items: {
+                type: "object",
+                properties,
+                required: ["_id",'surveyId']
+            }
+        }
     };
 }
+
+
+// export const createStandardSurveyCollectionSchema = (config: Survey) => {
+
+
+//     const properties: Record<string, any> = {
+//         _id: { type: "string", format: "uuid" },
+//         // surveyId: { type: "string" },
+//     };
+
+//     if (!config.groups) {
+//         return {
+//             _id: config.id,
+//             name: config.id || config.title || 'untitled',
+//             type: "standard",
+//             schema: { type: "object", properties }
+//         };
+//     }
+
+//     for (const group of config.groups) {
+//         for (const question of group.questions) {
+//             addQuestionProperties(properties, question);
+//         }
+//     }
+
+//     return {
+//         _id: config.id,
+//         name: config.id || config.title || 'untitled',
+//         type: "standard",
+//         schema: { type: "object", properties }
+//     };
+// }
 
 export const createOwnedSurveyCollectionSchema = (config: Survey) => {
     const properties: Record<string, any> = {
