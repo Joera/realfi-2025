@@ -72,7 +72,7 @@ export class NilDBBuilderService {
 
         try {
             const profile = await this.builderClient.readProfile();
-            console.log('✅ Builder already registered:', profile);
+            // console.log('✅ Builder already registered:', profile);
         } catch (e) {
             console.log('Registering builder...');
             try {
@@ -168,20 +168,40 @@ export class NilDBBuilderService {
         }
     }
 
+    ensureAllot(content: string | number | { "%allot": string | number }): { "%allot": string | number } {
+        if (content && typeof content === "object" && "%allot" in content) {
+            return content as { "%allot": string | number };
+        }
+        if (typeof content === "string" || typeof content === "number") {
+            return { "%allot": content };
+        }
+        return { "%allot": "" };
+    }
+
     async submitResponseForUser (surveyId: string, userData: any) {
 
-        const testCollectionId = "f1333bcd-5119-4729-8b57-83ff8117da6f"
+        console.log(1);
 
-        const meta = await this.builderClient.readCollection(testCollectionId);
+        const testCollectionId = "0bca294f-cb6d-4988-a437-263b0005f922" // bd8eb5a2-115f-46b7-b5bb-35533b3f41be
 
-        console.log('collection meta:', JSON.stringify(meta, null, 2));
+        try {
+
+            const meta = await this.builderClient.readCollection(testCollectionId);
+            console.log('collection meta:', JSON.stringify(meta, null, 2));
+
+        } catch (err) {
+
+            console.log('error reading collection', JSON.stringify(err.body))
+        }
+
+        //
 
         const mockUserData = 
         {
             _id: "550e8400-e29b-41d4-a716-446655440001",
             surveyId: testCollectionId,
-            question_1771609804874: { "%share": 3 },
-            question_1772530986213: { "%share": 7 }
+            question_1771609804874: this.ensureAllot(1),
+            question_1772530986213: this.ensureAllot(3)
         };
 
         // const origFetch = globalThis.fetch;
@@ -194,6 +214,8 @@ export class NilDBBuilderService {
         // return origFetch(url, opts);
         // };
 
+
+        console.log(mockUserData);
    
         try {
             return await this.builderClient.createStandardData({

@@ -84,6 +84,8 @@ app.post('/api/submit-survey', async (req, res) => {
 
   if (isValidSignature && isParticipant && isSigner) {
 
+    console.log(0);
+
     try {
         const result = await nildb.submitResponseForUser(surveyId, userData);
     } catch (error) {
