@@ -225,15 +225,15 @@ contract S3ntimentSurveyStore {
         if (batches[surveyId][batchId].createdAt == 0) revert BatchNotFound();
  
         bytes32 messageHash = keccak256(abi.encodePacked(nullifier, "|", batchId));
+        bytes32 ethSignedHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
+        address signer = recoverSigner(ethSignedHash, signature);
         
-        // NO Ethereum prefix - organiser signed raw hash
-        address signer = recoverSigner(messageHash, signature);
         if (signer != batchId) revert InvalidSignature();
 
         if (usedNullifiers[messageHash]) revert NullifierAlreadyUsed();
 
         usedNullifiers[messageHash] = true;
-        batches[surgit logsveyId][batchId].cardCount++;
+        batches[surveyId][batchId].cardCount++;
 
         if (!surveyParticipants[surveyId][msg.sender]) {
             surveyParticipants[surveyId][msg.sender] = true;

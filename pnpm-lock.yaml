@@ -269,6 +269,9 @@ importers:
       '@lit-protocol/networks':
         specifier: 8.4.1
         version: 8.4.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(valibot@1.2.0(typescript@5.9.3))(viem@2.46.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.3.6))
+      '@nillion/blindfold':
+        specifier: ^0.1.0
+        version: 0.1.0
       '@nillion/client-web':
         specifier: ^0.6.0
         version: 0.6.0

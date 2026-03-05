@@ -70,6 +70,26 @@ export class NilDBBuilderService {
         await this.builderClient.refreshRootToken();
         const rootToken = this.builderClient.rootToken;  // This is already the envelope object ✅
 
+        try {
+            const profile = await this.builderClient.readProfile();
+            console.log('✅ Builder already registered:', profile);
+        } catch (e) {
+            console.log('Registering builder...');
+            try {
+                await this.builderClient.register({
+                    did: this.builderDid!.didString,
+                    name: 'S3ntiment Builder',
+                });
+                console.log('✅ Builder registered');
+            } catch (regError: any) {
+                if (regError?.message?.includes('duplicate key')) {
+                    console.log('✅ Builder already registered (duplicate key)');
+                } else {
+                    throw regError;
+                }
+            }
+        }
+
         // Create invocation tokens for each node
         this.nildbTokens = {};
         for (const node of this.builderClient.nodes) {
@@ -80,9 +100,33 @@ export class NilDBBuilderService {
                 .signAndSerialize(this.builderSigner);
         }
 
+        console.log('Has blindfold key:', !!(this.builderClient as any)._options?.key);
 
-        // const meta = await this.builderClient.readCollection("43a92ac7-7f7b-4b95-837a-6c1bd7da31af");
-        // console.log('collection meta:', JSON.stringify(meta, null, 2));
+
+        
+        // const testCollectionId = crypto.randomUUID();
+    
+        // await this.builderClient.createCollection({
+        //     _id: testCollectionId,
+        //     name: 'test-standard-write',
+        //     type: 'standard',
+        //     schema: {
+        //         type: 'object',
+        //         properties: {
+        //             _id: { type: 'string', format: 'uuid' },
+        //             name: { type: 'string' },
+        //             email: {
+        //                 type: 'object',
+        //                 properties: { '%share': { type: 'string' } },
+        //                 required: ['%share']
+        //             }
+        //         },
+        //         required: ['_id']
+        //     }
+        // });
+    
+        // console.log('Collection created:', testCollectionId);
+      
     }
 
     // async createSurveyOwner(surveyOwner: Signer) {
@@ -104,17 +148,17 @@ export class NilDBBuilderService {
     //     return delegation;
     // }
 
-    async createSurveyCollection(rawSchema: any, surveyOwnerDid: any) {
+    async createSurveyCollection(id: string, rawSchema: any, surveyOwnerDid: any) {
         try {
             const result = await this.builderClient.createCollection({
-                _id: rawSchema._id,
+                _id: id,
                 name: rawSchema.name,
                 type: rawSchema.type,
                 schema: rawSchema.schema,
                 owner: this.builderDid!.didString  // surveyOwnerDid,
             });
             console.log("collection created", result);
-            return rawSchema._id;
+            return id;
         } catch (e: any) {
             console.log("error message", e?.message);
             console.log("error status", e?.status);
@@ -125,11 +169,61 @@ export class NilDBBuilderService {
     }
 
     async submitResponseForUser (surveyId: string, userData: any) {
+
+        const testCollectionId = "9b87eb8e-9964-4f28-95e7-1f63162602c3";
+
+        const meta = await this.builderClient.readCollection(testCollectionId);
+
+        console.log('collection meta:', JSON.stringify(meta, null, 2));
+
+        const testData = {
+            _id: crypto.randomUUID(),
+            title: 'Yo',
+            content: { '%allot': 'bla' }
+        };
+
+        console.log(testData)
+
+        const { key, clients } = (this.builderClient as any)._options;
+        const body = {
+            collection: testCollectionId,
+            data: [{
+                _id: crypto.randomUUID(),
+                name: 'Test User',
+                email: { '%allot': 'test@example.com' }
+            }]
+        };
+
+        // const origFetch = globalThis.fetch;
+        // globalThis.fetch = async (url, opts) => {
+        // if (typeof url === 'string' && url.includes('/v1/data/standard')) {
+        //     console.log('RAW BODY TYPE:', typeof opts?.body);
+        //     // @ts-ignore
+        //     console.log('RAW BODY:', opts?.body?.substring?.(0, 500) || opts?.body);
+        // }
+        // return origFetch(url, opts);
+        // };
+
    
-        return await  this.builderClient.createStandardData({
-            collection: surveyId,
-            data: [userData]
-        });
+        try {
+            return await this.builderClient.createStandardData({
+                collection: testCollectionId,
+                data: [testData]
+                },
+                // { auth: { invocations: this.nildbTokens } }
+            );
+        } catch (e: any) {
+            if (Array.isArray(e)) {
+                e.forEach((err, i) => {
+                    console.error(`Node ${i}:`, JSON.stringify(err, null, 2));
+                     console.error('Cause:', err.cause);
+                });
+            } else {
+                console.error('Full error:', JSON.stringify(e, null, 2));
+
+            }
+            throw e;
+        }
     }
 
     async getUserWriteDelegation(didString: string, surveyId: string) {

@@ -1,10 +1,39 @@
+import { CreateCollectionRequest } from '@nillion/secretvaults';
 import { Question, Survey } from '@s3ntiment/shared';
 import { randomUUID } from 'crypto';
 
+export const createTestCollectionschema = () => {
+
+    const NOTES_COLLECTION_SCHEMA: Omit<CreateCollectionRequest, "_id"> = {
+        type: "standard",
+        name: "encrypted-notes",
+        schema: {
+            $schema: "http://json-schema.org/draft-07/schema#",
+            type: "array",
+            uniqueItems: true,
+            items: {
+                type: "object",
+                properties: {
+                    _id: { type: "string", format: "uuid" },
+                    title: { type: "string" },                   // Plaintext - for display
+                    content: {                                   // ENCRYPTED - secret shared
+                        type: "object",
+                        properties: { "%share": { type: "string" } },
+                        required: ["%share"],
+                    }
+                },
+                required: ["_id", "title", "content"],
+            },
+        },
+    };
+
+    return NOTES_COLLECTION_SCHEMA;
+}
+
 
 export const createStandardSurveyCollectionSchema = (config: Survey) => {
-    
-    
+
+
     const properties: Record<string, any> = {
         _id: { type: "string", format: "uuid" },
         // surveyId: { type: "string" },
@@ -28,7 +57,7 @@ export const createStandardSurveyCollectionSchema = (config: Survey) => {
     return {
         _id: config.id,
         name: config.id || config.title || 'untitled',
-        type: "owned",
+        type: "standard",
         schema: { type: "object", properties }
     };
 }

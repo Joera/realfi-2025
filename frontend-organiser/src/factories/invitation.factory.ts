@@ -84,9 +84,14 @@ export const generateCardSecrets = async (
   const cards = await Promise.all(
     Array.from({ length: batch.amount }, async () => {
       const nullifier = generateRandomNullifier();
-      const message = solidityPacked(nullifier, batch) as `0x${string}`;
-      const messageHash = keccak256(message);
+      
+      const packed = encodePacked(
+        ['string', 'string', 'address'],
+        [nullifier, '|', batch.id as `0x${string}`]
+      );
+      const messageHash = keccak256(packed);
       const signature = await batchAccount.signMessage({ message: { raw: messageHash } });
+      
       const url = `${baseUrl}?n=${nullifier}&b=${batch.id}&sig=${signature}&s=${batch.survey}`;
       return { nullifier, signature, url, svgString: await generateQRCodeSVG(url) };
     })

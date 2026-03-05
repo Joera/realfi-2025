@@ -53,6 +53,8 @@ export const parseCardURL = async (): Promise<CardData | null> => {
             signature: decodedSignature,
         });
 
+        console.log("SURVEY OWNER", surveyOwner)
+
         return {
             nullifier:   decodedNullifier,
             batchId:     decodedBatchId,
