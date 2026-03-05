@@ -1,7 +1,7 @@
 import { Builder, Codec, Signer } from "@nillion/nuc";
 import { secp256k1 } from "@noble/curves/secp256k1.js";
 import { bytesToHex, recoverMessageAddress, Signature, verifyMessage } from "viem";
-import { createOwnedSurveyCollectionSchema, createSurveyCollectionSchema, createTestCollectionschema } from "./collection.factory.js";
+import { createSurveyCollectionSchema } from "./collection.factory.js";
 import { accsForSurveyOwner, accsForOwnerOrUser } from "@s3ntiment/shared";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 import { randomUUID } from "crypto";

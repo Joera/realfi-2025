@@ -89,7 +89,7 @@ app.post('/api/submit-survey', async (req, res) => {
     try {
         const result = await nildb.submitResponseForUser(surveyId, userData);
     } catch (error) {
-      console.log("ERROR",error);
+        console.log("ERROR",error);
     }
 
       res.json({ success: true });

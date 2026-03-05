@@ -182,7 +182,7 @@ export class NilDBBuilderService {
 
         console.log(1);
 
-        const testCollectionId = "0bca294f-cb6d-4988-a437-263b0005f922" // bd8eb5a2-115f-46b7-b5bb-35533b3f41be
+        const testCollectionId = "0d53ce98-c4cd-42f4-936a-e75cd4539490" // bd8eb5a2-115f-46b7-b5bb-35533b3f41be
 
         try {
 
@@ -196,12 +196,16 @@ export class NilDBBuilderService {
 
         //
 
+
+
         const mockUserData = 
         {
-            _id: "550e8400-e29b-41d4-a716-446655440001",
+            _id: crypto.randomUUID(),
             surveyId: testCollectionId,
-            question_1771609804874: this.ensureAllot(1),
-            question_1772530986213: this.ensureAllot(3)
+            question_1771609804874: this.ensureAllot("1"),
+            // question_1772530986213: this.ensureAllot(3)
+            // question_1771609804874: { "%share": 1 },  // Keep this as-is
+            // question_1772530986213: { "%share": 3 }
         };
 
         // const origFetch = globalThis.fetch;
@@ -218,13 +222,18 @@ export class NilDBBuilderService {
         console.log(mockUserData);
    
         try {
-            return await this.builderClient.createStandardData({
+            const res =  await this.builderClient.createStandardData({
                 collection: testCollectionId,
                 data: [mockUserData]
-
                 },
                 // { auth: { invocations: this.nildbTokens } }
             );
+
+            console.log(res);
+
+            return res;
+
+
         } catch (e: any) {
             if (Array.isArray(e)) {
                 e.forEach((err, i) => {
