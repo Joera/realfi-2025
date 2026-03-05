@@ -101,6 +101,8 @@ export class NilDBBuilderService {
                 .signAndSerialize(this.builderSigner);
         }
 
+
+
         this.nildbReadTokens = {};
         for (const node of this.builderClient.nodes) {
             this.nildbReadTokens[node.id.didString] = await Builder.invocationFrom(rootToken)  // Use rootToken directly
@@ -222,6 +224,10 @@ export class NilDBBuilderService {
         // run checks isOwner
         
         console.log(1, surveyId);
+
+
+        console.log("READ TOKENS", this.nildbReadTokens)
+        await new Promise(r => setTimeout(r, 100));
 
 
         try {
