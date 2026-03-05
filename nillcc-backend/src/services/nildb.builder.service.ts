@@ -170,29 +170,37 @@ export class NilDBBuilderService {
 
     async submitResponseForUser (surveyId: string, userData: any) {
 
-        const testCollectionId = "9b87eb8e-9964-4f28-95e7-1f63162602c3";
+        const testCollectionId = "f1333bcd-5119-4729-8b57-83ff8117da6f"
 
-        const meta = await this.builderClient.readCollection(testCollectionId);
+        // const meta = await this.builderClient.readCollection(testCollectionId);
 
-        console.log('collection meta:', JSON.stringify(meta, null, 2));
+        // console.log('collection meta:', JSON.stringify(meta, null, 2));
 
-        const testData = {
-            _id: crypto.randomUUID(),
-            title: 'Yo',
-            content: { '%allot': 'bla' }
-        };
+        // const testData = {
+        //     _id: crypto.randomUUID(),
+        //     title: 'Yo',
+        //     content: { '%allot': 'bla' }
+        // };
 
-        console.log(testData)
+        const mockUserData = [
+        {
+            _id: "550e8400-e29b-41d4-a716-446655440001",
+            surveyId: testCollectionId,
+            question_1771609804874: { "%share": 3 },
+            question_1772530986213: { "%share": 7 }
+        }];
 
-        const { key, clients } = (this.builderClient as any)._options;
-        const body = {
-            collection: testCollectionId,
-            data: [{
-                _id: crypto.randomUUID(),
-                name: 'Test User',
-                email: { '%allot': 'test@example.com' }
-            }]
-        };
+        // console.log(testData)
+
+        // const { key, clients } = (this.builderClient as any)._options;
+        // const body = {
+        //     collection: testCollectionId,
+        //     data: [{
+        //         _id: crypto.randomUUID(),
+        //         name: 'Test User',
+        //         email: { '%allot': 'test@example.com' }
+        //     }]
+        // };
 
         // const origFetch = globalThis.fetch;
         // globalThis.fetch = async (url, opts) => {
@@ -208,7 +216,8 @@ export class NilDBBuilderService {
         try {
             return await this.builderClient.createStandardData({
                 collection: testCollectionId,
-                data: [testData]
+                data: [mockUserData]
+
                 },
                 // { auth: { invocations: this.nildbTokens } }
             );
