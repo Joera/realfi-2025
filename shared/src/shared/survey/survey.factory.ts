@@ -1,6 +1,4 @@
-import { base } from 'viem/chains';
-import { accsForOwnerOrUser } from '../lit/index.js';
-
+import { accsForOwnerOrUser } from '../index.js';
 
 export const fetchAndDecryptSurvey = async (services: any, deployment: any, surveyId: string, authContext: any) => {
 

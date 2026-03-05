@@ -11,6 +11,7 @@ import {
   SecretVaultUserClient,
   NucCmd
 } from '@nillion/secretvaults';
+import { QuestionGroup, Survey, tallyResults } from "@s3ntiment/shared";
 import { Signature, verifyMessage } from "viem";
 
 
@@ -101,43 +102,7 @@ export class NilDBBuilderService {
         }
 
         console.log('Has blindfold key:', !!(this.builderClient as any)._options?.key);
-
-
-        
-        // const testCollectionId = crypto.randomUUID();
-    
-        // await this.builderClient.createCollection({
-        //     _id: testCollectionId,
-        //     name: 'test-standard-write',
-        //     type: 'standard',
-        //     schema: {
-        //         type: 'object',
-        //         properties: {
-        //             _id: { type: 'string', format: 'uuid' },
-        //             name: { type: 'string' },
-        //             email: {
-        //                 type: 'object',
-        //                 properties: { '%share': { type: 'string' } },
-        //                 required: ['%share']
-        //             }
-        //         },
-        //         required: ['_id']
-        //     }
-        // });
-    
-        // console.log('Collection created:', testCollectionId);
-      
     }
-
-    // async createSurveyOwner(surveyOwner: Signer) {
-
-    //     return await SecretVaultUserClient.from({
-    //         baseUrls: config.NILDB_NODES,
-    //         signer: surveyOwner,
-    //         blindfold: { operation: 'store' },
-    //     });
-    // }
-
 
     // async delegateToSurveyOwner(ownerDid: Did) {
     //     const delegation = await Builder.delegationFrom(this.builder.rootToken)
@@ -160,10 +125,6 @@ export class NilDBBuilderService {
             console.log("collection created", result);
             return id;
         } catch (e: any) {
-            console.log("error message", e?.message);
-            console.log("error status", e?.status);
-            console.log("error body", e?.body);
-            console.log("error response", e?.response);
             throw e; // don't swallow it
         }
     }
@@ -172,32 +133,22 @@ export class NilDBBuilderService {
 
     async submitResponseForUser (surveyId: string, userData: any) {
 
-        console.log(1);
+        // try {
 
-        try {
+        //     const meta = await this.builderClient.readCollection(surveyId);
+        //     console.log('collection meta:', JSON.stringify(meta, null, 2));
 
-            const meta = await this.builderClient.readCollection(surveyId);
-            console.log('collection meta:', JSON.stringify(meta, null, 2));
+        // } catch (err) {
 
-        } catch (err) {
-
-            console.log('error reading collection', JSON.stringify(err.body))
-        }
-
-        console.log(userData);
+        //     console.log('error reading collection', JSON.stringify(err.body))
+        // }
    
         try {
-            const res =  await this.builderClient.createStandardData({
+            return await this.builderClient.createStandardData({
                 collection: surveyId,
                 data: [userData]
                 },
             );
-
-            console.log(res);
-
-            return res;
-
-
         } catch (e: any) {
             if (Array.isArray(e)) {
                 e.forEach((err, i) => {
@@ -206,7 +157,6 @@ export class NilDBBuilderService {
                 });
             } else {
                 console.error('Full error:', JSON.stringify(e, null, 2));
-
             }
             throw e;
         }
@@ -256,30 +206,45 @@ export class NilDBBuilderService {
     }
 
 
-    async tabulateSurveyResults(survey_id: string, keypair : any) {
+    async findSurveyResults(surveyId: string, groups: QuestionGroup[], signature : any) {
 
-        // const radioSum = await blindfold.sum(responses.map(r => r.question_1765188018511));
 
-        // // SUM per checkbox optie → hoeveel kozen "rice"
-        // const riceCount = await blindfold.sum(responses.map(r => r.question_1765188080959_0));
-        // const pastaCount = await blindfold.sum(responses.map(r => r.question_1765188080959_1));
+        // run checks isOwner
+        
+        console.log(1, surveyId);
 
-        // // SUM scale → bereken gemiddelde client-side
-        // const scaleSum = await blindfold.sum(responses.map(r => r.question_1765188127232));
-        // const scaleAvg = scaleSum / responseCount;
 
- 
-        let ownerDid = keypair.toDid().toString();
-        console.log('Owner DID:', ownerDid);
+        try {
 
-        // moet ik hier nog initialiseren ???? 
-        // mm wordt sowieso anders .. want we gaan weer blind compute gebruiken 
+            const rawResults = await this.builderClient.findData(
+                {
+                    collection: surveyId,
+                    filter: {}
+                },
+                { 
+                    auth: { invocations: this.nildbTokens } 
+                }
+            );
 
-        // const records = await this.builder.findData({
-        //     collection: COLLECTION,
-        //     filter: { surveyId: survey_id },
-        // });
+            console.log(rawResults);
+            try  {
+                const talliedResults = tallyResults(rawResults, groups);
+                console.log(talliedResults);
+                return talliedResults
 
+            } catch (error) {
+
+                console.log("error tallying", error)
+            }
+
+        } catch (error) {
+
+            console.log("error", JSON.stringify(error));
+            return { result : false};
+        }
+    }
+
+    
         // console.log(`Processing ${records.data.length} responses`);
 
         // // Group answers by question
@@ -513,7 +478,6 @@ export class NilDBBuilderService {
         // }
     }
 
-
     // async tabulateSurveyResults(survey_id: string) {
 
     //     console.log(`Tabulating results for survey: ${survey_id}`);
@@ -628,4 +592,3 @@ export class NilDBBuilderService {
 
 
    
-}

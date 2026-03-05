@@ -73,12 +73,10 @@ export class SurveyController {
       const seed = await this.services.waap.createNillDBSeed();
       await this.services.nillDB.init(seed);
 
-      const userData = createUserDataObject(crypto.randomUUID(), event.detail.answers, this.surveyId);
+      const userData = createUserDataObject(crypto.randomUUID(), event.detail.answers, this.config!);
       const signature = await this.services.waap.signMessage(`s3ntiment:submit:${this.surveyId}`);
       const s = this.services.waap.address;
       const smc = this.services.account.getAddress()
-      console.log("addr", s)
-      console.log("smc", smc)
       const result = await this.services.nillDB.storeStandard(import.meta.env.VITE_BACKEND, this.surveyId, userData, signature, s!, smc );
       console.log(result)
 

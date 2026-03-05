@@ -1,4 +1,4 @@
-import { CardData, CardSecret } from "../invites/index.js"
+import { CardData, CardSecret, SurveyResultsTally } from "../index.js"
 
 export interface SurveyQuestion {
   id: string
@@ -61,6 +61,7 @@ export interface Survey {
     groups?: QuestionGroup[]
     batches?: Batch[]
     config?: Config
+    results?: SurveyResultsTally
 }
 
 // Event detail types

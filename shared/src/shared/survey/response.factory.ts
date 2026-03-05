@@ -1,55 +1,57 @@
-export const prepareAnswers = (answers: any) => {
+import { Question, Survey } from "../index.js";
 
-        return answers.map((answer: any) => {
+export const prepareAnswers = (answers: any, surveyConfig: Survey) => {
+    const questionMap = new Map<string, Question>();
+    
+    if (surveyConfig.groups) {
+        surveyConfig.groups.forEach(group => {
+            group.questions.forEach(q => {
+                questionMap.set(q.id, q);
+            });
+        });
+    }
 
-        const answerValue = Array.isArray(answer.answer)
-        ? answer.answer.join(',')
-        : String(answer.answer);
-
-        // Determine correct type based on question
+    return answers.map((answer: any) => {
+        const question = questionMap.get(answer.questionId);
+        
         if (answer.questionType === 'radio') {
-        // Radio: option index as integer
-            const optionIndex = parseInt(answerValue, 10);
+            // Find the index of the selected option
+            const optionIndex = question?.options?.findIndex(opt => opt === answer.answer) ?? -1;
             return {
                 questionId: answer.questionId,
                 questionText: answer.questionText,
                 questionType: answer.questionType,
-            answer: { "%allot": optionIndex }
+                answer: optionIndex >= 0 ? optionIndex : 0
             };
-        }
-        else if (answer.questionType === 'scale') {
-        // Scale: rating as integer
-            const rating = parseInt(answerValue, 10);
+        } else if (answer.questionType === 'scale') {
+            const rating = parseInt(String(answer.answer), 10);
             return {
                 questionId: answer.questionId,
                 questionText: answer.questionText,
                 questionType: answer.questionType,
-                answer: { "%allot": rating }
+                answer: isNaN(rating) ? 0 : rating
             };
-        }
-        else if (answer.questionType === 'checkbox') {
-        // Checkbox: selected options array
-        // Schema has question_id_0, question_id_1, etc.
-            const selected = answerValue.split(',').map( (v: any) => parseInt(v.trim(), 10));
+        } else if (answer.questionType === 'checkbox') {
+            const selected = Array.isArray(answer.answer)
+                ? answer.answer.map((val: any) => question?.options?.indexOf(val) ?? -1).filter((i: number) => i >= 0)
+                : [];
             return {
                 questionId: answer.questionId,
                 questionText: answer.questionText,
                 questionType: answer.questionType,
-                answer: selected // Array of selected indices
+                answer: selected
             };
-        }
-        else {
-        // Text: plain string
+        } else {
             return {
                 questionId: answer.questionId,
                 questionText: answer.questionText,
                 questionType: answer.questionType,
-                answer: answerValue
+                answer: String(answer.answer)
             };
         }
     });
 }
-
+    
 const ensureAllot = (content: string | number | { "%allot": string | number }): { "%allot": string } => {
     if (content && typeof content === "object" && "%allot" in content) {
         return { "%allot": String(content["%allot"]) };
@@ -57,9 +59,10 @@ const ensureAllot = (content: string | number | { "%allot": string | number }): 
     return { "%allot": String(content ?? "") };
 }
 
-export const createUserDataObject = (uuid: string, answers: any, surveyId: string) => {
-    const preparedAnswers = prepareAnswers(answers);
-    const dataObject: Record<string, any> = { _id: uuid, surveyId };
+export const createUserDataObject = (uuid: string, answers: any, survey: Survey) => {
+
+    const preparedAnswers = prepareAnswers(answers, survey);
+    const dataObject: Record<string, any> = { _id: uuid, surveyId: survey.id };
     
     preparedAnswers.forEach((answer: any) => {
         if (answer.questionType === 'checkbox') {
@@ -72,6 +75,10 @@ export const createUserDataObject = (uuid: string, answers: any, surveyId: strin
                     "%allot": selectedIndices.includes(i) ? "1" : "0"  // Strings, not integers
                 };
             }
+
+        } else if (answer.questionType === 'text') {
+        // Text is plaintext, no wrapping
+            dataObject[answer.questionId] = String(answer.answer);
         } else {
             dataObject[answer.questionId] = ensureAllot(answer.answer);
         }

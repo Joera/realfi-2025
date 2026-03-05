@@ -103,23 +103,26 @@ app.post('/api/submit-survey', async (req, res) => {
 
 
 // Get survey results by surveyId // usinng general nil did as in demo 
-// app.get('/api/survey-results/:surveyId', async (req, res) => {
-//   try {
-//     const { surveyId } = req.params;
+app.post('/api/survey-results', async (req, res) => {
 
-//     // Create and run queries on encrypted data
-//     let response  = await nildb.tabulateSurveyResults(surveyId)
-//     // let summary = await nilai.ask("can you summarize: " + JSON.stringify(response))
-//     res.send({
-//       results: response,
-//     //  ai_summary: summary
-//     })
+  console.log(0)
+  try {
+    const { surveyId, groups } = req.body;
+
+    const signature = "";
+    // Create and run queries on encrypted data
+    let response  = await nildb.findSurveyResults(surveyId, groups, signature)
+    // let summary = await nilai.ask("can you summarize: " + JSON.stringify(response))
+    res.send({
+      results: response,
+    //  ai_summary: summary
+    })
 
 
-//   } catch (error: any) {
-//     console.log(error)
-//   }
-// });
+  } catch (error: any) {
+    console.log(error)
+  }
+});
 
 // Get survey results by surveyId
 // app.post('/api/survey-results', async (req, res) => {

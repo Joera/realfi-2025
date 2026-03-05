@@ -11,14 +11,14 @@ import { createBatch } from "../factories/survey.factory.js";
 import { generateCardSecrets } from "../factories/invitation.factory.js";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
 import { capabilityDelegation } from "../cap.js";
-import { fetchAndDecryptSurvey } from "@s3ntiment/shared";
+import { fetchAndDecryptSurvey, Survey } from "@s3ntiment/shared";
 
 
 export class SurveyController {
     private reactiveViews: any[] = [];
     private services: IServices;
     private surveyId: string;
-    private survey: any;
+    private survey!: Survey;
 
     constructor(services: IServices, surveyId: string) {
 
@@ -203,6 +203,21 @@ export class SurveyController {
         //       message  
         //   })
         // });
+
+        const response = await fetch(`${import.meta.env.VITE_BACKEND}/api/survey-results`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                surveyId: this.survey.id,
+                groups: this.survey.groups   
+            })
+        });
+
+        const talliedResults = await response.json();
+        console.log(talliedResults)
+        this.survey.results = talliedResults;
     }
 
     async render() {

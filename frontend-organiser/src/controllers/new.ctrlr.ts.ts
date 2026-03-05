@@ -80,7 +80,8 @@ export class NewSurveyController {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({         
+        body: JSON.stringify({   
+          surveyId,      
           surveyConfig,
           smartAccountAddress: this.services.account.getAddress()
         })

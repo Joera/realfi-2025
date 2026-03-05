@@ -1,10 +1,7 @@
-import { Builder, Codec, Signer } from "@nillion/nuc";
-import { secp256k1 } from "@noble/curves/secp256k1.js";
-import { bytesToHex, recoverMessageAddress, Signature, verifyMessage } from "viem";
-import { createSurveyCollectionSchema } from "./collection.factory.js";
-import { accsForSurveyOwner, accsForOwnerOrUser } from "@s3ntiment/shared";
+import { recoverMessageAddress, Signature } from "viem";
+import { createSurveyCollectionSchema } from "@s3ntiment/shared";
+import { accsForOwnerOrUser } from "@s3ntiment/shared";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
-import { randomUUID } from "crypto";
 
 
 export class SurveyController {
@@ -20,10 +17,11 @@ export class SurveyController {
         this.viem = viem;
     }
 
-
     async create(body: any) {
 
-        const { surveyConfig, smartAccountAddress } = body;
+        const { surveyId, surveyConfig, smartAccountAddress } = body;
+
+        console.log("surveyId", surveyId)
         
         // Generate survey-specific keypair
         // const privateKeyBytes = secp256k1.utils.randomSecretKey();
@@ -41,7 +39,7 @@ export class SurveyController {
 
         console.log(JSON.stringify(rawSchema))
 
-        const collectionId = await this.nildb.createSurveyCollection(randomUUID(), rawSchema, this.nildb.builderDid.didString);
+        const collectionId = await this.nildb.createSurveyCollection(surveyId, rawSchema, this.nildb.builderDid.didString);
         console.log("collection id", collectionId)
 
         const contract = surveyStore.address;
