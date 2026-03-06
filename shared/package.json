@@ -13,9 +13,9 @@
       "import": "./src/browser/index.ts",
       "types": "./src/browser/index.ts"
     },
-    "./node": {
-      "import": "./src/node/index.ts",
-      "types": "./src/node/index.ts"
+    "./assets": {
+      "import": "./src/assets/index.ts",
+      "types": "./src/assets/index.ts"
     }
   },
   "files": [

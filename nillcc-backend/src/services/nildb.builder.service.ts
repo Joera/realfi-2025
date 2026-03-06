@@ -71,25 +71,25 @@ export class NilDBBuilderService {
         await this.builderClient.refreshRootToken();
         const rootToken = this.builderClient.rootToken;  // This is already the envelope object ✅
 
-        try {
-            const profile = await this.builderClient.readProfile();
-            // console.log('✅ Builder already registered:', profile);
-        } catch (e) {
-            console.log('Registering builder...');
-            try {
-                await this.builderClient.register({
-                    did: this.builderDid!.didString,
-                    name: 'S3ntiment Builder',
-                });
-                console.log('✅ Builder registered');
-            } catch (regError: any) {
-                if (regError?.message?.includes('duplicate key')) {
-                    console.log('✅ Builder already registered (duplicate key)');
-                } else {
-                    throw regError;
-                }
-            }
-        }
+        // try {
+        //     const profile = await this.builderClient.readProfile();
+        //     // console.log('✅ Builder already registered:', profile);
+        // } catch (e) {
+        //     console.log('Registering builder...');
+        //     try {
+        //         await this.builderClient.register({
+        //             did: this.builderDid!.didString,
+        //             name: 'S3ntiment Builder',
+        //         });
+        //         console.log('✅ Builder registered');
+        //     } catch (regError: any) {
+        //         if (regError?.message?.includes('duplicate key')) {
+        //             console.log('✅ Builder already registered (duplicate key)');
+        //         } else {
+        //             throw regError;
+        //         }
+        //     }
+        // }
 
         // Create invocation tokens for each node
         this.nildbRootTokens = {};
@@ -103,17 +103,24 @@ export class NilDBBuilderService {
 
 
 
-        this.nildbReadTokens = {};
+        
+
+
+        console.log('Has blindfold key:', !!(this.builderClient as any)._options?.key);
+    }
+
+    async getReadTokens() {
+
+        const nildbReadTokens: any = {};
         for (const node of this.builderClient.nodes) {
-            this.nildbReadTokens[node.id.didString] = await Builder.invocationFrom(rootToken)  // Use rootToken directly
+            nildbReadTokens[node.id.didString] = await Builder.invocationFrom(this.builderClient.rootToken)  // Use rootToken directly
                 .audience(node.id)
                 .command(NucCmd.nil.db.data.read)
                 .expiresIn(86400)  // Note: expiresIn is in SECONDS, not milliseconds
                 .signAndSerialize(this.builderSigner);
         }
 
-
-        console.log('Has blindfold key:', !!(this.builderClient as any)._options?.key);
+        return nildbReadTokens;
     }
 
     // async delegateToSurveyOwner(ownerDid: Did) {
@@ -225,9 +232,7 @@ export class NilDBBuilderService {
         
         console.log(1, surveyId);
 
-
-        console.log("READ TOKENS", this.nildbReadTokens)
-        await new Promise(r => setTimeout(r, 100));
+        await new Promise(r => setTimeout(r, 5000));
 
 
         try {
@@ -238,7 +243,7 @@ export class NilDBBuilderService {
                     filter: {}
                 },
                 { 
-                    auth: { invocations: this.nildbReadTokens }
+                    auth: { invocations: await this.getReadTokens() }
                 }
             );
 

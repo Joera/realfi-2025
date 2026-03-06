@@ -1,4 +1,4 @@
-import { typograhyStyles } from '../../styles/shared-typograhy-styles.js'
+import { typograhyStyles } from '../../../../shared/src/assets/styles/typography-styles.js'
 import { colourStyles } from '../../styles/shared-colour-styles.js'
 import { buttonStyles } from '../../styles/shared-button-styles.js'
 import type { QuestionGroup, Question } from '@s3ntiment/shared'
@@ -68,7 +68,7 @@ class QuestionGroupElement extends HTMLElement {
         this.shadowRoot.innerHTML = `
         <style>
             :host {
-                --green: #3473ab;
+             
                 display: block;
                 margin-bottom: 1.5rem;
             }
@@ -109,7 +109,7 @@ class QuestionGroupElement extends HTMLElement {
                 align-items: center;
                 margin-bottom: 1rem;
                 gap: 0.5rem;
-                border-left: 3px solid var(--green);
+                border-left: 3px solid var(--color-too-dark);
                 padding: 0 .75rem;
             }
 
@@ -143,7 +143,7 @@ class QuestionGroupElement extends HTMLElement {
             }
 
             .btn-icon {
-                color: var(--green);
+                color: var(--color-too-dark);
                 cursor: pointer;
                 background: transparent;
                 border: none;

@@ -12,6 +12,7 @@ import { generateCardSecrets } from "../factories/invitation.factory.js";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
 import { capabilityDelegation } from "../cap.js";
 import { fetchAndDecryptSurvey, Survey } from "@s3ntiment/shared";
+import { renderIcon } from "@s3ntiment/shared/assets";
 
 
 export class SurveyController {
@@ -32,21 +33,17 @@ export class SurveyController {
 
         app.innerHTML = `
             <style>
-                :root {
-                    --green: rgb(42.9834254144, 112.6165745856, 98.0022099448)
-                }
-
+           
                 .survey-header {
                     width: 100%;
                     display: flex;
                     flex-direction: row;
                     justify-content: flex-start;
                     align-items: center;
-                    margin-bottom: 1.5rem;
                 }
 
                 .tabs-container {
-                    border-bottom: 1px solid var(--green);
+                    // border-bottom: 1px solid var(--color-too-dark);
                     margin-bottom: 2rem;
                     width: 100%;
                 }
@@ -65,8 +62,9 @@ export class SurveyController {
                     cursor: pointer;
                     font-size: 1rem;
                     font-weight: 500;
-                    color: var(--green);
+                    color: var(--color-too-dark);
                     transition: all 0.2s;
+                    border-bottom: 2px solid var(--color-too-dark);
                 }
 
                 .tab:hover {
@@ -74,20 +72,28 @@ export class SurveyController {
                 }
 
                 .tab.active {
-                    color: var(--green);
+                    color: var(--color-too-dark);
                     border-bottom-color: white;
-                    border-left: 1px solid var(--green);
-                    border-top: 1px solid var(--green);
-                    border-right: 1px solid var(--green);
-                    border-bottom: 1px solid #7ccdbc;
+                    border-left: 2px solid var(--color-too-dark);
+                    border-top: 2px solid var(--color-too-dark);
+                    border-right: 2px solid var(--color-too-dark);
+                    border-bottom: 2px solid var(--color-bg);
                 }
 
                 .back-btn {
                     background: none;
                     border: none;
-                    color: var(--green);
                     cursor: pointer;
                     font-size: 2rem;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+
+                    svg {
+                        height: 2.5rem;
+                        width: 2.5rem;
+                        fill: var(--color-too-dark)
+                    }
                 }
 
                 .back-btn:hover {
@@ -97,7 +103,7 @@ export class SurveyController {
 
             <div class="container container-large centered">
                 <div class="survey-header">
-                    <button class="back-btn" id="back-btn"><</button>
+                    <button class="back-btn" id="back-btn">${renderIcon('caret')}</button>
                     <h2 id="survey-title">Loading...</h2>
                 </div>
 
@@ -118,7 +124,7 @@ export class SurveyController {
         const titleView = reactive('#survey-title', () => {
 
             console.log("should update", this.survey)
-            return this.survey?.title || 'Loading...';
+            return this.survey?.title || '...';
         });
 
         if (titleView) {
@@ -147,8 +153,6 @@ export class SurveyController {
         // Reactive survey content
         const view = reactive('#survey-container', () => {
             const { resultTab } = store.ui;
-
-            console.log("tab", resultTab)
 
             switch (resultTab) {
                 case 'results':
@@ -216,7 +220,8 @@ export class SurveyController {
         });
 
         const talliedResults = await response.json();
-        this.survey.results = talliedResults;
+        this.survey.results = talliedResults.results;
+        store.addSurvey(this.survey);
     }
 
     async render() {

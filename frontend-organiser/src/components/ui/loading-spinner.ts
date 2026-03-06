@@ -1,10 +1,10 @@
 // loading-spinner.ts
 import { formStyles } from '../../styles/shared-form-styles.js'
-import { typograhyStyles } from '../../styles/shared-typograhy-styles.js'
+import { typograhyStyles } from '../../../../shared/src/assets/styles/typography-styles.js'
 
 class LoadingSpinner extends HTMLElement {
-  private message: string = 'Loading...'
-  private size: number = 160
+  private message: string = 'loading...'
+  private size: number = 240
   private color: string = '#3473ab;'
 
   constructor() {
@@ -47,12 +47,11 @@ class LoadingSpinner extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
-          min-height: 60vh;
+          min-height: 50vh;
           display: flex;
           width: 100%;
           text-align: center;
-          --green: rgb(42.9834254144, 112.6165745856, 98.0022099448)
-          min-height: 240px;
+          // min-height: 480px;
         }
 
         .spinner-container {
@@ -62,17 +61,19 @@ class LoadingSpinner extends HTMLElement {
           justify-content: center;
           gap: 1rem;
           padding: 2rem;
+          margin: auto;
+
         }
 
         .loader {
           width: ${this.size}px;
           height: ${this.size}px;
-          border: ${Math.max(3, Math.floor(this.size / 10))}px dotted ${this.color};
+          border: ${Math.max(3, Math.floor(this.size / 20))}px dotted ${this.color};
           border-radius: 50%;
           display: inline-block;
           position: relative;
           box-sizing: border-box;
-          animation: rotation 2s linear infinite;
+          animation: rotation 3s linear infinite;
         }
 
         @keyframes rotation {
@@ -87,8 +88,10 @@ class LoadingSpinner extends HTMLElement {
         .message {
           color: ${this.color};
           font-size: 1rem;
-          font-weight: 500;
+          font-weight: 400;
           margin: 0;
+          margin-top: -142px;
+
         }
 
         .visually-hidden {

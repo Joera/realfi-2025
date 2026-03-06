@@ -46,6 +46,7 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: [],
+    exclude: ["@s3ntiment/shared"],
     esbuildOptions: {
       target: 'esnext',
       define: {

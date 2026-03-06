@@ -1,13 +1,16 @@
-import { typograhyStyles } from '../styles/shared-typograhy-styles.js'
+import { typograhyStyles } from '../../../shared/src/assets/styles/typography-styles.js'
 import { colourStyles } from '../styles/shared-colour-styles.js'
 import { buttonStyles } from '../styles/shared-button-styles.js'
 import { layoutStyles } from '../styles/shared-layout-styles.js'
 import { store } from '../state/store.js'
 import { router } from '../router.js';
+import { Survey, SurveyResultsTally } from '@s3ntiment/shared'
 
 class SurveyDetailResponses extends HTMLElement {
     private unsubscribe?: () => void;
     private surveyId!: string;
+    private survey!: Survey;
+    private total!: number;
 
     constructor() {
         super()
@@ -36,9 +39,7 @@ class SurveyDetailResponses extends HTMLElement {
     private render(surveys: any[]) {
         if (!this.shadowRoot) return;
         
-        const survey = surveys.find(s => s.id === this.surveyId);
-
-        console.log("IN COMPONENT", survey)
+        this.survey = surveys.find(s => s.id === this.surveyId);
 
         this.shadowRoot.innerHTML = `
         <style>
@@ -53,27 +54,205 @@ class SurveyDetailResponses extends HTMLElement {
             }
         </style>
 
-        <div class="container container-large">
+        <div class="container container-large centered">
             
-            ${!survey ? `
-                <div class="loading">Loading survey...</div>
+            ${!this.survey ? `
+                <loading-spinner></loading-spinner>
             ` : `
-                <div id="responses">
-                    <p>Loading responses from Nillion...</p>
-                </div>
+                <loading-spinner></loading-spinner>
             `}
         </div>
         `;
 
-        this.attachListeners()
+        if(this.survey.results) {
+
+           
+            this.renderResults();
+            this.attachListeners()
+        }
     }
 
+     private renderResults() {
+        if (!this.shadowRoot) return;
 
-    private attachListeners() {
-       
-    
- 
+        const groupsHTML = this.survey.groups && this.survey.groups.length > 0
+            ? this.renderGrouped()
+            : this.renderFlat();
+
+        this.shadowRoot.innerHTML = `
+            <style>
+                .responses-container {
+                    
+                    width: 100%;
+                    color: var(--color-too-dark);
+                    display: flex;
+                    flex-direction: column;
+
+                    span {
+                        align-self: flex-end;
+                    }
+                }
+
+                .group-section {
+                    
+                    margin-bottom: 2rem;
+                    padding-left: 2rem;
+
+                }
+
+                .group-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 1rem;
+                    gap: 0.5rem;
+                    border-left: 3px solid var(--color-too-dark);
+                    padding: 0 .75rem;
+                }
+
+                .result-item {
+                    margin-bottom: 1.5rem;
+                    padding: 1rem;
+              
+                }
+
+                .result-item h3 {
+                    margin: 0 0 1rem 0;
+                         font-size: 1rem;
+                    font-weight: 600;
+                }
+
+                .result-row {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 0.5rem 0;
+                    border-bottom: 1px solid #eee;
+                }
+
+                .result-row:last-child {
+                    border-bottom: none;
+                }
+                         .text-responses ul {
+                    list-style: none;
+                    padding: 0;
+                    margin: 0.5rem 0 0;
+                }
+
+                .text-responses li {
+                    padding: 0.5rem;
+                    background: white;
+                    margin-bottom: 0.5rem;
+                    border-radius: 2px;
+                    font-size: 0.9rem;
+                }
+            </style>
+
+            <div class="container centered">
+                <div class="responses-container">
+                    <span>(${this.total} responses)</span>
+                    ${groupsHTML}
+                </div>
+            </div>
+        `;
     }
+
+    private renderGrouped(): string {
+        return this.survey.groups!.map(group => `
+            <div class="group-section">
+                <div class="group-header">
+                    <h3>${group.title}</h3>
+                </div>
+                ${group.questions.map(question => {
+                    const tally = this.survey.results![question.id];
+                    return tally ? this.renderResultItem(tally) : '';
+                }).join('')}
+            </div>
+        `).join('');
+    }
+
+    private renderFlat(): string {
+        return Object.entries(this.survey.results!).map(([_, tally]) =>
+            this.renderResultItem(tally)
+        ).join('');
+    }
+
+    private renderResultItem(tally: SurveyResultsTally[string]): string {
+
+        console.log(tally)
+        return `
+            <div class="result-item">
+                <h3>${tally.question}</h3>
+                ${this.renderByType(tally)}
+            </div>
+        `;
+    }
+
+    private renderByType(tally: SurveyResultsTally[string]): string {
+        switch (tally.type) {
+            case 'text':
+                return `
+                    <div class="text-responses">
+                        <p>${tally.responses.length} responses</p>
+                        <ul>
+                            ${tally.responses.map(r => `<li>${this.escapeHtml(r)}</li>`).join('')}
+                        </ul>
+                                            </div>
+                `;
+            
+            case 'radio':
+                return `
+                    <div class="radio-results">
+                        ${tally.options?.map((option, i) => `
+                            <div class="result-row">
+                                <span>${option}</span>
+                                <span>${tally.counts[i] || 0} / ${tally.total}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            case 'scale':
+                return `
+                    <div class="scale-results">
+                        <div class="result-row">
+                            <span>Average</span>
+                            <strong>${tally.average}</strong>
+                        </div>
+                        <div class="result-row">
+                            <span>Responses</span>
+                            <span>${tally.responses} / ${tally.total}</span>
+                        </div>
+                    </div>
+                `;
+            
+            case 'checkbox':
+                                return `
+                    <div class="checkbox-results">
+                        ${tally.options?.map((option, i) => `
+                            <div class="result-row">
+                                <span>${option}</span>
+                                <span>${tally.counts[i] || 0} selected</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            
+            default:
+                return '';
+        }
+    }
+
+    private escapeHtml(text: string): string {
+        const map: { [key: string]: string } = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    private attachListeners() {}
 
 
 }
@@ -81,11 +260,3 @@ class SurveyDetailResponses extends HTMLElement {
 customElements.define('survey-detail-responses', SurveyDetailResponses)
 
 export { SurveyDetailResponses }
-
-
-        // <div class="survey-header">
-                //     <h1>Survey Results</h1>
-                //     <div>Survey ID: ${survey.id.slice(0, 16)}...</div>
-                //     <div>Created: ${new Date(Number(survey.createdAt) * 1000).toLocaleDateString()}</div>
-                //     <div>Collection: ${survey.collectionID?.slice(0, 8)}...</div>
-                // </div>

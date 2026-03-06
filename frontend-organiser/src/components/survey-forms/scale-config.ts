@@ -1,4 +1,4 @@
-import { typograhyStyles } from '../../styles/shared-typograhy-styles.js'
+import { typograhyStyles } from '../../../../shared/src/assets/styles/typography-styles.js'
 import { colourStyles } from '../../styles/shared-colour-styles.js'
 
 class ScaleConfig extends HTMLElement {

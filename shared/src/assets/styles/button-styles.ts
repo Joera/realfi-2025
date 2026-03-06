@@ -1,5 +1,3 @@
-import { bgDarkest, bgTooDark } from "./shared-colour-styles";
-
 export const buttonStyles = new CSSStyleSheet();
 buttonStyles.replaceSync(`
     .button-group {
@@ -25,12 +23,12 @@ buttonStyles.replaceSync(`
         }
 
         .btn-primary {
-          background-color: ${bgTooDark};
+          background-color: var(--color-too-dark);
           color: white;
         }s
 
         .btn-primary:hover:not(:disabled) {
-          background-color: ${bgTooDark};
+          background-color: var(--color-too-dark);
 
         .btn-secondary {
           background-color: #f3f4f6;
