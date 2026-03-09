@@ -2,6 +2,9 @@
 import { defineConfig } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { fileURLToPath } from 'url';
+import wasm from 'vite-plugin-wasm';
+import topLevelAwait from 'vite-plugin-top-level-await';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 import path from 'path';
 import { config } from 'dotenv';
 
@@ -29,6 +32,14 @@ export default defineConfig({
     }
   },
   plugins: [
+    wasm(), 
+    topLevelAwait(),
+    viteStaticCopy({
+      targets: [{
+        src: 'node_modules/@holonym-foundation/mishtiwasm/pkg/esm/mishtiwasm_bg.wasm',
+        dest: 'assets'
+      }]
+    }),
     nodePolyfills({
       globals: {
         Buffer: true,

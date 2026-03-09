@@ -1,4 +1,4 @@
-import initMishtiwasm, { msg_to_point, new_mask, request_from_signer, unmask_and_hash_to_field_secp256k1 } from '@holonym-foundation/mishtiwasm';
+import initMishtiwasm, { msg_to_point, request_from_signer } from '@holonym-foundation/mishtiwasm';
 
 
 export class OPRFService {

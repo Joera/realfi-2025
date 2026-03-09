@@ -8,7 +8,7 @@ import {
   IPFSMethods
 } from "@s3ntiment/shared";
 
-import { WaapService } from "@s3ntiment/shared/browser"
+import { OPRFService, WaapService } from "@s3ntiment/shared/browser"
 
 
 import { base } from "viem/chains";
@@ -20,6 +20,7 @@ export interface IServices {
   account: PermissionlessSimpleService;
   safe: PermissionlessSafeService;
   ipfs: IPFSMethods;
+  oprf: OPRFService;
   isInitialized: () => boolean;
 }
 
@@ -33,6 +34,7 @@ export class ServiceContainer {
   public safe!: PermissionlessSafeService;
   public viem!: ViemService;
   public ipfs!: IPFSMethods;
+  public oprf!: OPRFService
   
   private constructor() {
     if (ServiceContainer.instance) {
@@ -61,18 +63,12 @@ export class ServiceContainer {
  
     this.lit = new LitService(import.meta.env.VITE_LIT_NETWORK);
     this.ipfs = new IPFSMethods(import.meta.env.VITE_KUBO_ENDPOINT, import.meta.env.VITE_PINATA_JWT, import.meta.env.VITE_PINATA_GATEWAY)
+    this.oprf = new OPRFService(import.meta.env.VITE_HUMAN_NETWORK_SIGNER_URL);
 
-    const walletClient = await this.waap.createWallet(base);
+    await this.waap.login(base)
 
-    if (walletClient) {
-        if (import.meta.env.VITE_USE_SAFE == 'true') { await this.safe.updateSigner(walletClient); }
-        await this.account.updateSigner(walletClient);
-    } else {
-        
-        console.warn('No wallet yet, skipping signer setup');
-    }
-
-    await this.lit.init()
+    await this.lit.init();
+    await this.oprf.init();
 
     this.initialized = true;
   }

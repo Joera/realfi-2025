@@ -1,7 +1,7 @@
 import { nagaDev, nagaTest } from "@lit-protocol/networks";
 import { createLitClient } from "@lit-protocol/lit-client";
 import { createAuthManager, storagePlugins } from "@lit-protocol/auth";
-import type { Account } from "viem/accounts";
+import type { Account, PrivateKeyAccount } from "viem/accounts";
 
 type LitNetwork = "nagaDev" | "nagaTest";
 
@@ -22,18 +22,17 @@ export class LitService {
         return this.litClient;
     }
 
-    async createAuthContext(waapWalletClient: any, capabilityDelegation: any, domain: string): Promise<any> {
+    async createAuthContext(signer: any, capabilityDelegation: any, domain: string): Promise<any> {
 
         if (!this.litClient) throw new Error("Lit client not initialized — call init() first");
 
+        console.log("signer address", signer.address)
+
         const wrappedAccount = {
-            address: waapWalletClient.account.address,
+            address: signer.address,
             type: "local",
             signMessage: async ({ message }: { message: string }) =>
-                await waapWalletClient.signMessage({
-                    account: waapWalletClient.account,
-                    message,
-                }),
+                await signer.signMessage({ message }),
         } as unknown as Account;
 
         const authManager = createAuthManager({

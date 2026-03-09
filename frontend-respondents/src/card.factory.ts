@@ -86,7 +86,7 @@ export class Card {
         );
     }
 
-    async validate(services: IServices) {
+    async register(services: IServices) { // should be called register
         return await services.account.write(
             surveyStore.address as `0x${string}`,
             surveyStore.abi,

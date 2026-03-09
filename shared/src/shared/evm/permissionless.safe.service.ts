@@ -6,10 +6,11 @@ import type { Chain } from "viem";
 import { getRPCUrl } from "./chains.factory";
 import { TxOptions, TxResult } from "./tx.types";
 import { extractDeployedAddress } from "./contract-address.factory";
+import { privateKeyToAccount } from "viem/accounts";
 
 export interface IPermissionlessSafeService {
     address: string;
-    updateSigner: (signer: any) => Promise<string>;
+    updateSignerWithKey: (key: `0x${string}`) => Promise<`0x${string}`>;
     connectToFreshSafe: (salt: string) => Promise<string>;
     connectToExistingSafe: (safeAddress: string) => Promise<string>;
     write: (address: string, abi: any, method: string, args: any[], options?: TxOptions) => Promise<TxResult>;
@@ -54,10 +55,10 @@ export class PermissionlessSafeService implements IPermissionlessSafeService {
         });
     }
 
-    async updateSigner(waapWalletClient: any): Promise<string> {
-        this.signer = waapWalletClient;
-        return this.signer.address;
-    }
+    async updateSignerWithKey(key: `0x${string}`): Promise<`0x${string}`> {
+            this.signer = privateKeyToAccount(key);
+            return this.signer.address;
+        }
 
     async isDeployed(address?: string): Promise<boolean> {
         try {

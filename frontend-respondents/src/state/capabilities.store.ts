@@ -43,6 +43,8 @@ export class CapabilityDelegationStore {
   }
 
   async ensure(backendUrl: string, account: PermissionlessSimpleService): Promise<any> {
+
+    console.log("cap delegation ensure")
     
     const cached = loadCapabilityDelegation(); // always goes through expiry check
     if (cached) {
@@ -50,6 +52,11 @@ export class CapabilityDelegationStore {
         return cached;
     }
 
+    // signer or account ??? // for what? 
+    // should i use signer for lit ?? 
+
+    // to use account for lit we need to use sign + isValidSignature ??? 
+    // 
     const signature = await account.signMessage('Request capability to decrypt');
     const delegation = await fetchCapabilityDelegation(backendUrl, account.getSignerAddress(), signature);
     this.delegationObservable.set(delegation);

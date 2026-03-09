@@ -17,7 +17,7 @@ config(); // loads local .env
 export default defineConfig({
   root: '.',
   server: {
-    port: 9999,
+    port: 9997,
     open: false
   },
   build: {

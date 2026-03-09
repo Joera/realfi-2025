@@ -7,6 +7,7 @@ import { createBatchWallet } from '../factories/invitation.factory.js';
 import { createBatch, createInvitations, deploySafe} from '../factories/survey.factory.js';
 import { IServices } from '../services/services.js';
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
+import { base } from 'viem/chains';
 
 export class NewSurveyController {
   private reactiveViews: any[] = [];
@@ -52,7 +53,14 @@ export class NewSurveyController {
 
       const surveyId = crypto.randomUUID();
 
+      const input = await this.services.waap.signMessage(`Sign in with your unlinkable account to co-own survey ${surveyId}`); 
+      const key = await this.services.oprf.getSecp256k1(input);
+      // set signer for safe 
+      await this.services.safe.updateSignerWithKey(key);
+
       const safeAddress = import.meta.env.VITE_USE_SAFE == 'true' ? await this.services.safe.predictSafeAddress(surveyId) : "";
+
+      console.log("safeAddress", safeAddress)
   
       const config = {
         safe: safeAddress,

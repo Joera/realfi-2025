@@ -1,7 +1,6 @@
 // src/router.ts
 
 import Navigo from 'navigo';
-import { LandingController } from './controllers/landing.ctrlr.js';
 import { IServices } from './services.js';
 import { AboutController } from './controllers/about.ctrlr.js';
 import { SurveyController } from './controllers/survey.ctrlr.js';
@@ -9,6 +8,14 @@ import { LogoutController } from './components/logout.ctrlr.js';
 import { CardData } from '@s3ntiment/shared';
 import { Card, parseCardURL } from './card.factory.js';
 import { base } from 'viem/chains';
+import { InvalidCardController } from './controllers/invalid-card-ctrlr.js';
+import { UsedCardController } from './controllers/used-card-ctrlr.js';
+import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' };
+import { authenticate, hasParticipatingAccount } from './auth.factory.js';
+import { removeSplash } from './onpageload.js';
+import { AuthController } from './controllers/auth-ctrlr.js';
+
+
 
 const router = new Navigo('/');
 
@@ -16,39 +23,93 @@ let currentController: any = null;
 
 export const initRouter = (services: IServices) => {
 
-    router.on('/', 
-      () => {
-        if (currentController?.destroy) currentController.destroy();
-        currentController = new LandingController(services);
-        // currentController.render();
-      },
-      {
-        before(done, match) {
-          (async () => {
-            const cardData: CardData | null = await parseCardURL();
-            if (cardData == null) {
-              // no card
-              done();
-            } else {
-              const card = new Card(cardData);
-              
-              const cardIsUsed = await card.isUsed(services);
-              if (cardIsUsed) {
+    router
+      .on('/', 
+        () => {
+          if (currentController?.destroy) currentController.destroy();
+          currentController = new AuthController(services);
+          removeSplash();
+          currentController.render();
+        },
+        {
+          before(done, match) {
+            (async () => {
+              const cardData: CardData | null = await parseCardURL();
+              if (cardData == null) {
+                router.navigate('/invalid-card');
                 done();
               } else {
-                await services.waap.login(base);
-                const input = await services.waap.signMessage(`Sign in with your unlinkable account for survey ${cardData.surveyId}`);
-                const key = await services.oprf.getSecp256k1(input);
-                await services.account.updateSignerWithKey(key);
-                await card.validate(services)
-                // register
+
+                const card = new Card(cardData);         
+                const cardIsUsed = await card.isUsed(services);
+
+                if (cardIsUsed) {
+                  router.navigate(`/used-card/${card.surveyId}`);
+                  done();
+                } else {
+                  done();
+                }
+              }
+            })();
+          }
+        }
+      ).on('/invalid-card',
+        () => {
+          if (currentController?.destroy) currentController.destroy();
+          currentController = new InvalidCardController(services);
+          removeSplash();
+          currentController.render();
+        }
+      )
+      .on('/used-card/:surveyId',
+        (match: any) => {
+          if (currentController?.destroy) currentController.destroy();
+          const surveyId = match?.params?.surveyId || match?.data?.surveyId || '';
+          currentController = new UsedCardController(services, surveyId);
+          removeSplash();
+          currentController.render();
+        }
+      )
+      .on('/surveys/:surveyId', 
+        (match: any) => {
+          if (currentController?.destroy) currentController.destroy();      
+          const surveyId = match?.params?.surveyId || match?.data?.surveyId || '';
+          currentController = new SurveyController(services, surveyId);
+          removeSplash();
+          currentController.render();
+        },
+        {
+          before(done,match) {
+            (async () => {
+
+              const surveyId = match?.params?.surveyId || match?.data?.surveyId || '';
+              if (!surveyId) {
+                router.navigate('/surveys');
                 done();
               }
-            }
-          })();
+         
+              // store in session // or LS
+              let isParticipant = await hasParticipatingAccount(services, surveyId);
+              if(!isParticipant) {
+                isParticipant = await authenticate(services, surveyId)  // separate route // with controller + spinner ? 
+              }
+              if (isParticipant) {
+                console.log("isParticipant")
+                done()
+              } else {
+                router.navigate('/invalid-card');
+                done()
+              }
+            })();
+          }
         }
-      }
-    );
+      )
+
+        
+
+       
+        
+
 
 //   router
 //     .on('/', () => {

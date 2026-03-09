@@ -48,12 +48,14 @@ export class SurveyController {
 
   async render() {
 
+    console.log("hi")
+
     const capabilityDelegation = await store.ensureCapabilityDelegation(
       import.meta.env.VITE_BACKEND,
       this.services.account
     );
 
-    const authContext = await this.services.lit.createAuthContext(this.services.waap.getWalletClient(), capabilityDelegation, window.location.host);
+    const authContext = await this.services.lit.createAuthContext(this.services.account.getSigner(), capabilityDelegation, window.location.host);
     const survey = await fetchAndDecryptSurvey(this.services, surveyStore, this.surveyId, authContext)
     this.config = survey;
     console.log("SURVEY", survey)
@@ -82,8 +84,10 @@ export class SurveyController {
       const signature = await this.services.waap.signMessage(`s3ntiment:submit:${this.surveyId}`);
       const s = this.services.waap.address;
       const smc = this.services.account.getAddress()
-      const result = await this.services.nillDB.storeStandard(import.meta.env.VITE_BACKEND, this.surveyId, userData, signature, s!, smc );
-      console.log(result)
+      if(smc != undefined) {
+        const result = await this.services.nillDB.storeStandard(import.meta.env.VITE_BACKEND, this.surveyId, userData, signature, s!, smc );
+        console.log(result)
+      }
 
 
       // FLOW AS DESIGNED FOR OWNED COLLECTIONS    

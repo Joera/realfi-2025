@@ -65,20 +65,9 @@ export class ServiceContainer implements IServices {
     this.nillDB = new NillDBUserService(import.meta.env.VITE_NIL_BUILDER_DID, import.meta.env.VITE_NILCHAIN_URL, import.meta.env.VITE_NILAUTH_URL, import.meta.env.VITE_NILDB_NODES);
     this.oprf = new OPRFService(import.meta.env.VITE_HUMAN_NETWORK_SIGNER_URL);
     
-    const walletClient = await this.waap.createWallet(base);
-
-    if (walletClient) {
-        await this.account.updateSignerWithWaap(walletClient);
-    } else {
-        console.warn('No wallet yet, skipping signer setup');
-    }
-
-    console.log('a')
-
+    await this.waap.createWallet(base);
     await this.lit.init()
-    console.log('b')
     await this.oprf.init()
-    console.log('c')
 
     this.initialized = true;
 

@@ -1,5 +1,4 @@
-export const buttonStyles = new CSSStyleSheet();
-buttonStyles.replaceSync(`
+export const buttonStylesString = `
     .button-group {
           display: flex;
           gap: 1rem;
@@ -71,4 +70,7 @@ buttonStyles.replaceSync(`
         .summary-value {
           color: #374151;
         }    
-`)
+`
+
+export const buttonStyles = new CSSStyleSheet();
+buttonStyles.replaceSync(buttonStylesString)

@@ -1,3 +1,5 @@
+import { buttonStylesString } from './button-styles';
+
 export function injectGlobalStyles() {
   if (document.getElementById("app-global")) return;
   const style = document.createElement("style");
@@ -79,6 +81,7 @@ export function injectGlobalStyles() {
     }
 
     .onboarding-message {
+
         margin: 0 1.5rem 1.5rem 1.5rem;
 
         h2 {
@@ -95,6 +98,7 @@ export function injectGlobalStyles() {
         p { 
             margin: 0;
             font-family: "Monaspace Neon";
+            color: var(--color-too-dark);
         }
     }
 
@@ -192,18 +196,26 @@ export function injectGlobalStyles() {
 
     h1 {
 
-        font-size: 3.6rem;
+        font-size: 2.8rem;
         font-family: "Cormorant Garamond";
         font-style: normal;
         font-weight: 700;
         color: var(--color-too-dark);
 
-        span {
+        @media(min-width: 1000px) {
             font-size: 3.6rem;
+        }
+
+        span {
+            font-size: 2.4rem;
             font-family: "Cormorant Garamond";
             font-style: normal;
             font-weight: 700;
-                color: white;
+            color: white;
+
+            @media(min-width: 1000px) {
+                font-size: 3.6rem;
+            }
         }
     }
 
@@ -229,6 +241,9 @@ export function injectGlobalStyles() {
         font-size: 1rem;
         line-height: 1.55;
     }
+
+
+    ${buttonStylesString}
     
     `;
   document.head.appendChild(style);

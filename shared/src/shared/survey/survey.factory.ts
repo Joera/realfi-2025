@@ -18,8 +18,10 @@ export const fetchAndDecryptSurvey = async (services: any, deployment: any, surv
     try { 
         const data = await services.lit.decrypt(config.surveyConfig, authContext, accs);
         d = data.convertedData;
-    } catch (error){
-        console.log(error);
+    } catch (e: any){
+        console.log('Lit decrypt error:', e);
+        console.log('Lit decrypt error message:', e?.message);
+        console.log('Lit decrypt error details:', JSON.stringify(e?.details || e?.errorKind || e, null, 2));
     }
 
     return {
@@ -34,3 +36,4 @@ export const encryptAndStoreSurvey = async () => {
 
     // encryption part happens inside a promise.all 
 }
+

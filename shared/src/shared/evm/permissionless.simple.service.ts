@@ -2,13 +2,15 @@ import { toSimpleSmartAccount } from "permissionless/accounts";
 import { createSmartAccountClient, SmartAccountClient } from "permissionless";
 import { createPimlicoClient } from "permissionless/clients/pimlico";
 import { createPublicClient, encodeFunctionData, http, parseEther, Transport } from "viem";
-import type { Chain, Signature } from "viem";
+import type { Chain, PrivateKeyAccount, Signature, WalletClient } from "viem";
 
 import { getRPCUrl, TxOptions, TxResult } from "@s3ntiment/shared";
 import { extractDeployedAddress } from "@s3ntiment/shared";
 import { privateKeyToAccount } from "viem/accounts";
+import { WaaPWalletConnect } from "@human.tech/waap-sdk";
 
 export interface IPermissionlessSimpleService {
+    getSigner: () => PrivateKeyAccount | WalletClient;
     getSmartAccountClient: () => SmartAccountClient;
     updateSignerWithKey: (key: `0x${string}`) => Promise<`0x${string}`>;
     updateSignerWithWaap: (waapWalletClient: any) => Promise<`0x${string}`>;
@@ -56,18 +58,22 @@ export class PermissionlessSimpleService implements IPermissionlessSimpleService
     async updateSignerWithKey(key: `0x${string}`): Promise<`0x${string}`> {
         this.signer = privateKeyToAccount(key);
         await this.connectToAccount();
+        console.log("uptain with signer key")
         return this.signer.address;
     }
 
-    async updateSignerWithWaap(waapWalletClient: any): Promise<`0x${string}`> {
+    async updateSignerWithWaap(waapWalletClient: WalletClient): Promise<`0x${string}`> {
         this.signer = waapWalletClient;
         await this.connectToAccount();
         return this.signer.account.address;
     }
 
+    getSigner(): PrivateKeyAccount | WalletClient {
+        return this.signer;
+    }
+
     getSignerAddress() : string {
-        console.log("SS", this.signer)
-        return this.signer.account.address || this.signer.address;
+        return this.signer.address;
     }
 
     async connectToAccount(): Promise<void> {
@@ -92,8 +98,8 @@ export class PermissionlessSimpleService implements IPermissionlessSimpleService
         console.log("account address", this.smartAccount.address)
     }
 
-    getAddress(): `0x${string}` {
-        return this.smartAccount.address;
+    getAddress(): `0x${string}` | undefined {
+        return this.smartAccount ? this.smartAccount.address: undefined;
     }
 
     async write(

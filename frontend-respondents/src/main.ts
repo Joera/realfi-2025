@@ -11,7 +11,6 @@ injectGlobalStyles();
 
 import { initRouter } from './router.js';
 import { getServices } from './services.js';
-import { onPageLoaded } from "./onpageload.js";
 
 
 
@@ -32,9 +31,6 @@ const main = async () => {
 
   initRouter(services);
 
-  // if route is 
-
-  onPageLoaded();
 }
 
 if (document.readyState === 'loading') {

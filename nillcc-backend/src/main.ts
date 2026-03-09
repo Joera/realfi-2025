@@ -130,6 +130,8 @@ app.post('/api/lit-payment-delegation', async (req, res) => {
 
     const { userAddr, signature } = req.body;
 
+    console.log("userAddress", userAddr)
+
     // check signature
     const hasValidSignature = await viem.publicClient.verifyMessage({
       address: userAddr,
