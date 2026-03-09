@@ -57,6 +57,7 @@ export interface Config {
 export interface Survey {
     id?: string
     title?: string
+    createdAt?: BigInt
     introduction?: string
     groups?: QuestionGroup[]
     batches?: Batch[]

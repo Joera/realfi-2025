@@ -12,7 +12,6 @@ export const fetchAndDecryptSurvey = async (services: any, deployment: any, surv
     const config = JSON.parse(await services.ipfs.fetchFromPinata(surveyInfo[0]));
 
     const accs = accsForOwnerOrUser(surveyId, deployment.address, services.account.getAddress());
-    console.log("b4 decryptin", services.lit.litClient.networkName)
 
     let d: any;
 

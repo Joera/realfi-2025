@@ -3,14 +3,12 @@ import { IServices } from "../services/services.js";
 import { store } from "../state/store.js";
 import { reactive } from "../utils/reactive.js";
 import '../components/survey-detail-responses.js';
-import '../components/survey-detail-config.js';
+import '../components/survey-detail-access.js';
 import '../components/survey-forms/survey-form-questions.js';
 import '../components/survey-forms/survey-form-batches.js';
 import { router } from "../router.js";
 import { createBatch } from "../factories/survey.factory.js";
-import { generateCardSecrets } from "../factories/invitation.factory.js";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
-import { capabilityDelegation } from "../cap.js";
 import { fetchAndDecryptSurvey, Survey } from "@s3ntiment/shared";
 import { renderIcon } from "@s3ntiment/shared/assets";
 
@@ -61,7 +59,7 @@ export class SurveyController {
                     border: none;
                     cursor: pointer;
                     font-size: 1rem;
-                    font-weight: 500;
+                    font-weight: 400;
                     color: var(--color-too-dark);
                     transition: all 0.2s;
                     border-bottom: 2px solid var(--color-too-dark);
@@ -123,7 +121,7 @@ export class SurveyController {
         // Reactive survey title
         const titleView = reactive('#survey-title', () => {
 
-            console.log("should update", this.survey)
+            // console.log("should update", this.survey)
             return this.survey?.title || '...';
         });
 
@@ -138,7 +136,7 @@ export class SurveyController {
             
             return `
                 <button class="tab ${resultTab === 'results' ? 'active' : ''}" data-tab="results">Results</button>
-                <button class="tab ${resultTab === 'config' ? 'active' : ''}" data-tab="config">Config</button>
+                <button class="tab ${resultTab === 'access' ? 'active' : ''}" data-tab="access">Access</button>
                 <button class="tab ${resultTab === 'questions' ? 'active' : ''}" data-tab="questions">Questions</button>
                 <button class="tab ${resultTab === 'batches' ? 'active' : ''}" data-tab="batches">Batches</button>
 
@@ -157,8 +155,8 @@ export class SurveyController {
             switch (resultTab) {
                 case 'results':
                     return `<survey-detail-responses class="container" survey-id="${this.surveyId}"></survey-detail-responses>`
-                case 'config':
-                    return `<survey-detail-config class="container" survey-id="${this.surveyId}"></survey-detail-config>`;
+                case 'access':
+                    return `<survey-detail-access class="container" survey-id="${this.surveyId}"></survey-detail-access>`;
                 case 'questions':
                     return `<survey-form-questions class="container" survey-id="${this.surveyId}"></survey-form-questions>`;
                 case 'batches':
@@ -179,16 +177,27 @@ export class SurveyController {
     
     async process() {
 
-        this.survey = store.surveys.find((s: any) => s.id === this.surveyId);
+        const survey = store.surveys.find((s: any) => s.id === this.surveyId);
 
-         if (!this.survey) {
+         if (survey && survey !== undefined) {
+
+            this.survey = survey;
+
+         } else {
+
             console.log('Survey not in store, fetching...');
-            
+
+            const capabilityDelegation = await store.ensureCapabilityDelegation(
+                import.meta.env.VITE_BACKEND,
+                this.services.account
+            );
+
             const authContext = await this.services.lit.createAuthContext(this.services.waap.getWalletClient(), capabilityDelegation, window.location.host);
             this.survey = await fetchAndDecryptSurvey(this.services, surveyStore, this.surveyId, authContext)
-            console.log(this.survey)
+            console.log("S",this.survey)
             store.addSurvey(this.survey);
-        }
+         
+         }
 
         // const nillDid = await this.services.nillion.getDid();
 
@@ -222,6 +231,7 @@ export class SurveyController {
         const talliedResults = await response.json();
         this.survey.results = talliedResults.results;
         store.addSurvey(this.survey);
+        
     }
 
     async render() {
@@ -238,7 +248,7 @@ export class SurveyController {
     setListeners() {
 
         document.querySelector('#back-btn')?.addEventListener('click', () => {
-            router.navigate('/results');
+            router.navigate('/surveys');
         });
 
         // Use event delegation on the parent container
@@ -246,7 +256,7 @@ export class SurveyController {
             const tab = (e.target as HTMLElement).closest('.tab');
             if (!tab) return;
             
-            const tabName = (tab as HTMLElement).dataset.tab as 'results' | 'config' | 'questions';
+            const tabName = (tab as HTMLElement).dataset.tab as 'results' | 'access' | 'questions';
             console.log("click", tabName);
             store.setUI({ resultTab: tabName });
         });

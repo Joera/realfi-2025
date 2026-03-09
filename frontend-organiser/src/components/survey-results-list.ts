@@ -1,7 +1,7 @@
 import { typograhyStyles } from '../../../shared/src/assets/styles/typography-styles.js'
 import { colourStyles } from '../styles/shared-colour-styles.js'
 import { buttonStyles } from '../styles/shared-button-styles.js'
-import '../components/ui/loading-spinner.js'
+import '@s3ntiment/shared/components';
 import { store } from '../state/store.js';
 import { router } from '../router.js';
 import { layoutStyles } from '../styles/shared-layout-styles.js';
@@ -82,7 +82,7 @@ class SurveyResultsList extends HTMLElement {
            
             
              ${surveys.length === 0 ? `
-        <loading-spinner></loading-spinner>
+        <loading-spinner message="decrypting surveys"></loading-spinner>
     ` : `
         <h1>My surveys</h1>
         <div class="survey-table">

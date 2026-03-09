@@ -1,6 +1,6 @@
 import { createPublicClient, http } from "viem";
 import type { Chain } from "viem";
-import { getRPCUrl } from "./chains.factory";
+import { getRPCUrl } from "./chains.factory.js";
 
 export class ViemService {
 

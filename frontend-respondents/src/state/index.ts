@@ -1,3 +1,3 @@
-export * from './store.js';
-export * from './store.types.js';
-export * from './observable.js';
+
+export { Observable, type Listener } from './observable.js';
+export { store } from './store.js';

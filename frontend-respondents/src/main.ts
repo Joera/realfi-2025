@@ -1,33 +1,40 @@
-import './styles/main.scss';
+const color = "#7ccdbc";
+import { injectFonts } from "@s3ntiment/shared/assets";
+import { injectTokens, buildTokens } from "@s3ntiment/shared/assets";
+import { injectGlobalStyles } from "@s3ntiment/shared/assets";
+injectFonts();
+buildTokens(color);
+injectTokens(color);
+
+injectGlobalStyles();
+
+
 import { initRouter } from './router.js';
 import { getServices } from './services.js';
+import { onPageLoaded } from "./onpageload.js";
 
 
-const onPagePainted = () => {
 
-  console.log("paint");
-  const header = document.querySelector('#header') as HTMLElement;
-  console.log(header);
-  header!.style.display = "flex";
-  
-  // const nav = document.getElementsByTagName('nav')[0];
-  // nav.style.display = "flex";
-
-};
 
 
 const main = async () => {
   // Initialize router
 
   const services = getServices();
+
   await services.initialize();
-  
   // Verify initialization
   if (!services.isInitialized()) {
     throw new Error('Failed to initialize services');
   }
-  
+
+  await document.fonts.ready;
+
   initRouter(services);
+
+  // if route is 
+
+  onPageLoaded();
 }
 
 if (document.readyState === 'loading') {
@@ -36,4 +43,3 @@ if (document.readyState === 'loading') {
   main()
 }
 
-window.addEventListener('load', onPagePainted);

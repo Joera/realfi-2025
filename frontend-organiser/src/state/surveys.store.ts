@@ -13,12 +13,19 @@ export class SurveysStore {
   }
 
   set(surveys: Survey[]): void {
-    console.log('hello')
     this.observable.set(surveys);
   }
 
   add(survey: Survey): void {
-    this.observable.update(current => [...current, survey]);
+    this.observable.update(current => {
+      const index = current.findIndex(s => s.id === survey.id);
+      if (index === -1) {
+        return [...current, survey];
+      }
+      const updated = [...current];
+      updated[index] = survey;
+      return updated;
+    });
   }
 
   remove(index: number): void {

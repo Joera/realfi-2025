@@ -1,93 +1,94 @@
-import { Observable } from './observable.js';
+import { Observable, Listener } from './observable.js';
 import { CardState } from '../controllers/landing.ctrlr.js';
 import { Survey } from '@s3ntiment/shared';
+import { loadSurveysFromStorage, saveSurveysToStorage, clearSurveysFromStorage } from './storage.js';
 
 export interface SurveyEntry extends Survey {
-    answeredQuestions: number[];
-    cardState?: CardState;
+  answeredQuestions: number[];
+  cardState?: CardState;
 }
 
-type SurveyMap = Record<string, SurveyEntry>;
+export type SurveyMap = Record<string, SurveyEntry>;
 
-class SurveysStore {
+export class SurveysStore {
+  private observable: Observable<SurveyMap>;
+  private _activeSurveyId: string | null = null;
 
-    private observable: Observable<SurveyMap>;
-    private _activeSurveyId: string | null = null;
+  constructor() {
+    this.observable = new Observable<SurveyMap>(loadSurveysFromStorage());
+  }
 
-    constructor() {
-        this.observable = new Observable<SurveyMap>(
-            JSON.parse(localStorage.getItem('surveys') || '{}')
-        );
+  get all(): SurveyMap {
+    return this.observable.get();
+  }
+
+  get activeSurveyId(): string | null {
+    return this._activeSurveyId;
+  }
+
+  get active(): SurveyEntry | null {
+    if (!this._activeSurveyId) return null;
+    return this.all[this._activeSurveyId] ?? null;
+  }
+
+  setActive(surveyId: string): void {
+    this._activeSurveyId = surveyId;
+    if (!this.all[surveyId]) {
+      this.observable.update(current => ({
+        ...current,
+        [surveyId]: { id: surveyId, answeredQuestions: [] },
+      }));
     }
+  }
 
-    get all()            { return this.observable.get(); }
-    get activeSurveyId() { return this._activeSurveyId; }
+  setData(surveyId: string, data: Survey): void {
+    this.observable.update(current => ({
+      ...current,
+      [surveyId]: { ...current[surveyId], ...data, id: surveyId },
+    }));
+  }
 
-    get active(): SurveyEntry | null {
-        if (!this._activeSurveyId) return null;
-        return this.all[this._activeSurveyId] ?? null;
+  getData(surveyId: string): SurveyEntry | null {
+    return this.all[surveyId] ?? null;
+  }
+
+  update(surveyId: string, update: Partial<Omit<SurveyEntry, 'id'>>): void {
+    this.observable.update(current => ({
+      ...current,
+      [surveyId]: { ...current[surveyId], ...update, id: surveyId },
+    }));
+  }
+
+  get(surveyId: string): SurveyEntry | null {
+    return this.all[surveyId] ?? null;
+  }
+
+  subscribe(listener: Listener<SurveyMap>): () => void {
+    return this.observable.subscribe(listener);
+  }
+
+  persist(): void {
+    const stripped = Object.fromEntries(
+      Object.entries(this.all).map(([k, v]) => {
+        const { groups, batches, config, title, introduction, ...rest } = v;
+        return [k, rest];
+      })
+    );
+    saveSurveysToStorage(stripped as SurveyMap);
+  }
+
+  clear(surveyId?: string): void {
+    if (surveyId) {
+      this.observable.update(current => {
+        const next = { ...current };
+        delete next[surveyId];
+        return next;
+      });
+      this.persist();
+    } else {
+      this.observable.set({});
+      this._activeSurveyId = null;
+      clearSurveysFromStorage();
     }
-
-    setActive(surveyId: string) {
-        this._activeSurveyId = surveyId;
-        if (!this.all[surveyId]) {
-            this.observable.update(current => ({
-                ...current,
-                [surveyId]: { id: surveyId, answeredQuestions: [] },
-            }));
-        }
-    }
-
-    setData(surveyId: string, data: Survey) {
-        this.observable.update(current => ({
-            ...current,
-            [surveyId]: { ...current[surveyId], ...data, id: surveyId },
-        }));
-    }
-
-    getData(surveyId: string): Survey | null {
-        return this.all[surveyId] ?? null;
-    }
-
-    update(surveyId: string, update: Partial<Omit<SurveyEntry, 'id'>>) {
-        this.observable.update(current => ({
-            ...current,
-            [surveyId]: { ...current[surveyId], ...update, id: surveyId },
-        }));
-    }
-
-    get(surveyId: string): SurveyEntry | null {
-        return this.all[surveyId] ?? null;
-    }
-
-    subscribe(listener: (value: SurveyMap) => void): () => void {
-        return this.observable.subscribe(listener);
-    }
-
-    persist() {
-        const stripped = Object.fromEntries(
-            Object.entries(this.all).map(([k, v]) => {
-                const { groups, batches, config, title, introduction, ...rest } = v;
-                return [k, rest];
-            })
-        );
-        localStorage.setItem('surveys', JSON.stringify(stripped));
-    }
-
-    clear(surveyId?: string) {
-        if (surveyId) {
-            this.observable.update(current => {
-                const next = { ...current };
-                delete next[surveyId];
-                return next;
-            });
-        } else {
-            this.observable.set({});
-            this._activeSurveyId = null;
-            localStorage.removeItem('surveys');
-        }
-        this.persist();
-    }
+  }
 }
-
-export const surveysStore = new SurveysStore();

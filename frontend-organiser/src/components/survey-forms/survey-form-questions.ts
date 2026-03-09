@@ -117,7 +117,15 @@ class SurveyFormQuestions extends HTMLElement {
             return
         }
 
+        //   <div class="form-container">
+        //         <div>               
+        //             <label for="survey-introduction">Introduction:</label>
+        //             <textarea id="survey-introduction" placeholder="Enter survey introduction">${survey.introduction}</textarea>
+        //         </div>
+        //     </div>
+
         container.innerHTML = this._groups.map((_, gIndex) => `
+           
             <question-group group-index="${gIndex}"></question-group>
         `).join('')
 

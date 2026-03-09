@@ -6,10 +6,12 @@ import type { Chain, Signature } from "viem";
 
 import { getRPCUrl, TxOptions, TxResult } from "@s3ntiment/shared";
 import { extractDeployedAddress } from "@s3ntiment/shared";
+import { privateKeyToAccount } from "viem/accounts";
 
 export interface IPermissionlessSimpleService {
     getSmartAccountClient: () => SmartAccountClient;
-    updateSigner: (signer: any) => Promise<string>;
+    updateSignerWithKey: (key: `0x${string}`) => Promise<`0x${string}`>;
+    updateSignerWithWaap: (waapWalletClient: any) => Promise<`0x${string}`>;
     connectToAccount: () => Promise<void>;
     write: (address: string, abi: any, method: string, args: any[], options?: TxOptions) => Promise<TxResult>;
     writeRaw: (to: string, data: `0x${string}`, options?: TxOptions) => Promise<TxResult>;
@@ -51,10 +53,21 @@ export class PermissionlessSimpleService implements IPermissionlessSimpleService
         return this.smartAccountClient;
     }
 
-    async updateSigner(waapWalletClient: any): Promise<string> {
-        this.signer = waapWalletClient;
+    async updateSignerWithKey(key: `0x${string}`): Promise<`0x${string}`> {
+        this.signer = privateKeyToAccount(key);
         await this.connectToAccount();
         return this.signer.address;
+    }
+
+    async updateSignerWithWaap(waapWalletClient: any): Promise<`0x${string}`> {
+        this.signer = waapWalletClient;
+        await this.connectToAccount();
+        return this.signer.account.address;
+    }
+
+    getSignerAddress() : string {
+        console.log("SS", this.signer)
+        return this.signer.account.address || this.signer.address;
     }
 
     async connectToAccount(): Promise<void> {
@@ -125,10 +138,23 @@ export class PermissionlessSimpleService implements IPermissionlessSimpleService
         return result;
     }
 
-    async signMessage (message: string) : Promise<Signature> {
+    // signMessage uses EIP-191 — it prepends \x19Ethereum Signed Message:\n + length before hashing. 
+    // That's fine for simple string messages and verifiable with viem's verifyMessage.
+    // The signature comes from the signer as simplesmart account does not support 712
+    async signMessage (message: string) : Promise<`0x${string}`> {
 
-        const signature = await this.signer.signMessage({
-            message: typeof message === 'string' ? message : JSON.stringify(message),
+        return await this.signer.signMessage({ message });
+    }
+
+    // The signature comes from the EOA owner (this.signer) !!!!
+    // but also verifiable via EIP-1271 red call isValidSignature() on the smart account address
+    // SMC needs to be deployed!!! 
+    async signTypedData(domain: any, types: any, message: any): Promise<`0x${string}`> {
+        
+        const signature = await this.signer.signTypedData({
+            domain,
+            types,
+            message,
         });
 
         return signature;

@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
+  readonly VITE_PROD: string
   readonly VITE_PINATA_KEY: string
   readonly VITE_PINATA_SECRET: string
   readonly VITE_PINATA_JWT: string
@@ -14,6 +15,7 @@ interface ImportMetaEnv {
   readonly VITE_LIT_NETWORK: string
   readonly VITE_ENTRYPOINT_ADDRESS_V07: string
   readonly VITE_USE_SAFE: string
+  readonly VITE_HUMAN_NETWORK_SIGNER_URL: string
 }
 
 

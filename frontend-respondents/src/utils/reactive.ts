@@ -1,41 +1,42 @@
-import { userStore, surveysStore, uiStore } from '../state/store.js';
-
+// reactive.ts
 type TemplateFunction = () => string;
-type AnyStore = typeof userStore | typeof surveysStore | typeof uiStore;
+
+type AnyStore = {
+  subscribe: (listener: () => void) => () => void;
+};
 
 class Reactive {
+  private element: HTMLElement;
+  private template: TemplateFunction;
+  private unsubscribers: (() => void)[] = [];
 
-    private element: HTMLElement;
-    private template: TemplateFunction;
-    private unsubscribers: (() => void)[] = [];
+  constructor(element: HTMLElement, template: TemplateFunction) {
+    this.element = element;
+    this.template = template;
+  }
 
-    constructor(element: HTMLElement, template: TemplateFunction) {
-        this.element = element;
-        this.template = template;
-    }
+  render() {
+    this.element.innerHTML = this.template();
+  }
 
-    render() {
-        this.element.innerHTML = this.template();
-    }
+  bind(store: AnyStore) {
+    const unsubscribe = store.subscribe(() => this.render());
+    this.unsubscribers.push(unsubscribe);
+    this.render();
+    return this;
+  }
 
-    bind(store: AnyStore) {
-        const unsubscribe = store.subscribe(() => this.render());
-        this.unsubscribers.push(unsubscribe);
-        this.render();
-        return this;
-    }
-
-    destroy() {
-        this.unsubscribers.forEach(unsub => unsub());
-        this.unsubscribers = [];
-    }
+  destroy() {
+    this.unsubscribers.forEach(unsub => unsub());
+    this.unsubscribers = [];
+  }
 }
 
 export const reactive = (
-    selector: string,
-    template: TemplateFunction
+  selector: string,
+  template: TemplateFunction
 ): Reactive | null => {
-    const element = document.querySelector(selector) as HTMLElement;
-    if (!element) return null;
-    return new Reactive(element, template);
+  const element = document.querySelector(selector) as HTMLElement;
+  if (!element) return null;
+  return new Reactive(element, template);
 };

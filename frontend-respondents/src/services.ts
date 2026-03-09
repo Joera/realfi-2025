@@ -7,7 +7,8 @@ import {
 } from "@s3ntiment/shared";
 
 import {
-  WaapService
+  WaapService,
+  OPRFService
 } from "@s3ntiment/shared/browser";
 
 
@@ -21,6 +22,7 @@ export interface IServices {
   ipfs: IPFSMethods
   lit: LitService;
   nillDB: NillDBUserService;
+  oprf: OPRFService;
 }
 
 export class ServiceContainer implements IServices {
@@ -33,6 +35,7 @@ export class ServiceContainer implements IServices {
   public ipfs!: IPFSMethods;
   public lit!: LitService;
   public nillDB!: NillDBUserService;
+  public oprf!: OPRFService
   
   private constructor() {
     if (ServiceContainer.instance) {
@@ -60,18 +63,26 @@ export class ServiceContainer implements IServices {
     this.lit = new LitService(import.meta.env.VITE_LIT_NETWORK);
     this.ipfs = new IPFSMethods(import.meta.env.VITE_KUBO_ENDPOINT, import.meta.env.VITE_PINATA_JWT, import.meta.env.VITE_PINATA_GATEWAY)
     this.nillDB = new NillDBUserService(import.meta.env.VITE_NIL_BUILDER_DID, import.meta.env.VITE_NILCHAIN_URL, import.meta.env.VITE_NILAUTH_URL, import.meta.env.VITE_NILDB_NODES);
+    this.oprf = new OPRFService(import.meta.env.VITE_HUMAN_NETWORK_SIGNER_URL);
     
     const walletClient = await this.waap.createWallet(base);
 
     if (walletClient) {
-        await this.account.updateSigner(walletClient);
+        await this.account.updateSignerWithWaap(walletClient);
     } else {
         console.warn('No wallet yet, skipping signer setup');
     }
 
+    console.log('a')
+
     await this.lit.init()
+    console.log('b')
+    await this.oprf.init()
+    console.log('c')
 
     this.initialized = true;
+
+    return;
   }
   
   isInitialized(): boolean {

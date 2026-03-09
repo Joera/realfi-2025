@@ -3,9 +3,8 @@ import { IServices } from "../services/services.js";
 import { store } from "../state/store.js";
 import { reactive } from "../utils/reactive.js";
 import '../components/survey-results-list.js';
-import { capabilityDelegation } from "../cap.js";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
-import { fetchAndDecryptSurvey } from "@s3ntiment/shared";
+import { fetchAndDecryptSurvey, Survey } from "@s3ntiment/shared";
 
 
 export class SurveyListController {
@@ -29,8 +28,8 @@ export class SurveyListController {
         const view = reactive('#survey-results', () => {
           // const { landingStep } = store.ui;
     
-          // switch (landingStep) {
-          //   case 'register':
+          // add spinner here 
+          
               return `
                 <survey-results-list class="centered"></survey-results-list>
               `;
@@ -50,9 +49,12 @@ export class SurveyListController {
     async process() {
 
         const accountAddress = this.services.account.getAddress();
-
         let _surveys = await this.services.viem.read(surveyStore.address as `0x${string}`, surveyStore.abi,'getOwnerSurveys',[accountAddress]);
-        // _surveys = _surveys.filter( (s: string) => s == '3fd2377d-ba7d-4066-8401-efd89e1275c0');
+        
+        const capabilityDelegation = await store.ensureCapabilityDelegation(
+          import.meta.env.VITE_BACKEND,
+          this.services.account
+        );
 
         const authContext = await this.services.lit.createAuthContext(this.services.waap.getWalletClient(), capabilityDelegation, window.location.host);
 
@@ -62,9 +64,13 @@ export class SurveyListController {
             })
         );
 
-        surveys = surveys.filter( s => s != undefined);
-
-        console.log("SS", surveys);
+        surveys = surveys
+          .filter( s => s != undefined)
+          .sort((a: Survey, b: Survey) => {
+            if (b.createdAt! > a.createdAt!) return 1;
+            if (b.createdAt! < a.createdAt!) return -1;
+            return 0;
+          });
 
         store.setSurveys(surveys);
 

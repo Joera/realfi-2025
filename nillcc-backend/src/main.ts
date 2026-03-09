@@ -2,6 +2,7 @@ import './env.js';  // must be first
 import express from 'express';
 import cors from 'cors';
 import { NilDBBuilderService } from './services/nildb.builder.service.js';
+import { createPaymentDelegationAuthSig } from '@lit-protocol/auth-helpers';
 import { base } from 'viem/chains';
 
 // import { NilAIService } from './nillai.service.js';
@@ -9,8 +10,9 @@ import { base } from 'viem/chains';
 import { SurveyController } from './survey.ctrlr.js';
 import { ViemService, LitService, IPFSMethods } from "@s3ntiment/shared";
 import { Codec } from '@nillion/nuc';
-import { verifyMessage } from 'viem';
+import { Account, verifyMessage } from 'viem';
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
+import { privateKeyToAccount } from 'viem/accounts';
 
 const app = express();
 app.use(cors());
@@ -31,13 +33,11 @@ const lit = new LitService(LIT_NETWORK);
 const ipfs = new IPFSMethods(KUBO_ENDPOINT,PINATA_JWT, PINATA_GATEWAY);
 const survey = new SurveyController(nildb, lit, ipfs, viem);
 await nildb.initBuilder();
-await lit.init(); 
+const litClient = await lit.init(); 
 
 app.post('/api/create-survey', async (req, res) => {
 
-  console.log(req.body)
   const surveyCid = await survey.create(req.body);
-  console.log("b4", surveyCid)
   res.send( surveyCid );
 
 });
@@ -105,7 +105,6 @@ app.post('/api/submit-survey', async (req, res) => {
 // Get survey results by surveyId // usinng general nil did as in demo 
 app.post('/api/survey-results', async (req, res) => {
 
-  console.log(0)
   try {
     const { surveyId, groups } = req.body;
 
@@ -124,82 +123,57 @@ app.post('/api/survey-results', async (req, res) => {
   }
 });
 
-// Get survey results by surveyId
-// app.post('/api/survey-results', async (req, res) => {
-//   try {
-//     const sessionSig = req.body.sessionSig;
-//     const surveyId = req.body.surveyName;
-//     const ownerAddress = req.body.ownerAddress;
+app.post('/api/lit-payment-delegation', async (req, res) => {
 
-//     // get ownerAddress from sessionSig ? 
+  console.log("request payment delegation")
+  try {
 
-//     // 1. Haal survey data op van contract
-//     const survey = await getSurvey(ownerAddress, surveyId);
+    const { userAddr, signature } = req.body;
+
+    // check signature
+    const hasValidSignature = await viem.publicClient.verifyMessage({
+      address: userAddr,
+      message: 'Request capability to decrypt',
+      signature
+    });
+
+    // isSignerForOwnerOrParticipant
+    // const isOwner = viem.read()
+    // const iParticipant = viem.read() 
+
+    if (hasValidSignature) {
     
-//     // 2. Decrypt Nillion key via Lit (met authSig)
-//     const nilKey = await lit.decrypt(surveyId, survey.encryptedNilKey, sessionSig);
-    
-//     // 3. Maak nilDB instantie met die key
-//     const keypair = Keypair.from(nilKey);
-//     // const surveyNildb = new NilDBService(keypair);
-//     // await surveyNildb.initOWner();
-    
-//     // 4. Query results
-//     const response = await nildb.tabulateSurveyResults(surveyId, keypair);
-    
-//     res.send({ results: response });
+      const sponsorAccount: Account = privateKeyToAccount(
+          `0x${process.env.VITE_LIT_PAYMASTER_KEY}` as `0x${string}`
+      );
 
-//   } catch (error: any) {
-//     console.log(error);
-//     res.status(500).send({ error: error.message });
-//   }
-// });
+      // Call this from an API endpoint, passing the user's address
+      const paymentDelegationAuthSig = await createPaymentDelegationAuthSig({
+          signer: sponsorAccount,          // your funded viem account
+          signerAddress: sponsorAccount.address,
+          delegateeAddresses: [userAddr], // the user's EOA
+          maxPrice: '1000000000000000000',
+          scopes: ['encryption_sign', 'sign_session_key','lit_action'],
+          litClient,
+          expiration: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
+      });
 
+      res.status(200).json({
+        payload: paymentDelegationAuthSig
+      });
 
+    } else { 
 
-
-// Generate delegate token for a user
-// app.post('/api/delegate-token', async (req, res) => {
-
-//     // check with smart contract? 
-//     // signature + nullifier 
-
-//     console.log(req.body)
-  
-//     const didString = req.body.did;
-//     const publicKeyHex = didString.replace('did:nil:', '');
-//     const did = Did.fromHex(publicKeyHex);
-//     const token = nildb.delegateToken(did);
-//     console.log(token);
-//     res.send(JSON.stringify(token));
-// });
+      res.status(401).json({
+        msg: 'unauthorized'
+      });
+    }
 
 
-// app.post('/api/create', async (req, res) => {
-
-//     // check with smart contract? 
-//     // signature + nullifier 
-
-//     console.log(req.body)
-  
-//     const didString = req.body.did;
-//     const publicKeyHex = didString.replace('did:nil:', '');
-//     const did = Did.fromHex(publicKeyHex);
-//     const token = nildb.delegateToken(did);
-//     console.log(token);
-//     res.send(JSON.stringify(token));
-// });
-
-// app.post('/api/collection', async (req, res) => {
-
-//     const uid = randomUUID();
-//     console.log(uid);
-//     const collection = surveyResultsCollection(uid);
-//     const token = await nildb.createCollection(collection);
-//     res.send(JSON.stringify(uid));
-// });
-
-
+  } catch (error: any) {
+    console.log(error)
+  }
+});
 
 
 

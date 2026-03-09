@@ -4,7 +4,7 @@ import { buttonStyles } from '../styles/shared-button-styles.js'
 import { store } from '../state/store.js'
 import { router } from '../router.js';
 
-class SurveyDetailConfig extends HTMLElement {
+class SurveyDetailAccess extends HTMLElement {
     private unsubscribe?: () => void;
     private surveyId!: string;
 
@@ -41,14 +41,20 @@ class SurveyDetailConfig extends HTMLElement {
         this.shadowRoot.innerHTML = `
         <style>
               :host {
-                --green: rgb(42.9834254144, 112.6165745856, 98.0022099448);
                 display: block;
+                color: var(--color-too-dark);
+            }
+
+            .access-container {
+            
+                padding: 2rem;
             }
 
             .readonly {
                 display: flex;
                 flex-direction: row;
                 justify-content: flex-start; 
+                margin-bottom: 0.75rem;
             }
 
             .form-container {
@@ -58,7 +64,7 @@ class SurveyDetailConfig extends HTMLElement {
 
             label {
                 display: block;
-                margin-bottom: 0.5rem;
+                
                 font-weight: 500;
             }
 
@@ -103,32 +109,31 @@ class SurveyDetailConfig extends HTMLElement {
                 <div class="loading">Loading survey...</div>
             ` : `
 
-                <div class="readonly">
-                    <label>Survey ID:</label>
-                    <span>${survey.id}</span>
+                <div class="access-container">
+
+                    <div class="readonly">
+                        <label>Survey ID:</label>
+                        <span>${survey.id}</span>
+                    </div>
+
+                    <div class="readonly">
+                        <label>Safe:</label>
+                        <span></span>
+                    </div>
+
+                    <div class="readonly">
+                        <label>Owners:</label>
+                        <span></span>
+                    </div>
+
+                    <div class="readonly">
+                        <label>Readers:</label>
+                        <span></span>
+                    </div>
+                
                 </div>
 
-                <div class="readonly">
-                    <label>Safe:</label>
-                    <span></span>
-                </div>
-
-                <div class="readonly">
-                    <label>Owners:</label>
-                    <span></span>
-                </div>
-
-                <div class="readonly">
-                    <label>Readers:</label>
-                    <span></span>
-                </div>
-
-                 <div class="form-container">
-                        <div>               
-                            <label for="survey-introduction">Introduction:</label>
-                            <textarea id="survey-introduction" placeholder="Enter survey introduction">${survey.introduction}</textarea>
-                        </div>
-                </div>
+               
             `};
 
         `;
@@ -145,6 +150,6 @@ class SurveyDetailConfig extends HTMLElement {
 
 }
 
-customElements.define('survey-detail-config', SurveyDetailConfig)
+customElements.define('survey-detail-access', SurveyDetailAccess)
 
-export { SurveyDetailConfig }
+export { SurveyDetailAccess }

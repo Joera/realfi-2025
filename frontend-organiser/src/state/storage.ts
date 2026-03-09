@@ -2,6 +2,7 @@ import { DraftsMap } from './types.js';
 
 const DRAFTS_STORAGE_KEY = 'surveyDrafts';
 const CURRENT_DRAFT_KEY = 'currentDraftId';
+const CAP_DELEGATION_KEY = 'litCapabilityDelegation';
 
 export function loadDraftsFromStorage(): DraftsMap {
   try {
@@ -40,6 +41,39 @@ export function saveCurrentDraftId(id: string | null): void {
     }
   } catch (e) {
     console.warn('Failed to save current draft id:', e);
+  }
+}
+
+export function saveCapabilityDelegation(delegation: any): void {
+  try {
+    localStorage.setItem(CAP_DELEGATION_KEY, JSON.stringify(delegation));
+  } catch (e) {
+    console.warn('Failed to save capability delegation:', e);
+  }
+}
+
+export function loadCapabilityDelegation(): any | null {
+  try {
+    const stored = localStorage.getItem(CAP_DELEGATION_KEY);
+    if (!stored) return null;
+    const delegation = JSON.parse(stored);
+    if (isDelegationExpired(delegation)) {
+      localStorage.removeItem(CAP_DELEGATION_KEY);
+      return null;
+    }
+    return delegation;
+  } catch (e) {
+    return null;
+  }
+}
+
+function isDelegationExpired(delegation: any): boolean {
+  try {
+    const match = delegation.signedMessage.match(/Expiration Time: (.+)/);
+    if (!match) return true;
+    return new Date(match[1].trim()) < new Date();
+  } catch {
+    return true;
   }
 }
 

@@ -1,8 +1,7 @@
-import { typograhyStyles } from '../shared-typograhy-styles.js'
-import { colourStyles } from '../shared-colour-styles.js'
-import { buttonStyles } from '../shared-button-styles.js'
+import { typograhyStyles } from '@s3ntiment/shared/assets'
+import { buttonStyles } from '@s3ntiment/shared/assets'
 import { SurveyAnswer, Question, Survey } from "@s3ntiment/shared";
-import { surveysStore } from "../state/index.js";
+import { store } from "../state/store.js";
 
 // Flatten groups into a sequential list of questions for step-based navigation
 interface FlatQuestion extends Question {
@@ -20,7 +19,7 @@ class SurveyQuestions extends HTMLElement {
   constructor() {
     super()
     this.attachShadow({ mode: 'open' })
-    this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, colourStyles, buttonStyles]
+    this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, buttonStyles]
   }
 
   private flattenQuestions(survey: Survey): FlatQuestion[] {
@@ -57,7 +56,7 @@ class SurveyQuestions extends HTMLElement {
 
     this.renderLoading();
 
-    const config = surveysStore.getData(surveyId);
+    const config = store.getSurveyData(surveyId);
     if (!config) return;
 
     this.config = config;

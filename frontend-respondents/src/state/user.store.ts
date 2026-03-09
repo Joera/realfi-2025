@@ -1,44 +1,33 @@
-import { Observable } from './observable.js';
+import { Observable, Listener } from './observable.js';
 import { UserState } from './store.types.js';
+import { loadUserFromStorage, saveUserToStorage, clearUserFromStorage } from './storage.js';
 
-class UserStore {
+export class UserStore {
+  private observable: Observable<UserState>;
 
-    private observable: Observable<UserState>;
+  constructor() {
+    this.observable = new Observable<UserState>(loadUserFromStorage());
+  }
 
-    constructor() {
-        this.observable = new Observable<UserState>({
-            nullifier: localStorage.getItem('nullifier'),
-            batchId:   localStorage.getItem('batchId'),
-            address:   localStorage.getItem('address'),
-        });
-    }
+  get state(): UserState     { return this.observable.get(); }
+  get nullifier()            { return this.state.nullifier; }
+  get batchId()              { return this.state.batchId; }
+  get address()              { return this.state.address; }
 
-    get state()     { return this.observable.get(); }
-    get nullifier() { return this.state.nullifier; }
-    get batchId()   { return this.state.batchId; }
-    get address()   { return this.state.address; }
+  set(update: Partial<UserState>): void {
+    this.observable.update(current => ({ ...current, ...update }));
+  }
 
-    set(update: Partial<UserState>) {
-        this.observable.update(current => ({ ...current, ...update }));
-    }
+  subscribe(listener: Listener<UserState>): () => void {
+    return this.observable.subscribe(listener);
+  }
 
-    subscribe(listener: (value: UserState) => void): () => void {
-        return this.observable.subscribe(listener);
-    }
+  persist(): void {
+    saveUserToStorage(this.state);
+  }
 
-    persist() {
-        const { nullifier, batchId, address } = this.state;
-        if (nullifier) localStorage.setItem('nullifier', nullifier);
-        if (batchId)   localStorage.setItem('batchId', batchId);
-        if (address)   localStorage.setItem('address', address);
-    }
-
-    clear() {
-        this.observable.set({ nullifier: null, batchId: null, address: null });
-        localStorage.removeItem('nullifier');
-        localStorage.removeItem('batchId');
-        localStorage.removeItem('address');
-    }
+  clear(): void {
+    this.observable.set({ nullifier: null, batchId: null, address: null });
+    clearUserFromStorage();
+  }
 }
-
-export const userStore = new UserStore();

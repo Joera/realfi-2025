@@ -1,7 +1,5 @@
-import { formStyles } from '../shared-form-styles.js'
-import { typograhyStyles } from '../shared-typograhy-styles.js';
-import { colourStyles } from '../shared-colour-styles.js';
-import { buttonStyles } from '../shared-button-styles.js';
+import { formStyles } from '@s3ntiment/shared/assets'
+import { buttonStyles } from '@s3ntiment/shared/assets';
 
 
 // security-questions.ts
@@ -40,7 +38,7 @@ class SecurityQuestionsForm extends HTMLElement {
   constructor() {
     super()
     this.attachShadow({ mode: 'open' })
-    this.shadowRoot!.adoptedStyleSheets = [colourStyles, formStyles, typograhyStyles, buttonStyles]
+    this.shadowRoot!.adoptedStyleSheets = [formStyles, buttonStyles]
   }
 
   connectedCallback() {

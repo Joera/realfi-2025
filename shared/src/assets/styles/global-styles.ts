@@ -43,6 +43,28 @@ export function injectGlobalStyles() {
         justify-content: center;
     }
 
+    #splash {
+    
+        position: fixed;
+        height: 100vh;
+        width: 100vw;
+        top:0;
+        left:0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        svg {
+            width: 240px;
+            height: auto;
+            transition: all 0.3s ease;
+
+            path {
+                fill: var(--color-too-dark);
+            }
+        }
+    }
+
     #app  {
 
         justify-content: flex-start;
@@ -115,7 +137,10 @@ export function injectGlobalStyles() {
         }
 
         h1 {
+          
+            margin: 0;
             margin-left: 1.5rem;
+            margin-top: -0.75rem;
         }
 
 
@@ -125,10 +150,10 @@ export function injectGlobalStyles() {
             width: 4.8rem;
             height: auto;
             align-self: center;
-             transition: all 0.3s ease;
+            transition: all 0.3s ease;
         
 
-             path {
+            path {
                 fill: var(--color-too-dark);
             }
         }

@@ -1,12 +1,12 @@
 import { reactive } from '../utils/reactive.js';
+import '@s3ntiment/shared/components';
 
-import '../components/loading-spinner.js';
 import '../components/survey-questions.js';
 import { IServices } from '../services.js';
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 import { fetchAndDecryptSurvey, Survey } from '@s3ntiment/shared';
-import { capabilityDelegation } from '../cap.js';
-import { surveysStore } from '../state/surveys.store.js';
+
+import { store } from '../state';
 import { createUserDataObject } from '@s3ntiment/shared'
 
 export class SurveyController {
@@ -36,7 +36,7 @@ export class SurveyController {
     });
 
     if (view) {
-      view.bind(surveysStore);       
+      view.bind(store.surveys$);       
       this.reactiveViews.push(view);
     }
   }
@@ -48,11 +48,16 @@ export class SurveyController {
 
   async render() {
 
+    const capabilityDelegation = await store.ensureCapabilityDelegation(
+      import.meta.env.VITE_BACKEND,
+      this.services.account
+    );
+
     const authContext = await this.services.lit.createAuthContext(this.services.waap.getWalletClient(), capabilityDelegation, window.location.host);
     const survey = await fetchAndDecryptSurvey(this.services, surveyStore, this.surveyId, authContext)
     this.config = survey;
     console.log("SURVEY", survey)
-    surveysStore.setData(this.surveyId, survey)
+    store.setSurveyData(this.surveyId, survey)
     this.renderTemplate();
     this.setSurveyListener();
     

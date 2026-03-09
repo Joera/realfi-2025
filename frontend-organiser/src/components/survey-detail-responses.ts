@@ -4,7 +4,10 @@ import { buttonStyles } from '../styles/shared-button-styles.js'
 import { layoutStyles } from '../styles/shared-layout-styles.js'
 import { store } from '../state/store.js'
 import { router } from '../router.js';
-import { Survey, SurveyResultsTally } from '@s3ntiment/shared'
+import { Survey, SurveyResultsTally } from '@s3ntiment/shared';
+import './survey-results/radio-results';
+import './survey-results/checkbox-results';
+import './survey-results/scale-results';
 
 class SurveyDetailResponses extends HTMLElement {
     private unsubscribe?: () => void;
@@ -16,6 +19,8 @@ class SurveyDetailResponses extends HTMLElement {
         super()
         this.attachShadow({ mode: 'open' })
         this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, colourStyles, buttonStyles, layoutStyles]
+
+       
     }
 
     connectedCallback() {
@@ -57,14 +62,14 @@ class SurveyDetailResponses extends HTMLElement {
         <div class="container container-large centered">
             
             ${!this.survey ? `
-                <loading-spinner></loading-spinner>
+                <loading-spinner message="decrypting survey"></loading-spinner>
             ` : `
-                <loading-spinner></loading-spinner>
+                <loading-spinner message="collecting results"></loading-spinner>
             `}
         </div>
         `;
 
-        if(this.survey.results) {
+        if(this.survey && this.survey.results) {
 
            
             this.renderResults();
@@ -106,44 +111,45 @@ class SurveyDetailResponses extends HTMLElement {
                     align-items: center;
                     margin-bottom: 1rem;
                     gap: 0.5rem;
-                    border-left: 3px solid var(--color-too-dark);
-                    padding: 0 .75rem;
+                    border-left: 2px solid var(--color-too-dark);
+                    padding: 0 1.5rem;
                 }
 
                 .result-item {
-                    margin-bottom: 1.5rem;
-                    padding: 1rem;
+               
+                    padding: 1.5rem 2rem 1.5rem 1.75rem;
               
                 }
 
                 .result-item h3 {
                     margin: 0 0 1rem 0;
-                         font-size: 1rem;
-                    font-weight: 600;
+                    font-size: 1rem;
+                    font-weight: 400;
+                    color: black;
                 }
 
                 .result-row {
                     display: flex;
                     justify-content: space-between;
                     padding: 0.5rem 0;
-                    border-bottom: 1px solid #eee;
+                    border-bottom: 1px solid white;
                 }
 
                 .result-row:last-child {
                     border-bottom: none;
                 }
-                         .text-responses ul {
+                
+                .text-responses ul {
                     list-style: none;
                     padding: 0;
                     margin: 0.5rem 0 0;
                 }
 
                 .text-responses li {
-                    padding: 0.5rem;
+                    padding: 0.75rem;
                     background: white;
                     margin-bottom: 0.5rem;
                     border-radius: 2px;
-                    font-size: 0.9rem;
                 }
             </style>
 
@@ -154,6 +160,17 @@ class SurveyDetailResponses extends HTMLElement {
                 </div>
             </div>
         `;
+
+        requestAnimationFrame(() => {
+            Object.entries(this.survey.results!).forEach(([questionId, tally]) => {
+                const radioEl = this.shadowRoot!.querySelector(`#radio-${questionId}`) as any;
+                if (radioEl) radioEl.tally = tally;
+                const checkboxEl = this.shadowRoot!.querySelector(`#checkbox-${questionId}`) as any;
+                if (checkboxEl) checkboxEl.tally = tally;
+                const scaleEl = this.shadowRoot!.querySelector(`#scale-${questionId}`) as any;
+                if (scaleEl) scaleEl.tally = tally;
+            });
+        });
     }
 
     private renderGrouped(): string {
@@ -164,30 +181,28 @@ class SurveyDetailResponses extends HTMLElement {
                 </div>
                 ${group.questions.map(question => {
                     const tally = this.survey.results![question.id];
-                    return tally ? this.renderResultItem(tally) : '';
+                    return tally ? this.renderResultItem(tally, question.id) : '';
                 }).join('')}
             </div>
         `).join('');
     }
 
     private renderFlat(): string {
-        return Object.entries(this.survey.results!).map(([_, tally]) =>
-            this.renderResultItem(tally)
+        return Object.entries(this.survey.results!).map(([questionId, tally]) =>
+            this.renderResultItem(tally,questionId)
         ).join('');
     }
 
-    private renderResultItem(tally: SurveyResultsTally[string]): string {
-
-        console.log(tally)
+    private renderResultItem(tally: SurveyResultsTally[string], questionId: string): string {
         return `
             <div class="result-item">
                 <h3>${tally.question}</h3>
-                ${this.renderByType(tally)}
+                ${this.renderByType(tally, questionId)}
             </div>
         `;
     }
 
-    private renderByType(tally: SurveyResultsTally[string]): string {
+    private renderByType(tally: SurveyResultsTally[string], questionId: string): string {
         switch (tally.type) {
             case 'text':
                 return `
@@ -196,22 +211,16 @@ class SurveyDetailResponses extends HTMLElement {
                         <ul>
                             ${tally.responses.map(r => `<li>${this.escapeHtml(r)}</li>`).join('')}
                         </ul>
-                                            </div>
+                    </div>
                 `;
             
             case 'radio':
                 return `
-                    <div class="radio-results">
-                        ${tally.options?.map((option, i) => `
-                            <div class="result-row">
-                                <span>${option}</span>
-                                <span>${tally.counts[i] || 0} / ${tally.total}</span>
-                            </div>
-                        `).join('')}
-                    </div>
+                    <radio-results id="radio-${questionId}"></radio-results>
                 `;
             case 'scale':
                 return `
+                   <!-- <scale-results id="scale-${questionId}"></scale-results> -->
                     <div class="scale-results">
                         <div class="result-row">
                             <span>Average</span>
@@ -225,20 +234,15 @@ class SurveyDetailResponses extends HTMLElement {
                 `;
             
             case 'checkbox':
-                                return `
-                    <div class="checkbox-results">
-                        ${tally.options?.map((option, i) => `
-                            <div class="result-row">
-                                <span>${option}</span>
-                                <span>${tally.counts[i] || 0} selected</span>
-                            </div>
-                        `).join('')}
-                    </div>
+                    return `
+                    <checkbox-results id="checkbox-${questionId}"></checkbox-results>
                 `;
             
             default:
                 return '';
         }
+
+      
     }
 
     private escapeHtml(text: string): string {

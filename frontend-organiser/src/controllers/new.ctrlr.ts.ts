@@ -2,13 +2,11 @@
 
 
 import { Batch, CardData } from '@s3ntiment/shared';
-import { capabilityDelegation } from '../cap.js';
 import '../components/draft-survey-editor.js';
 import { createBatchWallet } from '../factories/invitation.factory.js';
 import { createBatch, createInvitations, deploySafe} from '../factories/survey.factory.js';
 import { IServices } from '../services/services.js';
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
-
 
 export class NewSurveyController {
   private reactiveViews: any[] = [];
@@ -54,9 +52,7 @@ export class NewSurveyController {
 
       const surveyId = crypto.randomUUID();
 
-      // const authContext = this.services.lit.createAuthContext(await this.services.waap.getWalletClient(), capabilityDelegation, window.location.host);
-
-       const safeAddress = import.meta.env.VITE_USE_SAFE == 'true' ? await this.services.safe.predictSafeAddress(surveyId) : "";
+      const safeAddress = import.meta.env.VITE_USE_SAFE == 'true' ? await this.services.safe.predictSafeAddress(surveyId) : "";
   
       const config = {
         safe: safeAddress,

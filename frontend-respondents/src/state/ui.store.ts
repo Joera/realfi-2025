@@ -1,30 +1,32 @@
-import { Observable } from './observable.js';
+import { Observable, Listener } from './observable.js';
 import { UIState } from './store.types.js';
 
-class UIStore {
+export class UIStore {
+  private observable: Observable<UIState>;
 
-    private observable: Observable<UIState>;
+  constructor() {
+    this.observable = new Observable<UIState>({
+      cardView: 'nocard',
+    });
+  }
 
-    constructor() {
-        this.observable = new Observable<UIState>({
-            cardView: 'nocard',
-        });
-    }
+  get state(): UIState {
+    return this.observable.get();
+  }
 
-    get state()       { return this.observable.get(); }
-    get cardView() { return this.state.cardView; }
+  get cardView(): UIState['cardView'] {
+    return this.state.cardView;
+  }
 
-    set(update: Partial<UIState>) {
-        this.observable.update(current => ({ ...current, ...update }));
-    }
+  set(update: Partial<UIState>): void {
+    this.observable.update(current => ({ ...current, ...update }));
+  }
 
-    subscribe(listener: (value: UIState) => void): () => void {
-        return this.observable.subscribe(listener);
-    }
+  subscribe(listener: Listener<UIState>): () => void {
+    return this.observable.subscribe(listener);
+  }
 
-    reset() {
-        this.observable.set({ cardView: 'nocard' });
-    }
+  reset(): void {
+    this.observable.set({ cardView: 'nocard' });
+  }
 }
-
-export const uiStore = new UIStore();

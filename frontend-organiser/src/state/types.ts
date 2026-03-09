@@ -1,4 +1,4 @@
-import { Survey } from "../types";
+import { Survey } from "@s3ntiment/shared";
 
 export interface DraftMeta {
   config: Survey;
@@ -13,7 +13,7 @@ export interface DraftsMap {
 export interface UIState {
   landingStep: 'welcome' | 'register' | 'choice';
   newStep: 'intro' | 'questions' | 'batches';
-  resultTab: 'results' | 'config' | 'questions' | 'batches';
+  resultTab: 'results' | 'access' | 'questions' | 'batches';
 }
 
 export interface AppState {

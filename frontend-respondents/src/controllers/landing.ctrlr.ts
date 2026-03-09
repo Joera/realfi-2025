@@ -1,9 +1,9 @@
 import { reactive } from '../utils/reactive.js';
 import { Card, parseCardURL } from "../card.factory.js";
-import '../components/loading-spinner.js';
+import '@s3ntiment/shared/components';
 import '../components/survey-questions.js';
 import { IServices } from '../services.js';
-import { uiStore, userStore } from '../state/store.js';
+import { store } from '../state/store.js';
 import { base } from 'viem/chains';
 import { router } from '../router.js';
 import { CardData } from '@s3ntiment/shared';
@@ -24,7 +24,7 @@ export class LandingController {
     }
 
     private detectCardState(card: CardData, cardIsUsed: boolean): CardState {
-        const storedNullifier = userStore.nullifier;
+        const storedNullifier = store.nullifier;
 
         if (cardIsUsed && card.nullifier !== storedNullifier) {
             return CardState.BLOCKED;
@@ -44,9 +44,16 @@ export class LandingController {
         app.innerHTML = `<div id="landing-content" class="centered"></div>`;
 
         const view = reactive('#landing-content', () => {
-            const { cardView } = uiStore.state;
 
-            switch (cardView) {
+            switch (store.cardView) {
+
+                case 'validation':
+                    return `
+                        <loading-spinner message="validating <br/>your invite" color="rgb(32, 85, 74)"></loading-spinner>
+                        </div>
+                    `;
+
+
                 case 'login':
                     return `
                         <div class="onboarding-message">
@@ -57,9 +64,8 @@ export class LandingController {
 
                 case 'welcomeback':
                     return `
-                        <div class="onboarding-message">
-                            <h2>Welcome back!</h2>
-                            <p>We're taking you to the survey ... </p>
+                        <loading-spinner message="decrypting the survey" color="rgb(32, 85, 74)"></loading-spinner>
+                     
                         </div>
                     `;
 
@@ -85,17 +91,19 @@ export class LandingController {
         });
 
         if (view) {
-            view.bind(uiStore);
+            view.bind(store.ui$);
             this.reactiveViews.push(view);
         }
     }
 
     async render() {
 
+        store.setUI({ cardView: 'validation' });   
+
         const cardData: CardData | null = await parseCardURL();
 
         if (!cardData) {
-            uiStore.set({ cardView: 'nocard' });
+            store.setUI({ cardView: 'nocard' });
             this.renderTemplate("");
             return;
         }
@@ -113,29 +121,29 @@ export class LandingController {
         switch (state) {
 
             case CardState.BLOCKED:
-                uiStore.set({ cardView: 'blocked' });
+                store.setUI({ cardView: 'blocked' });
                 break;
 
             case CardState.RETURNING:
-                uiStore.set({ cardView: 'welcomeback' });
+                store.setUI({ cardView: 'welcomeback' });
                 await this.services.waap.login(base);
-                await this.services.account.updateSigner(this.services.waap.walletClient);
+                await this.services.account.updateSignerWithWaap(this.services.waap.walletClient);
                 router.navigate('/surveys/' + card.surveyId);
                 break;
 
             case CardState.FIRST_TIME:
-                uiStore.set({ cardView: 'login' });
-                if (userStore.nullifier && userStore.nullifier !== card.nullifier) {
-                    userStore.clear();
+                store.setUI({ cardView: 'login' });
+                if (store.nullifier && store.nullifier !== card.nullifier) {
+                    store.resetUI();
+                    // is new card 
+                    // what if email has been used within this survey 
                 }
-                userStore.set({ nullifier: card.nullifier, batchId: card.batchId });
-                userStore.persist();
+                store.setUser({ nullifier: card.nullifier, batchId: card.batchId });
+                store.persistUser();
                 await this.services.waap.login(base);
-                await this.services.account.updateSigner(this.services.waap.walletClient);
+                await this.services.account.updateSignerWithWaap(this.services.waap.walletClient);
                 const tx = await card.validate(this.services);
-                console.log(11111)
                 if (tx.receipt?.status === 'success') {
-                    console.log(22222222)
                     router.navigate('/surveys/' + card.surveyId);
                 } else {
                     alert('❌ Card validation failed');

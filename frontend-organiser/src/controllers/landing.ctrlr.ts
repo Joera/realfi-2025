@@ -3,7 +3,7 @@
 // import '../components/landing-welcome.js';
 import '../components/landing-register.js';
 import '../components/landing-choice.js';
-import '../components/ui/loading-spinner.js'
+import '@s3ntiment/shared/components';
 import { store } from '../state/store.js';
 import { reactive } from '../utils/reactive.js';
 import { IServices } from '../services/services.js';

@@ -75,7 +75,7 @@ export const accsForUser = (contract: string, surveyId: string, smartAccountAddr
 };
 
 export const accsForOwnerOrUser = (surveyId: string, contract: string, smartAccountAddress: string) => {
-  console.log("params used for acc", [surveyId, contract, smartAccountAddress]);
+  // console.log("params used for acc", [surveyId, contract, smartAccountAddress]);
   return [surveyOwner(surveyId, contract, smartAccountAddress), { operator: "and" }, isOwnerOFSMC(smartAccountAddress), { operator: "or" }, isParticipant(contract, surveyId, smartAccountAddress), { operator: "and" }, isOwnerOFSMC(smartAccountAddress)];
 };
 

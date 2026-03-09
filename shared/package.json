@@ -16,6 +16,10 @@
     "./assets": {
       "import": "./src/assets/index.ts",
       "types": "./src/assets/index.ts"
+    },
+    "./components": {
+      "import": "./src/components/index.ts",
+      "types": "./src/components/index.ts"
     }
   },
   "files": [
@@ -26,6 +30,7 @@
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
+    "@holonym-foundation/mishtiwasm": "^0.3.2",
     "@human.tech/waap-sdk": "^1.2.0",
     "@lit-protocol/auth": "^8.2.3",
     "@lit-protocol/lit-client": "^8.3.1",
@@ -33,10 +38,11 @@
     "@nillion/nuc": "^2.0.0",
     "@nillion/secretvaults": "^2.0.0",
     "permissionless": "^0.3.4",
-    "viem": "^2.46.2"
-    
+    "viem": "^2.46.2",
+    "d3": "^7.9.0"
   },
   "devDependencies": {
+    "@holonym-foundation/mishtiwasm": "^0.3.2",
     "@human.tech/waap-sdk": "^1.2.0",
     "@lit-protocol/auth": "^8.2.3",
     "@lit-protocol/lit-client": "^8.3.1",
@@ -44,7 +50,9 @@
     "@nillion/nuc": "^2.0.0",
     "@nillion/secretvaults": "^2.0.0",
     "permissionless": "^0.3.4",
-    "viem": "^2.46.2"
+    "viem": "^2.46.2",
+    "d3": "^7.9.0",
+    "@types/d3": "^7.4.3"
   }
 
 }

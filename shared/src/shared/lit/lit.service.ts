@@ -14,10 +14,12 @@ export class LitService {
         this.network = network;
     }
 
-    async init(): Promise<void> {
+    async init(): Promise<any> {
         this.litClient = await createLitClient({
             network: this.network === "nagaTest" ? nagaTest : nagaDev,
         });
+
+        return this.litClient;
     }
 
     async createAuthContext(waapWalletClient: any, capabilityDelegation: any, domain: string): Promise<any> {
@@ -62,7 +64,7 @@ export class LitService {
 
     async encrypt(toEncrypt: any, accs: any[]): Promise<any> {
 
-        console.log("b4 encryptin", this.litClient.networkName, accs)
+        // console.log("b4 encryptin", this.litClient.networkName, accs)
 
         return await this.litClient.encrypt({
             dataToEncrypt: toEncrypt,
@@ -73,7 +75,7 @@ export class LitService {
 
     async decrypt(encryptedData: any, authContext: any, accs: any[]): Promise<any> {
 
-        console.log("b4 decryptin", this.litClient.networkName, accs)
+        // console.log("b4 decryptin", this.litClient.networkName, accs)
 
         return await this.litClient.decrypt({
             data: encryptedData,

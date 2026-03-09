@@ -1,4 +1,4 @@
-type Listener<T> = (value: T) => void;
+export type Listener<T> = (value: T) => void;
 
 export class Observable<T> {
 

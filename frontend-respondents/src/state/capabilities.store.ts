@@ -1,0 +1,64 @@
+// capability-delegation.store.ts
+import { PermissionlessSimpleService } from '@s3ntiment/shared';
+import { Listener, Observable } from './observable.js';
+import { loadCapabilityDelegation, saveCapabilityDelegation } from './storage';
+
+export async function fetchCapabilityDelegation(
+  backendUrl: string,
+  userAddr: string,
+  signature: string
+): Promise<any> {
+ 
+  const response = await fetch(`${backendUrl}/api/lit-payment-delegation`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userAddr, signature })
+  });
+
+  if (!response.ok) {
+    const { msg } = await response.json();
+    throw new Error(msg ?? 'fetchCapabilityDelegation: unauthorized');
+    }
+
+    const { payload } = await response.json();
+    saveCapabilityDelegation(payload);
+    return payload;
+}
+
+export class CapabilityDelegationStore {
+  private delegationObservable: Observable<any | null>;
+
+  constructor() {
+    this.delegationObservable = new Observable<any | null>(
+      loadCapabilityDelegation()
+    );
+  }
+
+  get delegation(): any | null {
+    return this.delegationObservable.get();
+  }
+
+  subscribe(listener: Listener<any | null>): () => void {
+    return this.delegationObservable.subscribe(listener);
+  }
+
+  async ensure(backendUrl: string, account: PermissionlessSimpleService): Promise<any> {
+    
+    const cached = loadCapabilityDelegation(); // always goes through expiry check
+    if (cached) {
+        this.delegationObservable.set(cached); // sync observable in case it drifted
+        return cached;
+    }
+
+    const signature = await account.signMessage('Request capability to decrypt');
+    const delegation = await fetchCapabilityDelegation(backendUrl, account.getSignerAddress(), signature);
+    this.delegationObservable.set(delegation);
+    saveCapabilityDelegation(delegation);
+    return delegation;
+  }
+
+  clear(): void {
+    this.delegationObservable.set(null);
+    localStorage.removeItem('litCapabilityDelegation');
+  }
+}

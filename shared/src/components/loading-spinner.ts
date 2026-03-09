@@ -1,6 +1,4 @@
-// loading-spinner.ts
-import { formStyles } from '../../styles/shared-form-styles.js'
-import { typograhyStyles } from '../../../../shared/src/assets/styles/typography-styles.js'
+import { typograhyStyles } from '../assets/styles/typography-styles.js'
 
 class LoadingSpinner extends HTMLElement {
   private message: string = 'loading...'
@@ -10,7 +8,7 @@ class LoadingSpinner extends HTMLElement {
   constructor() {
     super()
     this.attachShadow({ mode: 'open' })
-    this.shadowRoot!.adoptedStyleSheets = [formStyles, typograhyStyles]
+    this.shadowRoot!.adoptedStyleSheets = [typograhyStyles]
   }
 
   static get observedAttributes() {
