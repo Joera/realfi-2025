@@ -1,9 +1,9 @@
-const surveyOwner = (surveyId: string, contract: string, smartAccountAddress: string) => ({
+const surveyOwner = (surveyId: string, contract: string, safeAddress: string) => ({
   conditionType: "evmContract" as const,
   contractAddress: contract,
   chain: "base" as const,
   functionName: "isOwner",
-  functionParams: [smartAccountAddress, surveyId],
+  functionParams: [safeAddress, surveyId],
   functionAbi: {
     type: "function",
     name: "isOwner",
@@ -21,19 +21,19 @@ const surveyOwner = (surveyId: string, contract: string, smartAccountAddress: st
   },
 });
 
-const isParticipant = (contract: string, surveyId: string, smartAccountAddress: string) => ({
+const isRespondent = (contract: string, surveyId: string) => ({
   conditionType: "evmContract" as const,
   contractAddress: contract,
   chain: "base" as const,
-  functionName: "isParticipant",
-  functionParams: [surveyId, smartAccountAddress],
+  functionName: "isRespondent",
+  functionParams: [surveyId, ":userAddress"],
   functionAbi: {
     type: "function",
-    name: "isParticipant",
+    name: "isRespondent",
     stateMutability: "view",
     inputs: [
       { name: "surveyId", type: "string" },
-      { name: "participant", type: "address" },
+      { name: "respondent", type: "address" },
     ],
     outputs: [{ name: "", type: "bool" }],
   },
@@ -45,39 +45,55 @@ const isParticipant = (contract: string, surveyId: string, smartAccountAddress: 
 });
 
 
-const isOwnerOFSMC = (smartAccountAddress: string) => ({
+// const isOwnerOFSMC = (smartAccountAddress: string) => ({
 
-    conditionType: "evmContract" as const,
-    contractAddress: smartAccountAddress,
-    chain: "base" as const,
-    functionName: "owner",
-    functionParams: [],
-    functionAbi: {
-      type: "function",
-      name: "owner",
-      stateMutability: "view",
-      inputs: [],
-      outputs: [{ name: "", type: "address" }],
-    },
-    returnValueTest: {
-      key: "",
-      comparator: "=" as const,
-      value: ":userAddress",
-    }
+//     conditionType: "evmContract" as const,
+//     contractAddress: smartAccountAddress,
+//     chain: "base" as const,
+//     functionName: "owner",
+//     functionParams: [],
+//     functionAbi: {
+//       type: "function",
+//       name: "owner",
+//       stateMutability: "view",
+//       inputs: [],
+//       outputs: [{ name: "", type: "address" }],
+//     },
+//     returnValueTest: {
+//       key: "",
+//       comparator: "=" as const,
+//       value: ":userAddress",
+//     }
+// })
+
+const isOwnerOfSafe = (safeAddress: string) => ({
+  conditionType: "evmContract" as const,
+  contractAddress: safeAddress,
+  chain: "base" as const,
+  functionName: "isOwner",
+  functionParams: [":userAddress"],
+  functionAbi: {
+    type: "function",
+    name: "isOwner",
+    stateMutability: "view",
+    inputs: [{ name: "owner", type: "address" }],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  returnValueTest: {
+    key: "",
+    comparator: "=" as const,
+    value: "true",
+  }
 })
 
-export const accsForSurveyOwner = (surveyId: string, contract: string, smartAccountAddress: string) => {
-  return [surveyOwner(surveyId, contract, smartAccountAddress), { operator: "and" }, isOwnerOFSMC(smartAccountAddress)];
+export const accsForSurveyOwner = (surveyId: string, contract: string, safeAddress: string) => {
+  return [surveyOwner(surveyId, contract, safeAddress), { operator: "and" }, isOwnerOfSafe(safeAddress)];
 };
 
-export const accsForUser = (contract: string, surveyId: string, smartAccountAddress: string) => {
-  return [isParticipant(contract, surveyId, smartAccountAddress), { operator: "and" }, isOwnerOFSMC(smartAccountAddress)];
+export const accsForRespondent = (contract: string, surveyId: string) => {
+  return [isRespondent(contract, surveyId)];
 };
 
-export const accsForOwnerOrUser = (surveyId: string, contract: string, smartAccountAddress: string) => {
-  // console.log("params used for acc", [surveyId, contract, smartAccountAddress]);
-  return [surveyOwner(surveyId, contract, smartAccountAddress), { operator: "and" }, isOwnerOFSMC(smartAccountAddress), { operator: "or" }, isParticipant(contract, surveyId, smartAccountAddress), { operator: "and" }, isOwnerOFSMC(smartAccountAddress)];
-};
 
 export const alwaysTrue =  [
   {

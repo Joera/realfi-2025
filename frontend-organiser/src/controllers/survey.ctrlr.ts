@@ -9,8 +9,9 @@ import '../components/survey-forms/survey-form-batches.js';
 import { router } from "../router.js";
 import { createBatch } from "../factories/survey.factory.js";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
-import { fetchAndDecryptSurvey, Survey } from "@s3ntiment/shared";
+import {  fetchAndDecryptSurveyWithOwner, Survey } from "@s3ntiment/shared";
 import { renderIcon } from "@s3ntiment/shared/assets";
+import { authenticate } from "../factories/auth.factory.js";
 
 
 export class SurveyController {
@@ -86,6 +87,7 @@ export class SurveyController {
                     display: flex;
                     justify-content: center;
                     align-items: center;
+                    flex: 0;
 
                     svg {
                         height: 2.5rem;
@@ -177,27 +179,31 @@ export class SurveyController {
     
     async process() {
 
-        const survey = store.surveys.find((s: any) => s.id === this.surveyId);
+        // const survey = store.surveys.find((s: any) => s.id === this.surveyId);
 
-         if (survey && survey !== undefined) {
+        //  if (survey && survey !== undefined) {
 
-            this.survey = survey;
+        //     this.survey = survey;
 
-         } else {
+        //  } else {
 
             console.log('Survey not in store, fetching...');
 
+            const safeAddress = await authenticate(this.services, this.surveyId)
+
+            console.log("sa", safeAddress)
+
             const capabilityDelegation = await store.ensureCapabilityDelegation(
                 import.meta.env.VITE_BACKEND,
-                this.services.account
+                this.services.safe
             );
 
-            const authContext = await this.services.lit.createAuthContext(this.services.waap.getWalletClient(), capabilityDelegation, window.location.host);
-            this.survey = await fetchAndDecryptSurvey(this.services, surveyStore, this.surveyId, authContext)
+            const authContext = await this.services.lit.createAuthContext(this.services.safe.getSigner(), capabilityDelegation, window.location.host);
+            this.survey = await fetchAndDecryptSurveyWithOwner(this.services, surveyStore, this.surveyId, authContext, safeAddress)
             console.log("S",this.survey)
-            store.addSurvey(this.survey);
+            // store.addSurvey(this.survey);  // should replace 
          
-         }
+        //  }
 
         // const nillDid = await this.services.nillion.getDid();
 

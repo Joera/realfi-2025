@@ -1,5 +1,5 @@
 // capability-delegation.store.ts
-import { PermissionlessSimpleService } from '@s3ntiment/shared';
+import { PermissionlessSafeService, PermissionlessSimpleService } from '@s3ntiment/shared';
 import { Listener, Observable } from './observable.js';
 import { loadCapabilityDelegation, saveCapabilityDelegation } from './storage';
 
@@ -42,7 +42,7 @@ export class CapabilityDelegationStore {
     return this.delegationObservable.subscribe(listener);
   }
 
-  async ensure(backendUrl: string, account: PermissionlessSimpleService): Promise<any> {
+  async ensure(backendUrl: string, account: PermissionlessSimpleService | PermissionlessSafeService): Promise<any> {
 
     console.log("cap delegation ensure")
     

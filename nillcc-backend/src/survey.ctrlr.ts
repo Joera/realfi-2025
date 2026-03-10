@@ -1,8 +1,7 @@
 import { recoverMessageAddress, Signature } from "viem";
-import { createSurveyCollectionSchema } from "@s3ntiment/shared";
-import { accsForOwnerOrUser } from "@s3ntiment/shared";
+import { accsForSurveyOwner, createSurveyCollectionSchema, EncryptedConfig } from "@s3ntiment/shared";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
-
+import { accsForRespondent } from "../../shared/src/shared/lit/accs.js";
 
 export class SurveyController {
     private nildb: any;
@@ -19,16 +18,10 @@ export class SurveyController {
 
     async create(body: any) {
 
-        const { surveyId, surveyConfig, smartAccountAddress } = body;
+        const { surveyId, surveyConfig, safeAddress } = body;
 
         console.log("surveyId", surveyId)
         
-        // Generate survey-specific keypair
-        // const privateKeyBytes = secp256k1.utils.randomSecretKey();
-        // const privateKeyHex = bytesToHex(privateKeyBytes).slice(2);
-        // const surveyOwner = Signer.fromPrivateKey(privateKeyHex, 'key');
-        // const surveyOwnerDid = await surveyOwner.getDid();
-
         // we're going to replace this with a PKP ... and use lit actions to assign delegations
 
         // owned collections dont seem to work yet. 
@@ -45,16 +38,17 @@ export class SurveyController {
         const contract = surveyStore.address;
 
         // Encrypt everything // we can now do this in FE i desired ... 
-        const [ encryptedSurveyConfig] = await Promise.all([ // encryptedKey
-            this.lit.encrypt(surveyConfig, accsForOwnerOrUser(surveyConfig.id, contract, smartAccountAddress)),
+        const [ encryptedForOwner, encryptedForRespondent] = await Promise.all([ // encryptedKey
+            this.lit.encrypt(surveyConfig, accsForSurveyOwner(surveyConfig.id, contract, safeAddress)),
+            this.lit.encrypt(surveyConfig, accsForRespondent(surveyConfig.id, contract))
             // this.lit.encrypt(privateKeyHex, accsForSurveyOwner(surveyConfig.id, contract, smartAccountAddress))
         ]);
 
-        const config = {
+        const config: EncryptedConfig = {
             surveyId: collectionId,
             nilDid: this.nildb.builderDid.didString, // surveyOwnerDid.didString,
-            // encryptedNilKey: encryptedKey,
-            surveyConfig: encryptedSurveyConfig,
+            encryptedForOwner,
+            encryptedForRespondent,
             config: surveyConfig.config
         };
 

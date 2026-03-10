@@ -10,6 +10,10 @@ export interface DraftsMap {
   [id: string]: DraftMeta;
 }
 
+export interface SurveysMap {
+  [id: string]: Survey;
+}
+
 export interface UIState {
   landingStep: 'welcome' | 'register' | 'choice';
   newStep: 'intro' | 'questions' | 'batches';

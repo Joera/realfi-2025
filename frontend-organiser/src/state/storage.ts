@@ -1,8 +1,28 @@
-import { DraftsMap } from './types.js';
+import { DraftsMap, SurveysMap } from './types.js';
 
 const DRAFTS_STORAGE_KEY = 'surveyDrafts';
 const CURRENT_DRAFT_KEY = 'currentDraftId';
 const CAP_DELEGATION_KEY = 'litCapabilityDelegation';
+const SURVEYS_STORAGE_KEY = 'surveys';
+
+
+export function loadSurveysFromStorage(): SurveysMap {
+  try {
+    const stored = localStorage.getItem(SURVEYS_STORAGE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch (e) {
+    console.warn('Failed to load surveys from localStorage:', e);
+  }
+  return {};
+}
+
+export function saveSurveysToStorage(surveys: SurveysMap): void {
+  try {
+    localStorage.setItem(SURVEYS_STORAGE_KEY, JSON.stringify(surveys));
+  } catch (e) {
+    console.warn('Failed to save surveys to localStorage:', e);
+  }
+}
 
 export function loadDraftsFromStorage(): DraftsMap {
   try {

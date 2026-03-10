@@ -11,7 +11,7 @@ formStyles.replaceSync(`
         select, input {
           width: 100%;
           padding: 0.75rem;
-          border: 1px solid #d1d5db;
+          border: 1px solid #fff;
           border-radius: 6px;
           font-size: 1rem;
           font-family: inherit;

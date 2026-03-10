@@ -5,6 +5,7 @@ import '@s3ntiment/shared/components';
 import { store } from '../state/store.js';
 import { router } from '../router.js';
 import { layoutStyles } from '../styles/shared-layout-styles.js';
+import { Survey } from '@s3ntiment/shared';
 
 class SurveyResultsList extends HTMLElement {
    
@@ -18,14 +19,21 @@ class SurveyResultsList extends HTMLElement {
 
     connectedCallback() {
 
+        const surveys = store.surveys; // or however you fetch current state
+        console.log("Store surveys", store.surveys)
+        this.render(surveys);
 
         this.unsubscribe = store.subscribeSurveys((surveys: any[]) => {
-            this.render(surveys);
+        const sorted = surveys
+            .filter(s => s != undefined)
+            .sort((a: Survey, b: Survey) => {
+            if (b.createdAt! > a.createdAt!) return 1;
+            if (b.createdAt! < a.createdAt!) return -1;
+            return 0;
+            });
+        this.render(sorted);
         });
-        
-        this.render(store.surveys);
-
-        
+           
     }
 
     disconnectedCallback() {
@@ -82,7 +90,7 @@ class SurveyResultsList extends HTMLElement {
            
             
              ${surveys.length === 0 ? `
-        <loading-spinner message="decrypting surveys"></loading-spinner>
+             <div>no surveys stored</div>
     ` : `
         <h1>My surveys</h1>
         <div class="survey-table">
@@ -99,7 +107,7 @@ class SurveyResultsList extends HTMLElement {
                     <div class="table-cell">${survey.title}...</div>
                     <div class="table-cell">${survey.id}</div>
                     <div class="table-cell">${new Date(Number(survey.createdAt) * 1000).toLocaleDateString()}</div>
-                    <div class="table-cell">${survey.config.safe}</div>
+                    <div class="table-cell">${survey.config != undefined ? survey.config.safe : ""}</div>
                     
                 </div>
             `).join('')}

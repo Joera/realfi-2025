@@ -44,30 +44,30 @@ export const registerBatch = async (services: any, batch: Batch) => {
     return await services.account.write(surveyStore.address, surveyStore.abi, "registerBatch", args, options);
 }
 
-export const deploySafe = async (services: any, salt: string): Promise<string> => {
+// export const deploySafe = async (services: any, salt: string): Promise<string> => {
     
-    const safeAddress = await services.safe.predictSafeAddress(salt);
+//     const safeAddress = await services.safe.predictSafeAddress(salt);
 
-    if (await services.safe.isDeployed(safeAddress)) {
-        return safeAddress;
-    }
+//     if (await services.safe.isDeployed(safeAddress)) {
+//         return safeAddress;
+//     }
     
-    const tempAccount = await toSafeSmartAccount({
-        client: services.safe.publicClient,
-        owners: [services.safe.signer],
-        version: "1.4.1",
-        saltNonce: BigInt(keccak256(toBytes(salt))),
-        entryPoint: { address: "0x0000000071727De22E5E9d8BAf0edAc6f37da032", version: "0.7" },
-    });
+//     const tempAccount = await toSafeSmartAccount({
+//         client: services.safe.publicClient,
+//         owners: [services.safe.signer],
+//         version: "1.4.1",
+//         saltNonce: BigInt(keccak256(toBytes(salt))),
+//         entryPoint: { address: "0x0000000071727De22E5E9d8BAf0edAc6f37da032", version: "0.7" },
+//     });
 
-    // Get factory info directly from the account — no network calls needed
-    const { factory, factoryData } = await tempAccount.getFactoryArgs();
+//     // Get factory info directly from the account — no network calls needed
+//     const { factory, factoryData } = await tempAccount.getFactoryArgs();
 
-    if (!factory || !factoryData) {
-        throw new Error("No factory data — Safe may already be deployed");
-    }
+//     if (!factory || !factoryData) {
+//         throw new Error("No factory data — Safe may already be deployed");
+//     }
 
-    await services.account.writeRaw(factory, factoryData, true);
+//     await services.safe.writeRaw(factory, factoryData, true);
 
-    return safeAddress;
-}
+//     return safeAddress;
+// }

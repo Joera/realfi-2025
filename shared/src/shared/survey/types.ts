@@ -54,6 +54,19 @@ export interface Config {
     litNetwork?: string
 }
 
+export interface EncryptedData {
+    ciphertext: string;
+    dataToEncryptHash: string;
+}
+
+export interface EncryptedConfig {
+    surveyId: string,
+    nilDid: string, // surveyOwnerDid.didString,
+    encryptedForOwner: EncryptedData,
+    encryptedForRespondent: EncryptedData,
+    config: Config
+}
+
 export interface Survey {
     id?: string
     title?: string

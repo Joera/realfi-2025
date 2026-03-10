@@ -1,13 +1,13 @@
 /// <reference types="vite/client" />
 
 
-import { Batch, CardData } from '@s3ntiment/shared';
+import { Batch } from '@s3ntiment/shared';
 import '../components/draft-survey-editor.js';
-import { createBatchWallet } from '../factories/invitation.factory.js';
-import { createBatch, createInvitations, deploySafe} from '../factories/survey.factory.js';
+import { createBatch, createInvitations } from '../factories/survey.factory.js';
 import { IServices } from '../services/services.js';
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
-import { base } from 'viem/chains';
+import { authenticate } from '../factories/auth.factory.js';
+import { store } from '../state/store.js';
 
 export class NewSurveyController {
   private reactiveViews: any[] = [];
@@ -52,14 +52,7 @@ export class NewSurveyController {
       console.log("ready to submit", survey)
 
       const surveyId = crypto.randomUUID();
-
-      const input = await this.services.waap.signMessage(`Sign in with your unlinkable account to co-own survey ${surveyId}`); 
-      const key = await this.services.oprf.getSecp256k1(input);
-      // set signer for safe 
-      await this.services.safe.updateSignerWithKey(key);
-
-      const safeAddress = import.meta.env.VITE_USE_SAFE == 'true' ? await this.services.safe.predictSafeAddress(surveyId) : "";
-
+      const safeAddress = await authenticate(this.services, surveyId);
       console.log("safeAddress", safeAddress)
   
       const config = {
@@ -87,7 +80,7 @@ export class NewSurveyController {
         body: JSON.stringify({   
           surveyId,      
           surveyConfig,
-          smartAccountAddress: this.services.account.getAddress()
+          safeAddress
         })
       });
 
@@ -100,25 +93,16 @@ export class NewSurveyController {
 
       const args = [surveyId, surveyCid.toString(), survey.batches.map( (b: Batch) => b.id)];
 
-      
-      if(import.meta.env.VITE_USE_SAFE == 'true') {
-        // check if combination owner + survey id was used before ! .. update pattern 
+      const receipt = await this.services.safe.write(surveyStore.address, surveyStore.abi, 'createSurvey', args, { waitForReceipt: true});
+      console.log(receipt);
 
-        const _safeAddress = await deploySafe(this.services, surveyId);
-        console.log('deployed safe', safeAddress, _safeAddress)
-        if (safeAddress != _safeAddress) { console.log('deployed wrong safe', safeAddress, _safeAddress); return; }
-        await this.services.safe.connectToExistingSafe(safeAddress);
-        const receipt = await this.services.safe.write(surveyStore.address, surveyStore.abi, 'createSurvey', args, { waitForReceipt: true});
-        console.log(receipt);
-      } else {
-        const receipt = await this.services.account.write(surveyStore.address, surveyStore.abi, 'createSurvey', args, { waitForReceipt: true});
-        console.log(receipt);
-      }
 
       for (let batch of survey.batches) {
         batch = await createInvitations(batch);
-       
       }
+
+      store.addSurvey(surveyConfig)
+      
     });
   }
 }

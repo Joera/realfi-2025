@@ -2,10 +2,10 @@ import { toSafeSmartAccount } from "permissionless/accounts";
 import { createSmartAccountClient } from "permissionless";
 import { createPimlicoClient } from "permissionless/clients/pimlico";
 import { createPublicClient, encodeFunctionData, http, keccak256, parseEther, toBytes, Transport } from "viem";
-import type { Chain } from "viem";
-import { getRPCUrl } from "./chains.factory";
-import { TxOptions, TxResult } from "./tx.types";
-import { extractDeployedAddress } from "./contract-address.factory";
+import type { Chain, PrivateKeyAccount } from "viem";
+import { getRPCUrl } from "./chains.factory.js";
+import { TxOptions, TxResult } from "./tx.types.js";
+import { extractDeployedAddress } from "./contract-address.factory.js";
 import { privateKeyToAccount } from "viem/accounts";
 
 export interface IPermissionlessSafeService {
@@ -59,6 +59,18 @@ export class PermissionlessSafeService implements IPermissionlessSafeService {
             this.signer = privateKeyToAccount(key);
             return this.signer.address;
         }
+
+    getSigner(): PrivateKeyAccount  {
+        return this.signer;
+    }
+
+    getSignerAddress() : string {
+        return this.signer.address;
+    }
+
+    getAddress(): `0x${string}` | undefined {
+        return this.smartAccount ? this.smartAccount.address: undefined;
+    }
 
     async isDeployed(address?: string): Promise<boolean> {
         try {
@@ -286,5 +298,27 @@ export class PermissionlessSafeService implements IPermissionlessSafeService {
         });
 
         return txHash;
+    }
+
+    // signMessage uses EIP-191 — it prepends \x19Ethereum Signed Message:\n + length before hashing. 
+    // That's fine for simple string messages and verifiable with viem's verifyMessage.
+    // The signature comes from the signer as the safe cannot sign
+    async signMessage (message: string) : Promise<`0x${string}`> {
+
+        return await this.signer.signMessage({ message });
+    }
+
+    // The signature comes from the signer
+    // but also verifiable via EIP-1271 red call isValidSignature() on the smart account address
+    // Safe needs to be deployed!!! 
+    async signTypedData(domain: any, types: any, message: any): Promise<`0x${string}`> {
+        
+        const signature = await this.signer.signTypedData({
+            domain,
+            types,
+            message,
+        });
+
+        return signature;
     }
 }

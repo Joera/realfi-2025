@@ -12,26 +12,34 @@ pragma solidity ^0.8.0;
  *   4. Cards are printed as QR codes containing: nullifier, batchId, signature, surveyId
  *
  * Card submission flow (on-chain):
- *   1. validateCard() recovers the signer from the card's signature
+ *   1. registerRespondent() recovers the signer from the card's signature
  *   2. Verifies signer === registered batch wallet (batchId)
  *   3. Marks nullifier as used to prevent double submission
- *   4. Caller registers as participant via registerParticipant() using their survey-scoped child wallet
+ *   4. Recovers WaaP signer via ISMC(msg.sender).owner() — the SMC is just the gas payer
+ *   5. Registers the WaaP signer as the respondent — this is the identity that matters
  *
  * Child wallet derivation (off-chain):
- *   1. User logs in once via WaaP → app-scoped master account
- *   2. Master account signs surveyId → signature used as vOPRF secret input
+ *   1. User logs in once via WaaP → app-scoped master account (WaaP signer)
+ *   2. WaaP signer signs surveyId → signature used as vOPRF secret input
  *   3. vOPRF(salt=surveyId, secret=signature) → deterministic child private key
  *   4. Child wallet is unlinkable to master account and to other surveys
- *   5. Child wallet calls validateCard() + registerParticipant()
- *   6. Lit Protocol uses isParticipant() as access condition to gate response decryption
+ *   5. Child wallet (via SMC) calls registerRespondent()
+ *   6. Lit Protocol uses isRespondent() as access condition — checks WaaP signer address
+ *      which matches :userAddress since Lit auth is signed by the WaaP key
  *
  * Key design decisions:
  *   - batchId === batch wallet address — no separate UUID needed
  *   - Batch signers are immutable once registered — protects printed cards
  *   - Batches are scoped to a survey — a batch wallet cannot be reused across surveys
  *   - createSurvey() accepts an array of batchIds to minimize signatures in new survey flow
+ *   - The SMC is purely a gas abstraction layer — identity is always the WaaP signer
  *   - No events are emitted — storage is read directly by Lit and frontend
  */
+
+interface ISMC {
+    function owner() external view returns (address);
+}
+
 contract S3ntimentSurveyStore {
 
     // -------------------------------------------------------------------------
@@ -61,7 +69,9 @@ contract S3ntimentSurveyStore {
 
     mapping(bytes32 => bool) public usedNullifiers;
 
-    mapping(string => mapping(address => bool)) private surveyParticipants;
+    // WaaP signer address → respondent tracking
+    // :userAddress in Lit ACCs resolves to this address
+    mapping(string => mapping(address => bool)) private surveyRespondents;
 
     // -------------------------------------------------------------------------
     // Errors
@@ -74,8 +84,6 @@ contract S3ntimentSurveyStore {
     error BatchAlreadyRegistered();
     error InvalidBatchId();
     error NullifierAlreadyUsed();
-    error SignerNotBatchWallet();
-    error AlreadyParticipant();
     error InvalidSignature();
 
 
@@ -201,21 +209,20 @@ contract S3ntimentSurveyStore {
     }
 
     // =========================================================================
-    // Card validation
+    // Respondent registration
     // =========================================================================
 
     /**
-     * @dev Validate a card submission.
-     *      Called by the user's survey-scoped child wallet.
-     *      Call registerParticipant() after this to register the child wallet.
+     * @dev Validate a card and register the WaaP signer as a respondent.
+     *      Called by the user's survey-scoped child wallet via SMC.
+     *      The SMC is purely a gas abstraction — identity is ISMC(msg.sender).owner().
      *
-     * @param nullifier  Unique card identifier from QR code
-     * @param signature  Signature produced by the ephemeral batch wallet
-     * @param batchId    Batch wallet address this card belongs to
      * @param surveyId   Survey this card is for
+     * @param nullifier  Unique card identifier from QR code
+     * @param batchId    Batch wallet address this card belongs to
+     * @param signature  Signature produced by the ephemeral batch wallet
      */
-
-    function validateCard(
+    function registerRespondent(
         string memory surveyId,
         string memory nullifier,
         address batchId,
@@ -223,20 +230,21 @@ contract S3ntimentSurveyStore {
     ) external {
         if (surveys[surveyId].owner == address(0)) revert SurveyNotFound();
         if (batches[surveyId][batchId].createdAt == 0) revert BatchNotFound();
- 
+
         bytes32 messageHash = keccak256(abi.encodePacked(nullifier, "|", batchId));
         bytes32 ethSignedHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
         address signer = recoverSigner(ethSignedHash, signature);
-        
-        if (signer != batchId) revert InvalidSignature();
 
+        if (signer != batchId) revert InvalidSignature();
         if (usedNullifiers[messageHash]) revert NullifierAlreadyUsed();
 
         usedNullifiers[messageHash] = true;
         batches[surveyId][batchId].cardCount++;
 
-        if (!surveyParticipants[surveyId][msg.sender]) {
-            surveyParticipants[surveyId][msg.sender] = true;
+        // Resolve identity: SMC owner is the WaaP signer, not the SMC itself
+        address waapSigner = ISMC(msg.sender).owner();
+        if (!surveyRespondents[surveyId][waapSigner]) {
+            surveyRespondents[surveyId][waapSigner] = true;
         }
     }
 
@@ -246,14 +254,15 @@ contract S3ntimentSurveyStore {
     }
 
     /**
-     * @dev Check if an address is a registered participant for a survey.
-     *      Used by Lit Protocol as an access condition.
+     * @dev Check if a WaaP signer address is a registered respondent for a survey.
+     *      Used by Lit Protocol as an access condition for both question and response decryption.
+     *      :userAddress in Lit ACCs resolves to the WaaP signer since Lit auth is signed by that key.
      *
-     * @param surveyId     Survey to check
-     * @param participant  Address to check (survey-scoped child wallet)
+     * @param surveyId    Survey to check
+     * @param respondent  WaaP signer address to check
      */
-    function isParticipant(string memory surveyId, address participant) external view returns (bool) {
-        return surveyParticipants[surveyId][participant];
+    function isRespondent(string memory surveyId, address respondent) external view returns (bool) {
+        return surveyRespondents[surveyId][respondent];
     }
 
     // =========================================================================
