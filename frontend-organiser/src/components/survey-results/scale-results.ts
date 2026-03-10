@@ -1,4 +1,4 @@
-import { Bar, createBars, Graph, GraphControllerV3 } from '@s3ntiment/shared';
+import { Bar, createBars, Graph, GraphControllerV3 } from '@s3ntiment/shared/browser';
 import { typograhyStyles } from '@s3ntiment/shared/assets';
 import * as d3 from 'd3';
 

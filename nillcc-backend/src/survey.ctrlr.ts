@@ -1,7 +1,7 @@
 import { recoverMessageAddress, Signature } from "viem";
 import { accsForSurveyOwner, createSurveyCollectionSchema, EncryptedConfig } from "@s3ntiment/shared";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
-import { accsForRespondent } from "../../shared/src/shared/lit/accs.js";
+import { accsForRespondent } from "@s3ntiment/shared";
 
 export class SurveyController {
     private nildb: any;

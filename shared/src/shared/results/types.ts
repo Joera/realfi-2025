@@ -1,4 +1,4 @@
-import { QuestionGroup } from "../survey";
+import { QuestionGroup } from "../survey/index.js";
 
 export interface TallyResult {
     question: string;

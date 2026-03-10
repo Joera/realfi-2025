@@ -1,5 +1,4 @@
 import { getAddress, http, keccak256, toBytes } from "viem";
-import { accsForOwnerOrUser } from "@s3ntiment/shared";
 import { Batch } from "@s3ntiment/shared";
 
 import { isCid } from "../utils/regex";

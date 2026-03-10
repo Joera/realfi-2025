@@ -1,27 +1,15 @@
 import { toSimpleSmartAccount } from "permissionless/accounts";
-import { createSmartAccountClient, SmartAccountClient } from "permissionless";
+import { createSmartAccountClient } from "permissionless";
 import { createPimlicoClient } from "permissionless/clients/pimlico";
-import { createPublicClient, encodeFunctionData, http, parseEther, Transport } from "viem";
-import type { Chain, PrivateKeyAccount, Signature, WalletClient } from "viem";
+import { createPublicClient, encodeFunctionData, http, keccak256, parseEther, toBytes, Transport } from "viem";
+import type { Chain, PrivateKeyAccount, WalletClient } from "viem";
 
 import { getRPCUrl, TxOptions, TxResult } from "@s3ntiment/shared";
 import { extractDeployedAddress } from "@s3ntiment/shared";
 import { privateKeyToAccount } from "viem/accounts";
-import { WaaPWalletConnect } from "@human.tech/waap-sdk";
 
-export interface IPermissionlessSimpleService {
-    getSigner: () => PrivateKeyAccount | WalletClient;
-    getSmartAccountClient: () => SmartAccountClient;
-    updateSignerWithKey: (key: `0x${string}`) => Promise<`0x${string}`>;
-    updateSignerWithWaap: (waapWalletClient: any) => Promise<`0x${string}`>;
-    connectToAccount: () => Promise<void>;
-    write: (address: string, abi: any, method: string, args: any[], options?: TxOptions) => Promise<TxResult>;
-    writeRaw: (to: string, data: `0x${string}`, options?: TxOptions) => Promise<TxResult>;
-    transfer: (to: string, amount: string) => Promise<string>;
-}
 
-export class PermissionlessSimpleService implements IPermissionlessSimpleService {
-
+export class PermissionlessSimpleService {
     private chain: Chain;
     private signer: any;
     private smartAccount: any;
@@ -205,4 +193,10 @@ export class PermissionlessSimpleService implements IPermissionlessSimpleService
 
         return txHash;
     }
+
+    async createNillDBSeed() {
+        const signature = await this.signMessage('Connect to blind computer for private responses');
+        return keccak256(toBytes(signature)).slice(2);
+    }
+
 }

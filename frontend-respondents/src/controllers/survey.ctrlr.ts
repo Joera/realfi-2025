@@ -81,14 +81,12 @@ export class SurveyController {
       await this.services.nillDB.init(seed);
 
       const userData = createUserDataObject(crypto.randomUUID(), event.detail.answers, this.config!);
-      const signature = await this.services.waap.signMessage(`s3ntiment:submit:${this.surveyId}`);
-      const s = this.services.waap.address;
-      const smc = this.services.account.getAddress()
-      if(smc != undefined) {
-        const result = await this.services.nillDB.storeStandard(import.meta.env.VITE_BACKEND, this.surveyId, userData, signature, s!, smc );
-        console.log(result)
-      }
+      const signature = await this.services.account.signMessage(`s3ntiment:submit:${this.surveyId}`);
+      const s = this.services.account.getSignerAddress();
 
+      const result = await this.services.nillDB.storeStandard(import.meta.env.VITE_BACKEND, this.surveyId, userData, signature, s!);
+      console.log(result)
+  
 
       // FLOW AS DESIGNED FOR OWNED COLLECTIONS    
       // const delegationToken = await this.services.nillDB.getUserDelegationToken("", this.surveyId, import.meta.env.VITE_BACKEND);

@@ -1,4 +1,4 @@
-import { getScanApi } from "./chains.factory";
+import { getScanApi } from "./chains.factory.js";
 
 interface InternalTransaction {
     contractAddress: string;
@@ -23,7 +23,7 @@ const getInternalTransactions = async (
 
     try {
         const response = await fetch(url);
-        const data = await response.json();
+        const data : any = await response.json();
         return data.result || [];
     } catch {
         return [];

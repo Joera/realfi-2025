@@ -56,7 +56,7 @@ app.post('/api/request-user-delegation', async (req, res) => {
 
 app.post('/api/submit-survey', async (req, res) => {
 
-  const { surveyId, userData, signature, signer, smc } = req.body;
+  const { surveyId, userData, signature, signer } = req.body;
 
   const isValidSignature = await verifyMessage({
       message: `s3ntiment:submit:${surveyId}`,
@@ -64,27 +64,14 @@ app.post('/api/submit-survey', async (req, res) => {
       address: signer
   });
 
-  const isParticipant = await viem.read(
+  const isRespondent = await viem.read(
       surveyStore.address as `0x${string}`,
       surveyStore.abi,
-      'isParticipant',
-      [surveyId, smc]
+      'isRespondent',
+      [surveyId, signer]
   );
 
-  const ownerAbi = [{
-      inputs: [],
-      name: "owner",
-      outputs: [{ name: "", type: "address" }],
-      stateMutability: "view",
-      type: "function"
-  }];
-
-  const owner = await viem.read(smc, ownerAbi, 'owner', []);
-  const isSigner = owner.toLowerCase() === signer.toLowerCase();
-
-  if (isValidSignature && isParticipant && isSigner) {
-
-    console.log(0);
+  if (isValidSignature && isRespondent) {
 
     try {
         const result = await nildb.submitResponseForUser(surveyId, userData);
@@ -94,7 +81,7 @@ app.post('/api/submit-survey', async (req, res) => {
 
       res.json({ success: true });
   } else {
-      console.log("failed:", { isValidSignature, isParticipant, isSigner });
+      console.log("failed:", { isValidSignature, isRespondent });
       res.json({ success: false });
   }
 });

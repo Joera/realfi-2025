@@ -132,7 +132,7 @@ export class NillDBUserService {
 
 
 
-    async storeStandard(backendUrl: string, surveyId: string, userData: any, signature: Signature | `0x${string}`, signer: string, smc: string) {
+    async storeStandard(backendUrl: string, surveyId: string, userData: any, signature: Signature | `0x${string}`, signer: string) {
 
         // possibly perform blindfold encryption here 
 
@@ -143,8 +143,7 @@ export class NillDBUserService {
                 surveyId,
                 userData,
                 signature,
-                signer,
-                smc
+                signer
             })
         });
     }
