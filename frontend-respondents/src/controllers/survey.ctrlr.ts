@@ -4,7 +4,7 @@ import '@s3ntiment/shared/components';
 import '../components/survey-questions.js';
 import { IServices } from '../services.js';
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
-import { fetchAndDecryptSurvey, Survey } from '@s3ntiment/shared';
+import { fetchAndDecryptSurveyWithRespondent, Survey } from '@s3ntiment/shared';
 
 import { store } from '../state';
 import { createUserDataObject } from '@s3ntiment/shared'
@@ -56,7 +56,7 @@ export class SurveyController {
     );
 
     const authContext = await this.services.lit.createAuthContext(this.services.account.getSigner(), capabilityDelegation, window.location.host);
-    const survey = await fetchAndDecryptSurvey(this.services, surveyStore, this.surveyId, authContext)
+    const survey = await fetchAndDecryptSurveyWithRespondent(this.services, surveyStore, this.surveyId, authContext)
     this.config = survey;
     console.log("SURVEY", survey)
     store.setSurveyData(this.surveyId, survey)

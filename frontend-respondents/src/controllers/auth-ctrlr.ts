@@ -7,6 +7,7 @@ import { router } from '../router.js';
 import { authenticate } from '../auth.factory.js';
 import { CardData } from '@s3ntiment/shared';
 import { Card, parseCardURL } from '../card.factory.js';
+import { removeSplash } from '../onpageload.js';
 
 
 export class AuthController {
@@ -24,10 +25,10 @@ export class AuthController {
 
         app.innerHTML = `<div id="auth-content" class="centered"></div>`;
 
-        const view = reactive('#authcontent', () => {
+        const view = reactive('#auth-content', () => {
 
             return `
-                <loading-spinner message"authenticating"></loading-spinner>
+                <loading-spinner message="authenticating" color="rgb(32,85,74)"></loading-spinner>
                 `
 
 
@@ -62,26 +63,34 @@ export class AuthController {
 
             const isParticipant = await authenticate(this.services, cardData.surveyId);
 
+            removeSplash();
+
             console.log(`${this.services.account.getAddress()} - ${ cardData.surveyId} : ${isParticipant}`)
 
             if(!isParticipant || import.meta.env.VITE_PROD !== 'true') {
-                const tx = await card.register(this.services) 
-            
-                if (tx.receipt?.status === 'success') {
-                    console.log("new card registered")
-                    router.navigate('/surveys/' + cardData.surveyId);
 
-                } else {
+                try {
+                    const tx = await card.register(this.services) 
+                
+                    if (tx.receipt?.status === 'success') {
+                        console.log("new card registered")
+                        router.navigate('/surveys/' + cardData.surveyId);
+
+                    } else {
+                        alert('❌ Card validation failed');
+                    }
+                } catch (error) {
+
                     alert('❌ Card validation failed');
                 }
             } 
 
-            if(!isParticipant || import.meta.env.VITE_PROD == 'true') {
-                alert("your mailadress was already used for this survey")
+            if(!isParticipant ) {  // && import.meta.env.VITE_PROD == 'true'
+                alert("your mailadress was already used for this survey. Skip if you're just tesing")
             }
         
             if(isParticipant) {
-                router.navigate(`/survey/${cardData.surveyId}`);
+                router.navigate(`/surveys/${cardData.surveyId}`);
             } else {
                 alert("not participant")
             }

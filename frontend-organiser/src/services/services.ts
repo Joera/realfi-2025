@@ -12,6 +12,7 @@ import { OPRFService, WaapService } from "@s3ntiment/shared/browser"
 
 
 import { base } from "viem/chains";
+import { authenticate } from "../factories/auth.factory";
 
 export interface IServices {
   waap: WaapService;
@@ -66,7 +67,7 @@ export class ServiceContainer {
     this.oprf = new OPRFService(import.meta.env.VITE_HUMAN_NETWORK_SIGNER_URL);
 
     await this.waap.login(base)
-
+  
     await this.lit.init();
     await this.oprf.init();
 

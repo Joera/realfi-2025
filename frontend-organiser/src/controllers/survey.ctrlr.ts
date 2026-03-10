@@ -179,30 +179,26 @@ export class SurveyController {
     
     async process() {
 
-        // const survey = store.surveys.find((s: any) => s.id === this.surveyId);
+        const survey = store.surveys.find((s: any) => s.id === this.surveyId);
 
-        //  if (survey && survey !== undefined) {
+         if (survey && survey !== undefined) {
+            this.survey = survey;
+         } 
 
-        //     this.survey = survey;
 
-        //  } else {
+        const safeAddress = await this.services.safe.connectToFreshSafe(this.surveyId) 
+        console.log("safe address:", safeAddress)
 
-            console.log('Survey not in store, fetching...');
+        const capabilityDelegation = await store.ensureCapabilityDelegation(
+            import.meta.env.VITE_BACKEND,
+            this.services.safe
+        );
 
-            const safeAddress = await authenticate(this.services, this.surveyId)
-
-            console.log("sa", safeAddress)
-
-            const capabilityDelegation = await store.ensureCapabilityDelegation(
-                import.meta.env.VITE_BACKEND,
-                this.services.safe
-            );
-
-            const authContext = await this.services.lit.createAuthContext(this.services.safe.getSigner(), capabilityDelegation, window.location.host);
-            this.survey = await fetchAndDecryptSurveyWithOwner(this.services, surveyStore, this.surveyId, authContext, safeAddress)
-            console.log("S",this.survey)
-            // store.addSurvey(this.survey);  // should replace 
-         
+        const authContext = await this.services.lit.createAuthContext(this.services.safe.getSigner(), capabilityDelegation, window.location.host);
+        this.survey = await fetchAndDecryptSurveyWithOwner(this.services, surveyStore, this.surveyId, authContext, safeAddress)
+        console.log("Survey: ",this.survey)
+            // store.addSurvey(this.survey);  // should replace // check if correctly overwrites 
+        
         //  }
 
         // const nillDid = await this.services.nillion.getDid();

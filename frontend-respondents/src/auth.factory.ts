@@ -14,13 +14,13 @@ export const authenticate = async (services: IServices, surveyId: string) : Prom
 
 export const hasParticipatingAccount = async (services: IServices, surveyId: string) : Promise<boolean> => {
 
-    if(services.account.getAddress() == undefined) return false;
+    if(services.account.getSignerAddress() == undefined) return false;
 
     return await services.viem.read(
         surveyStore.address as `0x${string}`,
         surveyStore.abi,
-        'isParticipant',
-        [surveyId, services.account.getAddress()]
+        'isRespondent',
+        [surveyId, services.account.getSignerAddress()]
     );
 
 }

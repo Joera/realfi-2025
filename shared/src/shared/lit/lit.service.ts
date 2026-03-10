@@ -42,8 +42,6 @@ export class LitService {
             }),
         });
 
-        console.log(capabilityDelegation)
-
         return await authManager.createEoaAuthContext({
             config: {
                 account: wrappedAccount,

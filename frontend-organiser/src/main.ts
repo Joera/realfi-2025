@@ -11,6 +11,7 @@ injectGlobalStyles();
 
 import { initRouter } from './router';
 import { getServices } from './services/services';
+import { authenticate } from "./factories/auth.factory";
 
 const onPagePainted = () => {
 
@@ -24,6 +25,8 @@ const main = async () => {
   const services = getServices();
   await services.initialize();
   // Initialize router
+
+  await authenticate(services);
   initRouter(services);
 }
 

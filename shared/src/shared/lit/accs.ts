@@ -91,6 +91,8 @@ export const accsForSurveyOwner = (surveyId: string, contract: string, safeAddre
 };
 
 export const accsForRespondent = (contract: string, surveyId: string) => {
+
+  console.log("accs:", contract, surveyId)
   return [isRespondent(contract, surveyId)];
 };
 

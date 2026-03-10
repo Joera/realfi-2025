@@ -1,13 +1,14 @@
 /// <reference types="vite/client" />
 
 
-import { Batch } from '@s3ntiment/shared';
+import { Batch, Survey } from '@s3ntiment/shared';
 import '../components/draft-survey-editor.js';
 import { createBatch, createInvitations } from '../factories/survey.factory.js';
 import { IServices } from '../services/services.js';
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
 import { authenticate } from '../factories/auth.factory.js';
 import { store } from '../state/store.js';
+import { router } from '../router.js';
 
 export class NewSurveyController {
   private reactiveViews: any[] = [];
@@ -52,7 +53,7 @@ export class NewSurveyController {
       console.log("ready to submit", survey)
 
       const surveyId = crypto.randomUUID();
-      const safeAddress = await authenticate(this.services, surveyId);
+      const safeAddress =  await this.services.safe.connectToFreshSafe(surveyId); 
       console.log("safeAddress", safeAddress)
   
       const config = {
@@ -63,13 +64,14 @@ export class NewSurveyController {
 
       console.log(config)
 
-      const surveyConfig =  {
+      const surveyConfig: Survey =  {
             id: surveyId,
             title: survey.title,
             introduction: survey.introduction,
             groups: survey.groups,
             batches: survey.batches,
-            config
+            config,
+            // createdAt: BigInt(Math.floor(Date.now() / 1000))
           }
 
       let res: any = await fetch(`${import.meta.env.VITE_BACKEND}/api/create-survey`, {
@@ -101,7 +103,9 @@ export class NewSurveyController {
         batch = await createInvitations(batch);
       }
 
-      store.addSurvey(surveyConfig)
+      store.addSurvey(surveyConfig);
+
+      router.navigate("/surveys")
       
     });
   }

@@ -33,7 +33,7 @@ export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: 
     }
 }
 
-export const fetchAndDecryptSurveyWithRespondent = async (services: any, deployment: any, surveyId: string, authContext: any, smc: string) => {
+export const fetchAndDecryptSurveyWithRespondent = async (services: any, deployment: any, surveyId: string, authContext: any) => {
 
     const surveyInfo = await services.viem.read(
       deployment.address as `0x{string}`, 
@@ -44,7 +44,7 @@ export const fetchAndDecryptSurveyWithRespondent = async (services: any, deploym
     
     const config: EncryptedConfig = JSON.parse(await services.ipfs.fetchFromPinata(surveyInfo[0]));
 
-    const accs = accsForRespondent(surveyId, deployment.address);
+    const accs = accsForRespondent(deployment.address, surveyId);
 
     let d: any;
 

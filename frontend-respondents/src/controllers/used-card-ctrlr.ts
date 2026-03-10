@@ -30,7 +30,6 @@ export class UsedCardController {
 
         const view = reactive('#used-card-content', () => {
 
-        
             return `
                 <div class="onboarding-message">
                     <h2>Used card</h2>
@@ -38,8 +37,6 @@ export class UsedCardController {
                     <button id="sign-in-btn" class="btn-primary" style="margin-top: 1.5rem">Sign in</button>
                 </div>
             `;
-
-
         });
 
         if (view) {

@@ -86,11 +86,16 @@ export class Card {
         );
     }
 
+  
+
     async register(services: IServices) { // should be called register
+
+          console.log(surveyStore)
+          
         return await services.account.write(
             surveyStore.address as `0x${string}`,
             surveyStore.abi,
-            'validateCard',
+            'registerRespondent',
             [this.data.surveyId, this.data.nullifier, this.data.batchId, this.data.signature],
             { waitForReceipt: true, confirmations: 2 }
         );

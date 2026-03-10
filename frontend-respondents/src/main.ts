@@ -13,11 +13,17 @@ import { initRouter } from './router.js';
 import { getServices } from './services.js';
 
 
-
+export const clearLitStorage = () => {
+  Object.keys(localStorage)
+    .filter(key => key.startsWith('lit-') || key === 'litCapabilityDelegation')
+    .forEach(key => localStorage.removeItem(key));
+};
 
 
 const main = async () => {
   // Initialize router
+
+  clearLitStorage();
 
   const services = getServices();
 

@@ -37,11 +37,9 @@ export class SurveyController {
 
         const contract = surveyStore.address;
 
-        // Encrypt everything // we can now do this in FE i desired ... 
         const [ encryptedForOwner, encryptedForRespondent] = await Promise.all([ // encryptedKey
             this.lit.encrypt(surveyConfig, accsForSurveyOwner(surveyConfig.id, contract, safeAddress)),
-            this.lit.encrypt(surveyConfig, accsForRespondent(surveyConfig.id, contract))
-            // this.lit.encrypt(privateKeyHex, accsForSurveyOwner(surveyConfig.id, contract, smartAccountAddress))
+            this.lit.encrypt(surveyConfig, accsForRespondent(contract, surveyConfig.id))
         ]);
 
         const config: EncryptedConfig = {
