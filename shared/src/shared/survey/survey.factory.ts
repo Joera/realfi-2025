@@ -1,18 +1,20 @@
 import { accsForSurveyOwner, EncryptedConfig } from '../index.js';
 import { accsForRespondent } from '../lit/accs.js';
 
-export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: any, surveyId: string, authContext: any, safeAddress: string) => {
+export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: any, surveyId: string, authContext: any, safeAddress?: string) => {
 
     const surveyInfo = await services.viem.read(
       deployment.address as `0x{string}`, 
       deployment.abi,
       'getSurvey',
       [surveyId]
-    );
+    );  
     
     const config: EncryptedConfig = JSON.parse(await services.ipfs.fetchFromPinata(surveyInfo[0]));
 
-    const accs = accsForSurveyOwner(surveyId, deployment.address, safeAddress);
+    console.log("CONFIG", config)
+
+    const accs = accsForSurveyOwner(surveyId, deployment.address, config.config.safe || "0x");
 
     let d: any;
 

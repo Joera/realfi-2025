@@ -4,8 +4,8 @@ import { createPimlicoClient } from "permissionless/clients/pimlico";
 import { createPublicClient, encodeFunctionData, http, keccak256, parseEther, toBytes, Transport } from "viem";
 import type { Chain, PrivateKeyAccount, WalletClient } from "viem";
 
-import { getRPCUrl, TxOptions, TxResult } from "@s3ntiment/shared";
-import { extractDeployedAddress } from "@s3ntiment/shared";
+import { getRPCUrl, TxOptions, TxResult } from "./index.js";
+import { extractDeployedAddress } from "./index.js";
 import { privateKeyToAccount } from "viem/accounts";
 
 
@@ -61,7 +61,7 @@ export class PermissionlessSimpleService {
     }
 
     getSignerAddress() : string {
-        return this.signer.address;
+        return this.signer == undefined ? "0x" : this.signer.address;
     }
 
     async connectToAccount(): Promise<void> {

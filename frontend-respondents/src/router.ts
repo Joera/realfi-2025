@@ -28,7 +28,7 @@ export const initRouter = (services: IServices) => {
         () => {
           if (currentController?.destroy) currentController.destroy();
           currentController = new AuthController(services);
-         
+          removeSplash();
           currentController.render();
         },
         {

@@ -7,7 +7,7 @@ import '../components/survey-detail-access.js';
 import '../components/survey-forms/survey-form-questions.js';
 import '../components/survey-forms/survey-form-batches.js';
 import { router } from "../router.js";
-import { createBatch } from "../factories/survey.factory.js";
+import { createBatch, createInvitations } from "../factories/survey.factory.js";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
 import {  fetchAndDecryptSurveyWithOwner, Survey } from "@s3ntiment/shared";
 import { renderIcon } from "@s3ntiment/shared/assets";
@@ -64,6 +64,7 @@ export class SurveyController {
                     color: var(--color-too-dark);
                     transition: all 0.2s;
                     border-bottom: 2px solid var(--color-too-dark);
+                    border-radius: 0;
                 }
 
                 .tab:hover {
@@ -185,21 +186,17 @@ export class SurveyController {
             this.survey = survey;
          } 
 
-
-        const safeAddress = await this.services.safe.connectToFreshSafe(this.surveyId) 
-        console.log("safe address:", safeAddress)
-
         const capabilityDelegation = await store.ensureCapabilityDelegation(
             import.meta.env.VITE_BACKEND,
             this.services.safe
         );
 
         const authContext = await this.services.lit.createAuthContext(this.services.safe.getSigner(), capabilityDelegation, window.location.host);
-        this.survey = await fetchAndDecryptSurveyWithOwner(this.services, surveyStore, this.surveyId, authContext, safeAddress)
+        this.survey = await fetchAndDecryptSurveyWithOwner(this.services, surveyStore, this.surveyId, authContext,"")
         console.log("Survey: ",this.survey)
-            // store.addSurvey(this.survey);  // should replace // check if correctly overwrites 
-        
-        //  }
+
+        await this.services.safe.connectToExistingSafe(this.survey.config?.safe || "") 
+
 
         // const nillDid = await this.services.nillion.getDid();
 
@@ -267,37 +264,24 @@ export class SurveyController {
             const event = e as CustomEvent
             const { batch, index, surveyId } = event.detail;
 
-            // update contract!!
-            // const authContext = this.services.lit.createAuthContext(this.services.waap.getWalletClient())
-            // const survey = await fetchSurvey(this.services, authContext, surveyId);
-            // survey.batches.push(batch);
+            console.log(batch, surveyId)
 
-            // const abi =     {
-            //     "inputs": [
-            //         {
-            //         "internalType": "string",
-            //         "name": "surveyId",
-            //         "type": "string"
-            //         },
-            //         {
-            //         "internalType": "string",
-            //         "name": "newIpfsCid",
-            //         "type": "string"
-            //         }
-            //     ],
-            //     "name": "updateSurveyCid",
-            //     "outputs": [],
-            //     "stateMutability": "nonpayable",
-            //     "type": "function"
-            //     };
-            // // oh we moeten ook encrypten en pinnen ... update endpoint on nil cc ... MAAAAAR is dit weel zo efficient .. toch niet hier encrypten ?????? 
-            // this.services.waap.write(import.meta.env.VITE_SURVEYSTORE_CONTRACT as any, abi, 'updateSurveyCid', [], {})
+            const b = await createBatch(this.services, batch, surveyId)
 
-            await createBatch(this.services, batch, surveyId)
+            const receipt = await this.services.safe.write(surveyStore.address, surveyStore.abi, 'registerBatch', [surveyId, b.id], { waitForReceipt: true});
+            console.log(receipt);
 
-            // const test = await generateCardSecrets(this.services, { id: '', name: "test", amount: 1, survey: surveyId  }, surveyId);
-
-            // console.log(test)
+            await createInvitations(b);
+            
         })
+
+        document.addEventListener('add-co-organiser', async (e: Event) => {
+            const { address, role, surveyId } = (e as CustomEvent).detail;
+
+            if (role == 'owner') {
+                console.log(0)
+                await this.services.safe.addOwner(address);
+            }
+        });
     }
 }

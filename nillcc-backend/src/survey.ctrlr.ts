@@ -1,5 +1,5 @@
 import { recoverMessageAddress, Signature } from "viem";
-import { accsForSurveyOwner, createSurveyCollectionSchema, EncryptedConfig } from "@s3ntiment/shared";
+import { accsForSurveyOwner, createSurveyCollectionSchema, EncryptedConfig } from "@s3ntiment/shared/";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 import { accsForRespondent } from "@s3ntiment/shared";
 

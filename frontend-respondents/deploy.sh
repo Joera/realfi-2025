@@ -1,2 +1,2 @@
-npm run build
+pnpm run build
 scp -r dist/* joera:/srv/s3ntiment/

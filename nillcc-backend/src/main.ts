@@ -9,7 +9,6 @@ import { base } from 'viem/chains';
 
 import { SurveyController } from './survey.ctrlr.js';
 import { ViemService, LitService, IPFSMethods } from "@s3ntiment/shared";
-import { Codec } from '@nillion/nuc';
 import { Account, verifyMessage } from 'viem';
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 import { privateKeyToAccount } from 'viem/accounts';

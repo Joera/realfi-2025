@@ -3,6 +3,7 @@ import { IServices } from "../services/services.js";
 import { reactive } from "../utils/reactive.js";
 import '../components/survey-results-list.js';
 import '../components/add-survey-input.js';
+import '../components/access-request.js';
 
 export class SurveyListController {
     private reactiveViews: any[] = [];
@@ -36,5 +37,16 @@ export class SurveyListController {
     destroy() {
         this.reactiveViews.forEach(view => view.destroy());
         this.reactiveViews = [];
+    }
+
+    setListeners() {
+
+        document.addEventListener('access-request', async (e) => {
+            const event = e as CustomEvent
+            const { surveyId } = event.detail;
+            console.log(surveyId);
+
+            
+        })
     }
 }

@@ -5,16 +5,7 @@ import { saveAs } from 'file-saver';
 import { privateKeyToAccount } from 'viem/accounts';
 import { Batch, CardSecret } from '@s3ntiment/shared';
 
-
-const baseUrl = "http://localhost:9999"; // https://s3ntiment.composible.io";
-
-// interface CardData {
-//   nullifier: string
-//   signature: string
-//   batchId: string
-//   url: string
-// }
-
+const baseUrl = import.meta.env.VITE_FRONTEND;  
 
 function generateRandomNullifier() {
   const randomBytes = crypto.getRandomValues(new Uint8Array(16));
@@ -60,19 +51,6 @@ export const createBatchWallet = async (services: any) => {
   };
 }
 
-// const solidityPacked = (nullifier: string, batch: Batch): `0x${string}` => {
-//   const encoder = new TextEncoder();
-//   const nullifierBytes = encoder.encode(nullifier);
-//   const pipeBytes = encoder.encode("|");
-//   const addressBytes = batch.id.slice(2); // remove 0x
-  
-//   const hexStr = Array.from(nullifierBytes)
-//     .concat(Array.from(pipeBytes))
-//     .map(b => b.toString(16).padStart(2, '0'))
-//     .join('') + addressBytes;
-  
-//   return ('0x' + hexStr) as `0x${string}`;
-// }
 
 export const generateCardSecrets = async (
   batchAccount: any,

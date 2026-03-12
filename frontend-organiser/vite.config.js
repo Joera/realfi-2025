@@ -24,6 +24,11 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: './index.html'
+      },
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) return 'vendor';
+        }
       }
     },
     assetsInlineLimit: 0,

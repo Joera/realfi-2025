@@ -74,10 +74,10 @@ export class SurveyController {
   async setSurveyListener() {
     
     document.addEventListener('survey-complete', async (event: any) => {
-      console.log('Survey completed!');
+      console.log('Survey completed!');23
       console.log('event:', event);
 
-      const seed = await this.services.waap.createNillDBSeed();
+      const seed = await this.services.account.createNillDBSeed();
       await this.services.nillDB.init(seed);
 
       const userData = createUserDataObject(crypto.randomUUID(), event.detail.answers, this.config!);

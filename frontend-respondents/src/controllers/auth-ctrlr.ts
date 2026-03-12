@@ -28,7 +28,7 @@ export class AuthController {
         const view = reactive('#auth-content', () => {
 
             return `
-                <loading-spinner message="authenticating" color="rgb(32,85,74)"></loading-spinner>
+                <loading-spinner message="safety takes time" color="rgb(32,85,74)"></loading-spinner>
                 `
 
 
@@ -58,19 +58,22 @@ export class AuthController {
         
             const card = new Card(cardData)
 
-
             this.renderTemplate();
 
             const isParticipant = await authenticate(this.services, cardData.surveyId);
 
-            removeSplash();
-
             console.log(`${this.services.account.getAddress()} - ${ cardData.surveyId} : ${isParticipant}`)
+
+            // if(isParticipant ) {  // && import.meta.env.VITE_PROD == 'true'
+            //  //   alert("your mailadress was already used for this survey. Skip if you're just tesing")
+            // }
 
             if(!isParticipant || import.meta.env.VITE_PROD !== 'true') {
 
                 try {
-                    const tx = await card.register(this.services) 
+                    const tx = await card.register(this.services);
+
+                    console.log(tx)
                 
                     if (tx.receipt?.status === 'success') {
                         console.log("new card registered")
@@ -85,15 +88,9 @@ export class AuthController {
                 }
             } 
 
-            if(!isParticipant ) {  // && import.meta.env.VITE_PROD == 'true'
-                alert("your mailadress was already used for this survey. Skip if you're just tesing")
-            }
-        
             if(isParticipant) {
                 router.navigate(`/surveys/${cardData.surveyId}`);
-            } else {
-                alert("not participant")
-            }
+            } 
         }   
 
     }

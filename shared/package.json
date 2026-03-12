@@ -4,10 +4,15 @@
   "main": "dist/index.js",
   "type": "module",
   "types": "dist/index.d.ts",
+
   "exports": {
     ".": {
-      "import": "./src/shared/index.ts",
-      "types": "./src/shared/index.ts"
+      "import": "./dist/shared/index.js",
+      "types": "./dist/shared/index.d.ts"
+    },
+    "./dev": {
+      "import": "./src/index.js",
+      "types": "./src/index.d.ts"
     },
     "./browser": {
       "import": "./src/browser/index.ts",

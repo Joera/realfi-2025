@@ -8,6 +8,7 @@ import { SurveyListController } from './controllers/survey-list.ts';
 import { SurveyController } from './controllers/survey.ctrlr.ts';
 import { NewSurveyController } from './controllers/new.ctrlr.ts';
 import { LogoutController } from './controllers/logout.ctrlr.ts';
+import { AccountController } from './controllers/account.ctrlr.ts';
 
 const router = new Navigo('/');
 
@@ -45,6 +46,11 @@ export const initRouter = (services: IServices) => {
     .on('/logout', () => {
       if (currentController?.destroy) currentController.destroy();
       currentController = new LogoutController(services);
+      currentController.render();
+    })
+    .on('/account', () => {
+      if (currentController?.destroy) currentController.destroy();
+      currentController = new AccountController(services);
       currentController.render();
     })
     .notFound(() => {

@@ -19,6 +19,7 @@ export interface IPermissionlessSafeService {
     transfer: (to: string, amount: string) => Promise<string>;
     predictSafeAddress: (salt: string) => Promise<string>;
     isDeployed: (address?: string) => Promise<boolean>;
+    addOwner: (address: `0x${string}`) => Promise<boolean>;
 }
 
 export class PermissionlessSafeService implements IPermissionlessSafeService {
@@ -56,9 +57,11 @@ export class PermissionlessSafeService implements IPermissionlessSafeService {
     }
 
     async updateSignerWithKey(key: `0x${string}`): Promise<`0x${string}`> {
-            this.signer = privateKeyToAccount(key);
-            return this.signer.address;
-        }
+        console.log(key)
+        this.signer = privateKeyToAccount(key);
+        console.log(this.signer)
+        return this.signer.address;
+    }
 
     getSigner(): PrivateKeyAccount  {
         return this.signer;
@@ -321,4 +324,31 @@ export class PermissionlessSafeService implements IPermissionlessSafeService {
 
         return signature;
     }
+
+    async addOwner(address: `0x${string}`) {
+
+        const result = await this.write(
+            this.address,
+            [
+                {
+                    name: 'addOwnerWithThreshold',
+                    type: 'function',
+                    stateMutability: 'nonpayable',
+                    inputs: [
+                        { name: 'owner', type: 'address' },
+                        { name: '_threshold', type: 'uint256' }
+                    ],
+                    outputs: []
+                }
+            ],
+            'addOwnerWithThreshold',
+            [address, 1],
+            { waitForReceipt: true }
+        );
+
+        console.log(result)
+
+        return !!result.txHash;
+    }
 }
+
