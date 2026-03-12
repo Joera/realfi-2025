@@ -10,6 +10,10 @@ class QuestionCard extends HTMLElement {
     private _groupIndex: number = 0
     private _questionIndex: number = 0
     private _isDragEnabled: boolean = false
+    private _correctAnswer: number | null = null
+    private _points: number = 1
+
+
 
     static get observedAttributes() {
         return ['group-index', 'question-index']
@@ -53,6 +57,9 @@ class QuestionCard extends HTMLElement {
     get question(): Question | null {
         return this._question
     }
+    
+    set correctAnswer(value: number) { this._correctAnswer = value }
+    set points(value: number) { this._points = value }
 
     private render() {
         if (!this.shadowRoot || !this._question) return
@@ -216,9 +223,10 @@ class QuestionCard extends HTMLElement {
                         ></scale-config>
                     ` : ''}
 
-                    ${q.type === 'radio' || q.type === 'checkbox' ? `
+                    ${q.type === 'radio' || q.type === 'checkbox' || q.type === 'scored-single'? `
                         <options-editor
                             type="${q.type}"
+                            question-id="${q.id}"
                             group-index="${this._groupIndex}"
                             question-index="${this._questionIndex}"
                         ></options-editor>
@@ -235,11 +243,12 @@ class QuestionCard extends HTMLElement {
         </div>
         `
 
-        // Set options via property after render
-        if (q.type === 'radio' || q.type === 'checkbox') {
-            const optionsEditor = this.shadowRoot.querySelector('options-editor') as any
-            if (optionsEditor) {
-                optionsEditor.options = q.options || []
+        const optionsEditor = this.shadowRoot.querySelector('options-editor') as any
+        if (optionsEditor) {
+            optionsEditor.options = q.options || []
+            if (q.type === 'scored-single') {
+                optionsEditor.correctAnswer = this._correctAnswer
+                optionsEditor.points = this._points
             }
         }
     }

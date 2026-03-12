@@ -199,6 +199,34 @@ class SurveyFormQuestions extends HTMLElement {
             const { groupIndex, questionIndex, optionIndex } = e.detail
             this.removeOption(groupIndex, questionIndex, optionIndex)
         }) as EventListener)
+
+        this.shadowRoot?.addEventListener('correct-answer-set', ((e: CustomEvent) => {
+            const { groupIndex, questionId, optionIndex } = e.detail
+            if (!this._groups[groupIndex].scoring) {
+                this._groups[groupIndex].scoring = {}
+            }
+            const existing = this._groups[groupIndex].scoring![questionId]
+            this._groups[groupIndex].scoring![questionId] = {
+                correctAnswer: optionIndex,
+                points: existing?.points ?? 1
+            }
+            this.emitChange()
+        }) as EventListener)
+
+        this.shadowRoot?.addEventListener('points-update', ((e: CustomEvent) => {
+            const { groupIndex, questionId, points } = e.detail
+            if (!this._groups[groupIndex].scoring) {
+                this._groups[groupIndex].scoring = {}
+            }
+            const existing = this._groups[groupIndex].scoring![questionId]
+            this._groups[groupIndex].scoring![questionId] = {
+                correctAnswer: existing?.correctAnswer ?? 0,
+                points
+            }
+            this.emitChange()
+        }) as EventListener)
+
+
     }
 
     // Group operations
@@ -245,7 +273,7 @@ class SurveyFormQuestions extends HTMLElement {
             required: true
         }
 
-        if (type === 'radio' || type === 'checkbox') {
+        if (type === 'radio' || type === 'checkbox' || type === 'scored-single') {
             question.options = ['']
         } else if (type === 'scale') {
             question.scaleRange = { min: 1, max: 10, minLabel: '', maxLabel: '' }
@@ -333,9 +361,13 @@ class SurveyFormQuestions extends HTMLElement {
                     errors.push(`${prefix}: Question text is required`)
                 }
 
-                if ((q.type === 'radio' || q.type === 'checkbox') &&
+                if ((q.type === 'radio' || q.type === 'checkbox' || q.type === 'scored-single') &&
                     (!q.options || q.options.filter((o: any) => o.trim()).length === 0)) {
                     errors.push(`${prefix}: At least one option required`)
+                }
+
+                if (q.type === 'scored-single' && !group.scoring?.[q.id]) {
+                    errors.push(`${prefix}: Please mark the correct answer`)
                 }
             })
         })

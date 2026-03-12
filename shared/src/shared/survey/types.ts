@@ -20,7 +20,7 @@ export interface SurveyAnswer {
 export interface Question {
     id: string
     question: string
-    type: 'radio' | 'checkbox' | 'scale' | 'text'
+    type: 'radio' | 'checkbox' | 'scale' | 'text' | 'scored-single'
     options?: string[]
     scaleRange?: {
         min: number
@@ -31,12 +31,19 @@ export interface Question {
     required: boolean
 }
 
+// New — scoring info per question
+export interface GroupScoring {
+    correctAnswer: number  // option index
+    points: number
+}
+
+// QuestionGroup — add optional scoring sibling
 export interface QuestionGroup {
     id: string
     title: string
     questions: Question[]
+    scoring?: Record<string, GroupScoring>  // questionId → scoring
 }
-
 
 export interface Batch {
     id: string

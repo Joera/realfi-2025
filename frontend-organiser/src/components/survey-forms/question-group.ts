@@ -212,10 +212,11 @@ class QuestionGroupElement extends HTMLElement {
 
                 <select class="add-question-select btn-primary" id="add-question">
                     <option value="">+ Add question...</option>
-                    <option value="radio">Radio (Single Choice)</option>
-                    <option value="checkbox">Checkbox (Multiple Choice)</option>
+                    <option value="radio">Single Choice</option>
+                    <option value="checkbox">Multiple Choice</option>
                     <option value="scale">Scale</option>
                     <option value="text">Text Input</option>
+                    <option value="scored-single">Scored Single Choice</option>
                 </select>
             </div>
         </div>
