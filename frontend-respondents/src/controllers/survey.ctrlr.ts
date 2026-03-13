@@ -48,7 +48,6 @@ export class SurveyController {
 
   async render() {
 
-    console.log("hi")
 
     const capabilityDelegation = await store.ensureCapabilityDelegation(
       import.meta.env.VITE_BACKEND,
@@ -74,7 +73,7 @@ export class SurveyController {
   async setSurveyListener() {
     
     document.addEventListener('survey-complete', async (event: any) => {
-      console.log('Survey completed!');23
+      console.log('Survey completed!');
       console.log('event:', event);
 
       const seed = await this.services.account.createNillDBSeed();

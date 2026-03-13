@@ -30,7 +30,8 @@ export class SurveyController {
             return safeGroup
         })
 
-        const safeConfig = { ...surveyConfig, groups: safeGroups }
+        const safeConfigWithScoring = { ...surveyConfig, groups: surveyConfig.groups } // scoring still attached
+        const safeConfig = { ...surveyConfig, groups: safeGroups } // scoring stripped
         const hasScoring = Object.keys(scoring).length > 0
 
         const rawSchema = createSurveyCollectionSchema(safeConfig, "standard")
@@ -38,8 +39,8 @@ export class SurveyController {
 
         const contract = surveyStore.address;
 
-        const [ encryptedForOwner, encryptedForRespondent, encryptedScoring] = await Promise.all([
-            this.lit.encrypt(safeConfig, accsForSurveyOwner(safeConfig.id, contract, safeAddress)),
+        const [ encryptedForOwner, encryptedForRespondent] = await Promise.all([
+            this.lit.encrypt(safeConfigWithScoring, accsForSurveyOwner(safeConfig.id, contract, safeAddress)),
             this.lit.encrypt(safeConfig, accsForRespondent(contract, safeConfig.id)),
             hasScoring
                 ? this.lit.encrypt(scoring, accsForSurveyOwner(safeConfig.id, contract, safeAddress))
@@ -51,7 +52,6 @@ export class SurveyController {
             nilDid: this.nildb.builderDid.didString,
             encryptedForOwner,
             encryptedForRespondent,
-            ...(encryptedScoring && { encryptedScoring }),
             config: surveyConfig.config
         }
 

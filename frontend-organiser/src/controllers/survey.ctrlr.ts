@@ -284,5 +284,11 @@ export class SurveyController {
                 await this.services.safe.addOwner(address);
             }
         });
+
+        document.addEventListener('survey-save', async (e: Event) => {
+            const { surveyId, groups } = (e as CustomEvent).detail
+                // TODO: PUT /api/surveys/:id — stub for now
+            console.log('save groups', surveyId, groups)
+        });
     }
 }
