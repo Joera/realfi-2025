@@ -1,5 +1,5 @@
 export async function fetchPaymentDelegation(backendUrl: string, userAddr: string, signature: string) {
-  const response : any = await fetch(`${backendUrl}/api/lit-payment-delegation`, {
+  const response : any = await fetch(`${backendUrl}/api/lit/payment-delegation`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'

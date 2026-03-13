@@ -4,8 +4,9 @@ import { store } from "../state/store.js";
 import { reactive } from "../utils/reactive.js";
 import '../components/survey-detail-responses.js';
 import '../components/survey-detail-access.js';
-import '../components/survey-forms/survey-form-questions.js';
+// import '../components/survey-forms/survey-form-questions.js';
 import '../components/survey-forms/survey-form-batches.js';
+import '../components/registered-questions-editor.js';
 import { router } from "../router.js";
 import { createBatch, createInvitations } from "../factories/survey.factory.js";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
@@ -161,7 +162,7 @@ export class SurveyController {
                 case 'access':
                     return `<survey-detail-access class="container" survey-id="${this.surveyId}"></survey-detail-access>`;
                 case 'questions':
-                    return `<survey-form-questions class="container" survey-id="${this.surveyId}"></survey-form-questions>`;
+                    return `<registered-questions-editor class="container" survey-id="${this.surveyId}"></registered-questions-editor>`
                 case 'batches':
                     return `<survey-form-batches class="container" survey-id="${this.surveyId}"></survey-form-batches>`;
                 default: 
@@ -203,7 +204,7 @@ export class SurveyController {
         // const message = `Request delegation for ${nillDid.didString}`;
         // const signature = await this.services.viem.signMessage(message);
 
-        // let nillDelegation: any  = await fetch(`${import.meta.env.VITE_BACKEND}/api/request-delegation`, { // or directly get results 
+        // let nillDelegation: any  = await fetch(`${import.meta.env.VITE_BACKEND}/api/surveys/${this.surveyId}/delegation`, { // or directly get results 
         //   method: 'POST',
         //   headers: {
         //       'Content-Type': 'application/json', 
@@ -216,7 +217,7 @@ export class SurveyController {
         //   })
         // });
 
-        const response = await fetch(`${import.meta.env.VITE_BACKEND}/api/survey-results`, {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND}/api/surveys/${this.surveyId}/results`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

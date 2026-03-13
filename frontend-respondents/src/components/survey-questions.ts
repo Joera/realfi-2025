@@ -397,6 +397,23 @@ class SurveyQuestions extends HTMLElement {
           >${savedAnswer?.answer || ''}</textarea>
         `;
 
+      case 'scored-single':
+        return `
+            <div class="options-container">
+                ${question.options?.map(option => `
+                    <label>
+                        <input
+                            type="radio"
+                            name="${question.id}"
+                            value="${option}"
+                            ${savedAnswer?.answer === option ? 'checked' : ''}
+                        >
+                        <span>${option}</span>
+                    </label>
+                `).join('') || ''}
+            </div>
+        `;
+
       default:
         return '';
     }
@@ -469,6 +486,10 @@ class SurveyQuestions extends HTMLElement {
       case 'text':
         const textarea = container?.querySelector(`textarea[name="${question.id}"]`) as HTMLTextAreaElement;
         return textarea?.value.trim() || '';
+
+      case 'scored-single':
+        const scoredRadio = container?.querySelector(`input[name="${question.id}"]:checked`) as HTMLInputElement;
+        return scoredRadio?.value || '';
 
       default:
         return '';

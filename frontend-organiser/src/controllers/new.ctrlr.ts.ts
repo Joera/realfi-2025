@@ -74,7 +74,7 @@ export class NewSurveyController {
             // createdAt: BigInt(Math.floor(Date.now() / 1000))
           }
 
-      let res: any = await fetch(`${import.meta.env.VITE_BACKEND}/api/create-survey`, {
+      let res: any = await fetch(`${import.meta.env.VITE_BACKEND}/api/surveys`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

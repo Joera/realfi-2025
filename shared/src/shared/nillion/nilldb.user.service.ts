@@ -136,7 +136,7 @@ export class NillDBUserService {
 
         // possibly perform blindfold encryption here 
 
-        return await fetch(`${backendUrl}/api/submit-survey`, {
+        return await fetch(`${backendUrl}/api/surveys/${surveyId}/submity`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -219,7 +219,7 @@ export class NillDBUserService {
         console.log('requesting delegation for DID:', this.userDidString);
 
         try {
-            const response = await fetch(`${backendUrl}/api/request-user-delegation`, {
+            const response = await fetch(`${backendUrl}/api/surveys/${surveyId}/delegation`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"

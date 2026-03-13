@@ -17,42 +17,106 @@ export class SurveyController {
     }
 
     async create(body: any) {
-
         const { surveyId, surveyConfig, safeAddress } = body;
 
-        console.log("surveyId", surveyId)
-        
-        // we're going to replace this with a PKP ... and use lit actions to assign delegations
+        // Split scoring out of groups before anything else
+        const scoring: Record<string, any> = {}
+        const safeGroups = surveyConfig.groups.map((group: any) => {
+            const { scoring: groupScoring, ...safeGroup } = group
+            if (groupScoring) {
+                // key by groupId to keep it locatable later
+                scoring[group.id] = groupScoring
+            }
+            return safeGroup
+        })
 
-        // owned collections dont seem to work yet. 
-        // const rawSchema = createOwnedSurveyCollectionSchema(surveyConfig);
-        // const rawSchema = createStandardSurveyCollectionSchema(surveyConfig);
+        const safeConfig = { ...surveyConfig, groups: safeGroups }
+        const hasScoring = Object.keys(scoring).length > 0
 
-        const rawSchema = createSurveyCollectionSchema(surveyConfig, "standard");
-
-        console.log(JSON.stringify(rawSchema))
-
-        const collectionId = await this.nildb.createSurveyCollection(surveyId, rawSchema, this.nildb.builderDid.didString);
-        console.log("collection id", collectionId)
+        const rawSchema = createSurveyCollectionSchema(safeConfig, "standard")
+        const collectionId = await this.nildb.createSurveyCollection(surveyId, rawSchema, this.nildb.builderDid.didString)
 
         const contract = surveyStore.address;
 
-        const [ encryptedForOwner, encryptedForRespondent] = await Promise.all([ // encryptedKey
-            this.lit.encrypt(surveyConfig, accsForSurveyOwner(surveyConfig.id, contract, safeAddress)),
-            this.lit.encrypt(surveyConfig, accsForRespondent(contract, surveyConfig.id))
-        ]);
+        const [ encryptedForOwner, encryptedForRespondent, encryptedScoring] = await Promise.all([
+            this.lit.encrypt(safeConfig, accsForSurveyOwner(safeConfig.id, contract, safeAddress)),
+            this.lit.encrypt(safeConfig, accsForRespondent(contract, safeConfig.id)),
+            hasScoring
+                ? this.lit.encrypt(scoring, accsForSurveyOwner(safeConfig.id, contract, safeAddress))
+                : Promise.resolve(null)
+        ])
 
         const config: EncryptedConfig = {
             surveyId: collectionId,
-            nilDid: this.nildb.builderDid.didString, // surveyOwnerDid.didString,
+            nilDid: this.nildb.builderDid.didString,
             encryptedForOwner,
             encryptedForRespondent,
+            ...(encryptedScoring && { encryptedScoring }),
             config: surveyConfig.config
-        };
+        }
 
-        console.log('📦 Survey config:', config);
+        return await this.ipfs.uploadToPinata(JSON.stringify(config))
+    }
 
-        return await this.ipfs.uploadToPinata(JSON.stringify(config));
+    async get(surveyId: string) {
+        const cid = await this.viem.read(
+            surveyStore.address as `0x${string}`,
+            surveyStore.abi,
+            'getSurveyCid',
+            [surveyId]
+        );
+        if (!cid) return null;
+        const raw = await this.ipfs.fetchFromPinata(cid);
+        const config = JSON.parse(raw);
+        // strip answer key before returning
+        const { encryptedScoring, ...safe } = config;
+        return safe;
+    }
+
+    // TODO: replace with nilCC blind scoring
+    async score(surveyId: string, signer: string) {
+
+        // 1. Get CID from chain
+        const cid = await this.viem.read(
+            surveyStore.address as `0x${string}`,
+            surveyStore.abi,
+            'getSurveyCid',
+            [surveyId]
+        );
+
+        // 2. Fetch config from IPFS
+        const raw = await this.ipfs.fetchFromPinata(cid);
+        const config = JSON.parse(raw);
+
+        // 3. Bail early if no scoring (not a quiz survey)
+        if (!config.encryptedScoring) {
+            return null;
+        }
+
+        // 4. Decrypt answer key (owner/builder Lit identity)
+        // TODO: use PKP here instead of builder key
+        const scoring = await this.lit.decrypt(config.encryptedScoring);
+
+        // 5. Fetch respondent's answers from nilDB
+        const answers = await this.nildb.getResponseForUser(surveyId, signer);
+
+        // 6. Score locally
+        // scoring: Record<groupId, Record<questionId, { correctAnswer: number, points: number }>>
+        // answers: SurveyAnswer[]
+        let total = 0;
+        let max = 0;
+
+        for (const [_groupId, groupScoring] of Object.entries(scoring) as any) {
+            for (const [questionId, s] of Object.entries(groupScoring) as any) {
+                max += s.points;
+                const answer = answers.find((a: any) => a.questionId === questionId);
+                if (answer && answer.optionIndex === s.correctAnswer) {
+                    total += s.points;
+                }
+            }
+        }
+
+        return { total, max, pct: Math.round((total / max) * 100) };
     }
 
     async requestDelegation(body: any) {

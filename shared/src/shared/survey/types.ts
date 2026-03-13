@@ -12,7 +12,7 @@ export interface SurveyQuestion {
 export interface SurveyAnswer {
   questionId: string
   questionText: string
-  questionType: 'radio' | 'checkbox' | 'text' | 'scale'
+  questionType: 'radio' | 'checkbox' | 'text' | 'scale' | 'scored-single'
   answer: string | string[] | number
   scaleRange?: { min: number; max: number; minLabel: string; maxLabel: string }
 }
