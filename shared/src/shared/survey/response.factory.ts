@@ -59,10 +59,10 @@ const ensureAllot = (content: string | number | { "%allot": string | number }): 
     return { "%allot": String(content ?? "") };
 }
 
-export const createUserDataObject = (uuid: string, answers: any, survey: Survey) => {
+export const createUserDataObject = (uuid: string, answers: any, survey: Survey, signerAddress: string) => {
 
     const preparedAnswers = prepareAnswers(answers, survey);
-    const dataObject: Record<string, any> = { _id: uuid, surveyId: survey.id };
+    const dataObject: Record<string, any> = { _id: uuid, surveyId: survey.id, signer: signerAddress };
     
     preparedAnswers.forEach((answer: any) => {
         if (answer.questionType === 'checkbox') {

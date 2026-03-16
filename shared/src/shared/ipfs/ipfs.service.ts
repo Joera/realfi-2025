@@ -101,7 +101,7 @@ export class IPFSMethods {
 
     async uploadToPinata(content: string | Blob, filename: string): Promise<string> {
 
-        console.log("PINATA UPLOAD B4", content)
+        // console.log("PINATA UPLOAD B4", content)
 
         const formData = new FormData();
         

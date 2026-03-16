@@ -86,7 +86,7 @@ export class NewSurveyController {
         })
       });
 
-      const result = await res.text();
+      const result = await res.json();
 
       if (this.services.ipfs.isCID(result.cid)) {
   

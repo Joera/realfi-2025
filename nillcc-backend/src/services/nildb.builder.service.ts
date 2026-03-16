@@ -12,6 +12,7 @@ import {
   NucCmd
 } from '@nillion/secretvaults';
 import { QuestionGroup, Survey, tallyResults } from "@s3ntiment/shared";
+import { decrypt, encrypt } from "eciesjs";
 import { Signature, verifyMessage } from "viem";
 
 
@@ -100,13 +101,6 @@ export class NilDBBuilderService {
                 .expiresIn(86400)  // Note: expiresIn is in SECONDS, not milliseconds
                 .signAndSerialize(this.builderSigner);
         }
-
-
-
-        
-
-
-        console.log('Has blindfold key:', !!(this.builderClient as any)._options?.key);
     }
 
     async getReadTokens() {
@@ -152,17 +146,25 @@ export class NilDBBuilderService {
 
     async submitResponseForUser (surveyId: string, userData: any) {
 
-        // try {
 
-        //     const meta = await this.builderClient.readCollection(surveyId);
-        //     console.log('collection meta:', JSON.stringify(meta, null, 2));
+        const existingDocIds = await this.exists(surveyId,userData.signer);
 
-        // } catch (err) {
+        console.log("Existing", existingDocIds);
 
-        //     console.log('error reading collection', JSON.stringify(err.body))
-        // }
+        if (  existingDocIds && existingDocIds.length > 0) {
 
-        // if exists .. delete first!
+            for (const id of existingDocIds) {
+            
+                const d = await this.builderClient.deleteData(
+                    {
+                    collection: surveyId,
+                    filter: { _id: id },
+                    }
+                );
+
+                console.log("deleted", d)
+            }
+        }
    
         try {
             return await this.builderClient.createStandardData({
@@ -231,11 +233,7 @@ export class NilDBBuilderService {
 
 
         // run checks isOwner
-        
-        console.log(1, surveyId);
-
         await new Promise(r => setTimeout(r, 5000));
-
 
         try {
 
@@ -250,10 +248,12 @@ export class NilDBBuilderService {
             );
 
             /// pagination on 1000 records!!!!!
+            
+            console.log(rawResults)
 
             try  {
                 const talliedResults = tallyResults(rawResults.data, groups);
-                console.log(talliedResults);
+                // console.log(talliedResults);
                 return talliedResults
 
             } catch (error) {
@@ -266,5 +266,53 @@ export class NilDBBuilderService {
             console.log("error", JSON.stringify(error));
             return { result : false};
         }
+    }
+
+
+    async exists(surveyId: string, signer: string) {
+
+        const rawResults = await this.builderClient.findData(
+            {
+                collection: surveyId,
+                filter: { signer: signer}
+            },
+            { 
+                auth: { invocations: await this.getReadTokens() }
+            }
+        );
+        
+        return rawResults.data[0] ? rawResults.data.map( (r: any) => r._id) : false;
+    }
+  
+    
+
+    async getResponseById(surveyId: string, docId: string) {
+
+        const rawResults = await this.builderClient.findData(
+                {
+                    collection: surveyId,
+                    filter: { _id: docId}
+                },
+                { 
+                    auth: { invocations: await this.getReadTokens() }
+                }
+            );
+
+        return rawResults.data[0];
+
+    }
+
+    encryptToBuilder(data: any): string {
+        const message = Buffer.from(JSON.stringify(data))
+        const pubKeyBytes = (this.builderDid as any).publicKeyBytes
+        const pubKeyHex = Buffer.from(pubKeyBytes).toString('hex')
+        const encrypted = encrypt(pubKeyHex, message)
+        return Buffer.from(encrypted).toString('base64')
+    }
+
+    decryptFromBuilder(encryptedBase64: string): any {
+        const encrypted = new Uint8Array(Buffer.from(encryptedBase64, 'base64'))
+        const decrypted = decrypt(this.builderKey, encrypted)
+        return JSON.parse(Buffer.from(decrypted).toString())
     }
 }

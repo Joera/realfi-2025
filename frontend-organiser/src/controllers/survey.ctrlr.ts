@@ -12,6 +12,7 @@ import { createBatch, createInvitations } from "../factories/survey.factory.js";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
 import {  fetchAndDecryptSurveyWithOwner, Survey } from "@s3ntiment/shared";
 import { renderIcon } from "@s3ntiment/shared/assets";
+import '@s3ntiment/shared/components';
 import { authenticate } from "../factories/auth.factory.js";
 
 
@@ -157,6 +158,8 @@ export class SurveyController {
             const { resultTab } = store.ui;
 
             switch (resultTab) {
+                case 'spinner':
+                    return `<loading-spinner></loading-spinner>`
                 case 'results':
                     return `<survey-detail-responses class="container" survey-id="${this.surveyId}"></survey-detail-responses>`
                 case 'access':
@@ -198,6 +201,10 @@ export class SurveyController {
 
         await this.services.safe.connectToExistingSafe(this.survey.config?.safe || "") 
 
+        // switch spinner msg
+
+        await this.resreshResponses()
+
 
         // const nillDid = await this.services.nillion.getDid();
 
@@ -217,6 +224,23 @@ export class SurveyController {
         //   })
         // });
 
+        
+        
+    }
+
+    async render() {
+
+        this.renderTemplate();
+        this.process();
+    }
+
+    destroy() {
+        this.reactiveViews.forEach(view => view.destroy());
+        this.reactiveViews = [];
+    }
+
+    async resreshResponses () {
+
         const response = await fetch(`${import.meta.env.VITE_BACKEND}/api/surveys/${this.surveyId}/results`, {
             method: 'POST',
             headers: {
@@ -234,18 +258,6 @@ export class SurveyController {
 
         console.log("RESULTS", this.survey.results)
         store.addSurvey(this.survey);
-        
-    }
-
-    async render() {
-
-        this.renderTemplate();
-        this.process();
-    }
-
-    destroy() {
-        this.reactiveViews.forEach(view => view.destroy());
-        this.reactiveViews = [];
     }
 
     setListeners() {
@@ -287,6 +299,11 @@ export class SurveyController {
             }
         });
 
+        document.addEventListener('refresh-responses', async (e: Event) => {
+
+            await this.resreshResponses()
+        });
+
         document.addEventListener('survey-save', async (e: Event) => {
             const { surveyId, groups } = (e as CustomEvent).detail
 
@@ -296,7 +313,17 @@ export class SurveyController {
             const existing = store.surveys.find((s: any) => s.id === surveyId)
             if (existing) {
 
-                const surveyConfig: Survey = { ...existing, groups };
+                const surveyConfig: Survey = { 
+                    id: existing.id,
+                    title: existing.title,
+                    introduction: existing.introduction,
+                    createdAt: existing.createdAt, /// ???? 
+                    config:existing.config,   // ????
+                    batches: existing.batches,   // ????? 
+                    groups: groups
+                };
+
+                console.log("UPDATING WITH THIS", surveyConfig)
         
                 let res: any = await fetch(`${import.meta.env.VITE_BACKEND}/api/surveys/${surveyId}`, {
                     method: 'PUT',

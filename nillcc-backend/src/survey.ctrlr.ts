@@ -2,7 +2,7 @@ import { recoverMessageAddress, Signature } from "viem";
 import { accsForSurveyOwner, createSurveyCollectionSchema, EncryptedConfig, Survey } from "@s3ntiment/shared";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 import { accsForRespondent } from "@s3ntiment/shared";
-import { stripScoring } from "./scoring.factory.js";
+import { calculateScore, stripScoring } from "./scoring.factory.js";
 
 export class SurveyController {
     private nildb: any;
@@ -21,7 +21,7 @@ export class SurveyController {
 
         const contract = surveyStore.address;
         const { surveyId, surveyConfig, safeAddress } = body;
-        const { safeConfigWithScoring, safeConfig } = stripScoring(surveyConfig)
+        const { safeConfigWithScoring, safeConfig, scoring } = stripScoring(surveyConfig)
 
         const rawSchema = createSurveyCollectionSchema(safeConfig, "standard")
         const collectionId = await this.nildb.createSurveyCollection(surveyId, rawSchema, this.nildb.builderDid.didString)
@@ -31,11 +31,14 @@ export class SurveyController {
             this.lit.encrypt(safeConfig, accsForRespondent(contract, surveyId))
         ])
 
+        const encryptedScoring = this.nildb.encryptToBuilder({scoring: scoring, groups: surveyConfig.groups});
+
         const config: EncryptedConfig = {
             surveyId: collectionId,
             nilDid: this.nildb.builderDid.didString,
             encryptedForOwner,
             encryptedForRespondent,
+            encryptedScoring,
             config: surveyConfig.config
         }
 
@@ -46,22 +49,26 @@ export class SurveyController {
 
         const contract = surveyStore.address;
         const { surveyId, surveyConfig, safeAddress } = body;
-        const { safeConfigWithScoring, safeConfig } = stripScoring(surveyConfig)
+
+        console.log(surveyConfig)
+
+        const { safeConfigWithScoring, safeConfig, scoring } = stripScoring(surveyConfig)
 
         const [ encryptedForOwner, encryptedForRespondent] = await Promise.all([
             this.lit.encrypt(safeConfigWithScoring, accsForSurveyOwner(surveyId, contract, safeAddress)),
             this.lit.encrypt(safeConfig, accsForRespondent(contract, surveyId))
         ])
 
+        const encryptedScoring = this.nildb.encryptToBuilder({scoring: scoring, groups: surveyConfig.groups});
+
         const config: EncryptedConfig = {
             surveyId,
             nilDid: this.nildb.builderDid.didString,
             encryptedForOwner,
             encryptedForRespondent,
+            encryptedScoring,
             config: surveyConfig.config
         }
-
-        console.log("B4", config)
 
         return await this.ipfs.uploadToPinata(JSON.stringify(config))
 
@@ -87,10 +94,8 @@ export class SurveyController {
         return safe;
     }
 
-    // TODO: replace with nilCC blind scoring
-    async score(surveyId: string, signer: string) {
 
-        const contract = surveyStore.address;
+    async score(surveyId: string, signerAddress: string) {
 
         const res = await this.viem.read(
             surveyStore.address as `0x${string}`,
@@ -107,35 +112,33 @@ export class SurveyController {
             return null;
         }
 
-        // moeten we dit wel hier doen? zit idd alleen in surveyowner .. is dat geen denkfout? antwoorden moeten deelbaar zijn met user .. evt alleen na inzending
-        // voorlopige oplossing: goede antwoorden - gewoon meesturen met de score 
-        const survey: Survey = await this.lit.decrypt(config.encryptedForOwner, accsForSurveyOwner(surveyId, contract, config.config?.safe));
 
-        const scoring: any = {}; 
-        survey.groups?.map((group: any) => {
-            const { scoring: groupScoring, ...safeGroup } = group
-            if (groupScoring) {
-                scoring[group.id] = groupScoring
-            }
-            return safeGroup
-        })
+        // temp solution .. see dilemma in obsidian 
+       const { scoring, groups } = this.nildb.decryptFromBuilder(config.encryptedScoring);
 
-        const answers = await this.nildb.getResponseForUser(surveyId, signer);
+       const existingIds = await this.nildb.exists(surveyId, signerAddress)
 
-        let total = 0;
-        let max = 0;
+       if (existingIds[0]) {
 
-        for (const [_groupId, groupScoring] of Object.entries(scoring) as any) {
-            for (const [questionId, s] of Object.entries(groupScoring) as any) {
-                max += s.points;
-                const answer = answers.find((a: any) => a.questionId === questionId);
-                if (answer && answer.optionIndex === s.correctAnswer) {
-                    total += s.points;
-                }
-            }
-        }
+            const userData = await this.nildb.getResponseById(surveyId, existingIds[0]);
 
-        return { total, max, scoring };
+            console.log(scoring)
+            console.log(userData)
+            console.log(groups)
+
+            const s = calculateScore(scoring, userData, groups);
+            console.log(s)
+
+            return s;
+
+       } else {
+
+        console.log("no entry found")
+        return false;
+
+       }
+
+       
     }
 
     async requestDelegation(body: any) {

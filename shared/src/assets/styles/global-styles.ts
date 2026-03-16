@@ -242,6 +242,52 @@ export function injectGlobalStyles() {
         line-height: 1.55;
     }
 
+    #completed-content {
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        > div {
+         
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        
+        }
+
+        .completed-container {
+            margin-bottom: 1.5rem;
+        
+        }
+
+        .score {
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+            div {
+                margin: .75rem
+            }
+
+            div:first-of-type {
+                border-bottom: 2px solid var(--color-too-dark);
+                
+            }
+        
+            .large {
+            
+                font-size: 8rem;
+                line-height: 1;
+                font-family: "Oswald", sans-serif;
+                font-weight: 600;
+                color: var(--color-too-dark);
+
+            }
+        }
+    }
+
 
     ${buttonStylesString}
     

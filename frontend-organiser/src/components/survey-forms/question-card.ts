@@ -247,7 +247,6 @@ class QuestionCard extends HTMLElement {
         if (optionsEditor) {
             optionsEditor.options = q.options || []
             if (q.type === 'scored-single') {
-                console.log(4, this._correctAnswer);
                 optionsEditor.correctAnswer = this._correctAnswer
                 optionsEditor.points = this._points
             }
@@ -308,14 +307,12 @@ class QuestionCard extends HTMLElement {
         handle?.addEventListener('mousedown', (e) => {
             // Don't call preventDefault - it blocks native drag!
             e.stopPropagation()
-            console.log('drag handle mousedown')
             this._isDragEnabled = true
             card?.setAttribute('draggable', 'true')
             document.addEventListener('mouseup', onMouseUp)
         })
 
         card?.addEventListener('dragstart', (e) => {
-            console.log('card dragstart fired, isDragEnabled:', this._isDragEnabled)
             if (!this._isDragEnabled) {
                 e.preventDefault()
                 return
@@ -325,14 +322,12 @@ class QuestionCard extends HTMLElement {
                 questionIndex: this._questionIndex
             }))
             e.dataTransfer!.effectAllowed = 'move'
-            console.log('drag data set')
             setTimeout(() => {
                 this.classList.add('dragging')
             }, 0)
         })
 
         card?.addEventListener('dragend', () => {
-            console.log('dragend')
             this.classList.remove('dragging')
             this._isDragEnabled = false
             card?.removeAttribute('draggable')

@@ -105,11 +105,12 @@ export const initRouter = (services: IServices) => {
           }
         }
       )
-      .on('/complete/:surveyId',
+      .on('/complete/:surveyId/:docId',
         (match: any) => {
           if (currentController?.destroy) currentController.destroy();
           const surveyId = match?.params?.surveyId || match?.data?.surveyId || '';
-          currentController = new CompletedController(services, surveyId);
+          const docId = match?.params?.docId || match?.data?.docId || '';
+          currentController = new CompletedController(services, surveyId, docId);
           removeSplash();
           currentController.render();
         }

@@ -82,19 +82,19 @@ export class LandingController {
 
   async setButtonListener() {
         
-    document.addEventListener('ready-to-login', async (event: any) => {
+    // document.addEventListener('ready-to-login', async (event: any) => {
 
-        const { walletClient, address } = await this.services.waap.login(base);
+    //     const { walletClient, address } = await this.services.waap.login(base);
         
-        if (walletClient && address) {
+    //     if (walletClient && address) {
 
-          await this.services.account.updateSigner(walletClient);
-          if (import.meta.env.VITE_USE_SAFE == 'true') { await this.services.safe.updateSigner(walletClient); }
-          console.log("logged in")
+    //       await this.services.safe.updateSigner(walletClient);
+    //       if (import.meta.env.VITE_USE_SAFE == 'true') { await this.services.safe.updateSigner(walletClient); }
+    //       console.log("logged in")
    
-        }
+    //     }
 
-    });
+    // });
 
   }
 

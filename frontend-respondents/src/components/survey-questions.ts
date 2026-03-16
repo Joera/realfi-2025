@@ -14,6 +14,7 @@ class SurveyQuestions extends HTMLElement {
   private flatQuestions: FlatQuestion[] = []
   private answers: SurveyAnswer[] = []
   private currentStep = 0
+  private isSubmitting = false;
   previousDocument: any;
 
   constructor() {
@@ -426,6 +427,9 @@ class SurveyQuestions extends HTMLElement {
   }
 
   private handleNext() {
+    
+    if (this.isSubmitting) return;
+  
     const currentQuestion = this.flatQuestions[this.currentStep];
     const answer = this.collectAnswer(currentQuestion);
 
@@ -454,6 +458,7 @@ class SurveyQuestions extends HTMLElement {
       this.render();
       this.attachEventListeners();
     } else {
+      this.isSubmitting = true;  // Lock before completing
       this.complete();
     }
   }
@@ -511,8 +516,6 @@ class SurveyQuestions extends HTMLElement {
   private complete() {
     this.currentStep = this.totalSteps;
     this.render();
-
-    console.log('complete')
 
     const event = new CustomEvent('survey-complete', {
       detail: {

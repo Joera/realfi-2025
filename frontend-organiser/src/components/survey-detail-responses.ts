@@ -152,11 +152,26 @@ class SurveyDetailResponses extends HTMLElement {
                     margin-bottom: 0.5rem;
                     border-radius: 2px;
                 }
+
+                .top-container {
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: space-between;
+                    align-items: center;
+                    width: calc(100% - 3rem);
+                    margin: 0.75rem 1.5rem;
+                }
+
+
             </style>
 
             <div class="container centered">
-                <div class="responses-container">
+                <div class="top-container">
                     <span>(${this.total} responses)</span>
+                    <button id="btn-refresh" class="btn-primary">Refresh</button>
+                    
+                </div>
+                <div class="responses-container">
                     ${groupsHTML}
                 </div>
             </div>
@@ -264,7 +279,18 @@ class SurveyDetailResponses extends HTMLElement {
         return text.replace(/[&<>"']/g, m => map[m]);
     }
 
-    private attachListeners() {}
+    private attachListeners() {
+
+
+        this.shadowRoot?.querySelector('#btn-refresh')?.addEventListener('click', () => {
+            
+            this.dispatchEvent(new CustomEvent('refresh-responses', {
+                detail: { },
+                bubbles: true,
+                composed: true
+            }))
+        });
+    }
 
 
 }

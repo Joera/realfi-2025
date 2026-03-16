@@ -17,7 +17,7 @@ export interface SurveysMap {
 export interface UIState {
   landingStep: 'welcome' | 'register' | 'choice';
   newStep: 'intro' | 'questions' | 'batches';
-  resultTab: 'results' | 'access' | 'questions' | 'batches';
+  resultTab: 'spinner' | 'results' | 'access' | 'questions' | 'batches';
 }
 
 export interface AppState {

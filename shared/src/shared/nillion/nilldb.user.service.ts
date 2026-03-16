@@ -150,7 +150,7 @@ export class NillDBUserService {
 
     async storeOwned(uuid: string, config: Survey, answers: any, surveyId : string, delegationToken: string) {
 
-            const userPrivateData = createUserDataObject(uuid, answers, config);
+            const userPrivateData = createUserDataObject(uuid, answers, config,"");
 
             try { 
           
@@ -187,7 +187,7 @@ export class NillDBUserService {
 
     async updateOwned(uuid: string, config: Survey, answers: any, surveyId: string, delegationToken: string, documentId: string) {
 
-        const userPrivateData = createUserDataObject(uuid, answers, config);
+        const userPrivateData = createUserDataObject(uuid, answers, config,"");
 
         // Delete old data
         await this.user.deleteData({

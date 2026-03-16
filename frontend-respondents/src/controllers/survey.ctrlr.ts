@@ -80,16 +80,17 @@ export class SurveyController {
       const seed = await this.services.account.createNillDBSeed();
       await this.services.nillDB.init(seed);
 
-      const userData = createUserDataObject(crypto.randomUUID(), event.detail.answers, this.config!);
+      const docIUd = crypto.randomUUID();
       const signature = await this.services.account.signMessage(`s3ntiment:submit:${this.surveyId}`);
-      const s = this.services.account.getSignerAddress();
+      const signerAddress = this.services.account.getSignerAddress();
+      const userData = createUserDataObject(docIUd, event.detail.answers, this.config!, signerAddress);
 
-      const result = await this.services.nillDB.storeStandard(import.meta.env.VITE_BACKEND, this.surveyId, userData, signature, s!);
+      const result = await this.services.nillDB.storeStandard(import.meta.env.VITE_BACKEND, this.surveyId, userData, signature, signerAddress!);
       console.log(result)
 
       if (result.ok) {
 
-        router.navigate(`complete/${this.surveyId}`)
+        router.navigate(`complete/${this.surveyId}/${docIUd}`)
 
       } else {
 

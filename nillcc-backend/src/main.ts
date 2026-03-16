@@ -153,6 +153,8 @@ router.post('/surveys/:id/submit', async (req: Request, res: Response) => {
             return;
         }
 
+        console.log("ONCE")
+
         await nildb.submitResponseForUser(surveyId, userData);
         res.json({ success: true });
 

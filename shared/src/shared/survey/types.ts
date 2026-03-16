@@ -67,10 +67,11 @@ export interface EncryptedData {
 }
 
 export interface EncryptedConfig {
-    surveyId: string,
+    surveyId: string
     nilDid: string, // surveyOwnerDid.didString,
-    encryptedForOwner: EncryptedData,
-    encryptedForRespondent: EncryptedData,
+    encryptedForOwner: EncryptedData
+    encryptedForRespondent: EncryptedData
+    encryptedScoring: string
     config: Config
 }
 

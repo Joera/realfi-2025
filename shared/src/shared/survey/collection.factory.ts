@@ -34,6 +34,7 @@ export const createSurveyCollectionSchema = (config: Survey, type: "owned" | "st
     const properties: Record<string, any> = {
         _id: { type: "string", format: "uuid" },
         surveyId: { type: "string" },
+        signer: { type: "string" }
     };
 
     if (config.groups) {
