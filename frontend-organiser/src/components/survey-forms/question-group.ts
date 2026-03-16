@@ -35,7 +35,7 @@ class QuestionGroupElement extends HTMLElement {
         if (this.isConnected) {
             this.render()
             this.attachEventListeners()
-            this.updateQuestionCards()
+            Promise.resolve().then(() => this.updateQuestionCards())
         }
     }
 
@@ -226,11 +226,21 @@ class QuestionGroupElement extends HTMLElement {
     private updateQuestionCards() {
         if (!this._group) return
 
+        console.log("0")
+
         const cards = this.shadowRoot?.querySelectorAll('question-card')
         cards?.forEach((card, index) => {
-            // Update both the attribute and the property
+            const q = this._group!.questions[index]
             card.setAttribute('question-index', String(index))
-            ;(card as any).question = this._group!.questions[index]
+            
+            // Set scoring BEFORE question so render() sees correct values
+            if (q.type === 'scored-single' && this._group!.scoring?.[q.id]) {
+                const s = this._group!.scoring[q.id]
+                ;(card as any).correctAnswer = s.correctAnswer
+                ;(card as any).points = s.points
+            }
+            
+            ;(card as any).question = q  // render() fires here, _correctAnswer already set
         })
     }
 

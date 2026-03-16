@@ -2,7 +2,7 @@ import { QuestionGroup } from "../survey/index.js";
 
 export interface TallyResult {
     question: string;
-    type: 'radio' | 'checkbox' | 'scale' | 'text';
+    type: 'radio' | 'checkbox' | 'scale' | 'text' | 'scored-single';
 }
 
 export interface TextTally extends TallyResult {
@@ -33,10 +33,18 @@ export interface CheckboxTally extends TallyResult {
     total: number;
 }
 
+export interface ScoredSingleTally extends TallyResult {
+    type: 'scored-single';
+    options?: string[];
+    counts: Record<number, number>;
+    total: number;
+    correctAnswer: number;
+}
+
 export interface SurveyDetailResponsesProps {
     results: SurveyResultsTally;
     groups?: QuestionGroup[];
     total: number;
 }
 
-export type SurveyResultsTally = Record<string, TextTally | RadioTally | ScaleTally | CheckboxTally>;
+export type SurveyResultsTally = Record<string, TextTally | RadioTally | ScaleTally | CheckboxTally | ScoredSingleTally>;

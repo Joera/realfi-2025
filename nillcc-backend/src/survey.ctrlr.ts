@@ -1,7 +1,8 @@
 import { recoverMessageAddress, Signature } from "viem";
-import { accsForSurveyOwner, createSurveyCollectionSchema, EncryptedConfig } from "@s3ntiment/shared";
+import { accsForSurveyOwner, createSurveyCollectionSchema, EncryptedConfig, Survey } from "@s3ntiment/shared";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 import { accsForRespondent } from "@s3ntiment/shared";
+import { stripScoring } from "./scoring.factory.js";
 
 export class SurveyController {
     private nildb: any;
@@ -17,34 +18,17 @@ export class SurveyController {
     }
 
     async create(body: any) {
+
+        const contract = surveyStore.address;
         const { surveyId, surveyConfig, safeAddress } = body;
-
-        // Split scoring out of groups before anything else
-        const scoring: Record<string, any> = {}
-        const safeGroups = surveyConfig.groups.map((group: any) => {
-            const { scoring: groupScoring, ...safeGroup } = group
-            if (groupScoring) {
-                // key by groupId to keep it locatable later
-                scoring[group.id] = groupScoring
-            }
-            return safeGroup
-        })
-
-        const safeConfigWithScoring = { ...surveyConfig, groups: surveyConfig.groups } // scoring still attached
-        const safeConfig = { ...surveyConfig, groups: safeGroups } // scoring stripped
-        const hasScoring = Object.keys(scoring).length > 0
+        const { safeConfigWithScoring, safeConfig } = stripScoring(surveyConfig)
 
         const rawSchema = createSurveyCollectionSchema(safeConfig, "standard")
         const collectionId = await this.nildb.createSurveyCollection(surveyId, rawSchema, this.nildb.builderDid.didString)
 
-        const contract = surveyStore.address;
-
         const [ encryptedForOwner, encryptedForRespondent] = await Promise.all([
-            this.lit.encrypt(safeConfigWithScoring, accsForSurveyOwner(safeConfig.id, contract, safeAddress)),
-            this.lit.encrypt(safeConfig, accsForRespondent(contract, safeConfig.id)),
-            hasScoring
-                ? this.lit.encrypt(scoring, accsForSurveyOwner(safeConfig.id, contract, safeAddress))
-                : Promise.resolve(null)
+            this.lit.encrypt(safeConfigWithScoring, accsForSurveyOwner(surveyId, contract, safeAddress)),
+            this.lit.encrypt(safeConfig, accsForRespondent(contract, surveyId))
         ])
 
         const config: EncryptedConfig = {
@@ -58,14 +42,44 @@ export class SurveyController {
         return await this.ipfs.uploadToPinata(JSON.stringify(config))
     }
 
+    async update(body: any) {
+
+        const contract = surveyStore.address;
+        const { surveyId, surveyConfig, safeAddress } = body;
+        const { safeConfigWithScoring, safeConfig } = stripScoring(surveyConfig)
+
+        const [ encryptedForOwner, encryptedForRespondent] = await Promise.all([
+            this.lit.encrypt(safeConfigWithScoring, accsForSurveyOwner(surveyId, contract, safeAddress)),
+            this.lit.encrypt(safeConfig, accsForRespondent(contract, surveyId))
+        ])
+
+        const config: EncryptedConfig = {
+            surveyId,
+            nilDid: this.nildb.builderDid.didString,
+            encryptedForOwner,
+            encryptedForRespondent,
+            config: surveyConfig.config
+        }
+
+        console.log("B4", config)
+
+        return await this.ipfs.uploadToPinata(JSON.stringify(config))
+
+    }
+
     async get(surveyId: string) {
-        const cid = await this.viem.read(
+        const res = await this.viem.read(
             surveyStore.address as `0x${string}`,
             surveyStore.abi,
-            'getSurveyCid',
+            'getSurvey',
             [surveyId]
         );
+
+        const cid = res[0];
         if (!cid) return null;
+
+        console.log("FETCHED CID", cid)
+
         const raw = await this.ipfs.fetchFromPinata(cid);
         const config = JSON.parse(raw);
         // strip answer key before returning
@@ -76,33 +90,38 @@ export class SurveyController {
     // TODO: replace with nilCC blind scoring
     async score(surveyId: string, signer: string) {
 
-        // 1. Get CID from chain
-        const cid = await this.viem.read(
+        const contract = surveyStore.address;
+
+        const res = await this.viem.read(
             surveyStore.address as `0x${string}`,
             surveyStore.abi,
-            'getSurveyCid',
+            'getSurvey',
             [surveyId]
         );
 
-        // 2. Fetch config from IPFS
+        const cid = res[0];
         const raw = await this.ipfs.fetchFromPinata(cid);
         const config = JSON.parse(raw);
 
-        // 3. Bail early if no scoring (not a quiz survey)
-        if (!config.encryptedScoring) {
+        if (!config.encryptedForOwner) {
             return null;
         }
 
-        // 4. Decrypt answer key (owner/builder Lit identity)
-        // TODO: use PKP here instead of builder key
-        const scoring = await this.lit.decrypt(config.encryptedScoring);
+        // moeten we dit wel hier doen? zit idd alleen in surveyowner .. is dat geen denkfout? antwoorden moeten deelbaar zijn met user .. evt alleen na inzending
+        // voorlopige oplossing: goede antwoorden - gewoon meesturen met de score 
+        const survey: Survey = await this.lit.decrypt(config.encryptedForOwner, accsForSurveyOwner(surveyId, contract, config.config?.safe));
 
-        // 5. Fetch respondent's answers from nilDB
+        const scoring: any = {}; 
+        survey.groups?.map((group: any) => {
+            const { scoring: groupScoring, ...safeGroup } = group
+            if (groupScoring) {
+                scoring[group.id] = groupScoring
+            }
+            return safeGroup
+        })
+
         const answers = await this.nildb.getResponseForUser(surveyId, signer);
 
-        // 6. Score locally
-        // scoring: Record<groupId, Record<questionId, { correctAnswer: number, points: number }>>
-        // answers: SurveyAnswer[]
         let total = 0;
         let max = 0;
 
@@ -116,7 +135,7 @@ export class SurveyController {
             }
         }
 
-        return { total, max, pct: Math.round((total / max) * 100) };
+        return { total, max, scoring };
     }
 
     async requestDelegation(body: any) {

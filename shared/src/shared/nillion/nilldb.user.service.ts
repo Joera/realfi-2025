@@ -136,7 +136,7 @@ export class NillDBUserService {
 
         // possibly perform blindfold encryption here 
 
-        return await fetch(`${backendUrl}/api/surveys/${surveyId}/submity`, {
+        return await fetch(`${backendUrl}/api/surveys/${surveyId}/submit`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({

@@ -8,6 +8,7 @@ import { fetchAndDecryptSurveyWithRespondent, Survey } from '@s3ntiment/shared';
 
 import { store } from '../state';
 import { createUserDataObject } from '@s3ntiment/shared'
+import { router } from '../router.js';
 
 export class SurveyController {
   private reactiveViews: any[] = [];
@@ -85,6 +86,23 @@ export class SurveyController {
 
       const result = await this.services.nillDB.storeStandard(import.meta.env.VITE_BACKEND, this.surveyId, userData, signature, s!);
       console.log(result)
+
+      if (result.ok) {
+
+        router.navigate(`complete/${this.surveyId}`)
+
+      } else {
+
+        const r: any = result.json();
+
+        if (r.error == "UNAUTHORISED") {
+          console.log("isValidSignature", r.isValidSignature)
+          console.log("isRespondent", r.isRespondent)
+        } else {
+          console.log("other error - network?")
+        }
+
+      }
   
 
       // FLOW AS DESIGNED FOR OWNED COLLECTIONS    

@@ -13,7 +13,18 @@ export const tallyResults = (rawResults: any[], groups: QuestionGroup[]) => {
             });
         });
     }
-    
+
+    const scoringMap = new Map<string, number>() // questionId → correctAnswer index
+    if (groups) {
+        groups.forEach(group => {
+            if (group.scoring) {
+                Object.entries(group.scoring).forEach(([qId, s]) => {
+                    scoringMap.set(qId, s.correctAnswer)
+                })
+            }
+        })
+    }
+        
     // Tally each question
     questionMap.forEach((question, questionId) => {
 
@@ -30,14 +41,16 @@ export const tallyResults = (rawResults: any[], groups: QuestionGroup[]) => {
                 count: responses.length
             };
         } else if (question.type === 'radio') {
-            // Count each option
-            const counts: Record<number, number> = {};
-
-                        rawResults.forEach(result => {
-                const value = parseInt(result[questionId], 10);
-                counts[value] = (counts[value] || 0) + 1;
-            });
             
+            const counts: Record<string, number> = {};
+
+            rawResults.forEach(result => {
+                const value = result[questionId]
+                if (value !== undefined && value !== null) {
+                    counts[value] = (counts[value] || 0) + 1
+                }
+            });
+
             talliedResults[questionId] = {
                 question: question.question,
                 type: 'radio',
@@ -45,6 +58,7 @@ export const tallyResults = (rawResults: any[], groups: QuestionGroup[]) => {
                 counts,
                 total: rawResults.length
             };
+
         } else if (question.type === 'scale') {
             // Calculate average and distribution
             const values = rawResults                
@@ -83,6 +97,27 @@ export const tallyResults = (rawResults: any[], groups: QuestionGroup[]) => {
                 options: question.options,
                 counts,
                 total: rawResults.length
+            };
+        }
+
+        else if (question.type === 'scored-single') {
+            const counts: Record<number, number> = {};
+
+            rawResults.forEach(result => {
+                const value = result[questionId]
+                const index = question.options?.indexOf(value) ?? -1
+                if (index >= 0) {
+                    counts[index] = (counts[index] || 0) + 1
+                }
+            });
+
+            talliedResults[questionId] = {
+                question: question.question,
+                type: 'scored-single',
+                options: question.options,
+                counts,
+                total: rawResults.length,
+                correctAnswer: scoringMap.get(questionId) ?? null
             };
         }
     });

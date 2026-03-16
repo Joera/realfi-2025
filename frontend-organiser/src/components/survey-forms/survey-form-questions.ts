@@ -46,15 +46,18 @@ class SurveyFormQuestions extends HTMLElement {
     }
 
     private deepCloneGroups(groups: QuestionGroup[]): QuestionGroup[] {
-        return groups.map(g => ({
-            ...g,
-            questions: g.questions.map((q: any) => ({
-                ...q,
-                options: q.options ? [...q.options] : undefined,
-                scaleRange: q.scaleRange ? { ...q.scaleRange } : undefined
-            }))
+    return groups.map(g => ({
+        ...g,
+        scoring: g.scoring 
+            ? Object.fromEntries(Object.entries(g.scoring).map(([k, v]) => [k, { ...v }]))
+            : undefined,
+        questions: g.questions.map((q: any) => ({
+            ...q,
+            options: q.options ? [...q.options] : undefined,
+            scaleRange: q.scaleRange ? { ...q.scaleRange } : undefined
         }))
-    }
+    }))
+}
 
     private emitChange() {
         this.dispatchEvent(new CustomEvent('groups-change', {

@@ -7,11 +7,13 @@ export async function fetchCapabilityDelegation(
   userAddr: string,
   signature: string
 ): Promise<any> {
-  const response = await fetch(`${backendUrl}/api/lit-payment-delegation`, {
+  const response = await fetch(`${backendUrl}/api/lit/payment-delegation`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userAddr, signature })
   });
+
+  console.log(response);
 
   if (!response.ok) {
     const { msg } = await response.json();

@@ -14,6 +14,7 @@ import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveySto
 import { authenticate, hasParticipatingAccount } from './auth.factory.js';
 import { removeSplash } from './onpageload.js';
 import { AuthController } from './controllers/auth-ctrlr.js';
+import { CompletedController } from './controllers/completed-ctrlr.js';
 
 
 
@@ -102,6 +103,15 @@ export const initRouter = (services: IServices) => {
               }
             })();
           }
+        }
+      )
+      .on('/complete/:surveyId',
+        (match: any) => {
+          if (currentController?.destroy) currentController.destroy();
+          const surveyId = match?.params?.surveyId || match?.data?.surveyId || '';
+          currentController = new CompletedController(services, surveyId);
+          removeSplash();
+          currentController.render();
         }
       )
 

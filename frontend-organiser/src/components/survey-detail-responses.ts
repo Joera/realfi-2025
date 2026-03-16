@@ -8,6 +8,7 @@ import { Survey, SurveyResultsTally } from '@s3ntiment/shared';
 import './survey-results/radio-results';
 import './survey-results/checkbox-results';
 import './survey-results/scale-results';
+import './survey-results/scored-single-results';
 
 class SurveyDetailResponses extends HTMLElement {
     private unsubscribe?: () => void;
@@ -169,6 +170,8 @@ class SurveyDetailResponses extends HTMLElement {
                 if (checkboxEl) checkboxEl.tally = tally;
                 const scaleEl = this.shadowRoot!.querySelector(`#scale-${questionId}`) as any;
                 if (scaleEl) scaleEl.tally = tally;
+                const scoredEl = this.shadowRoot!.querySelector(`#scored-${questionId}`) as any;
+                if (scoredEl) scoredEl.tally = tally;
             });
         });
     }
@@ -236,6 +239,11 @@ class SurveyDetailResponses extends HTMLElement {
             case 'checkbox':
                     return `
                     <checkbox-results id="checkbox-${questionId}"></checkbox-results>
+                `;
+
+            case 'scored-single':
+                return `
+                    <scored-single-results id="scored-${questionId}"></scored-single-results>
                 `;
             
             default:

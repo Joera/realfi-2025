@@ -77,7 +77,7 @@ export interface EncryptedConfig {
 export interface Survey {
     id?: string
     title?: string
-    createdAt?: BigInt
+    createdAt?: number
     introduction?: string
     groups?: QuestionGroup[]
     batches?: Batch[]

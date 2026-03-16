@@ -1,6 +1,16 @@
 import { accsForSurveyOwner, EncryptedConfig } from '../index.js';
 import { accsForRespondent } from '../lit/accs.js';
 
+const extractCid = (result: unknown): string => {
+  if (typeof result === 'string') {
+    try { return JSON.parse(result).cid ?? result } catch { return result }
+  }
+  if (typeof result === 'object' && result !== null) {
+    return (result as any).cid ?? (result as any).IpfsHash
+  }
+  return result as string
+}
+
 export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: any, surveyId: string, authContext: any, safeAddress?: string) => {
 
     const surveyInfo = await services.viem.read(
@@ -9,11 +19,12 @@ export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: 
       'getSurvey',
       [surveyId]
     );  
-    
-    const config: EncryptedConfig = JSON.parse(await services.ipfs.fetchFromPinata(surveyInfo[0]));
 
+    console.log("FROM CONTRACT", surveyInfo)
+
+    const cid = extractCid(surveyInfo[0])
+    const config: EncryptedConfig = JSON.parse(await services.ipfs.fetchFromPinata(cid));
     console.log("CONFIG", config)
-
     const accs = accsForSurveyOwner(surveyId, deployment.address, config.config.safe || "0x");
 
     let d: any;
@@ -29,7 +40,7 @@ export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: 
 
     return {
         id: surveyId,
-        createdAt: surveyInfo[2],
+        createdAt: Number(surveyInfo[2]),
         ...d,
         ...config
     }
@@ -43,9 +54,9 @@ export const fetchAndDecryptSurveyWithRespondent = async (services: any, deploym
       'getSurvey',
       [surveyId]
     );
-    
-    const config: EncryptedConfig = JSON.parse(await services.ipfs.fetchFromPinata(surveyInfo[0]));
 
+    const cid = extractCid(surveyInfo[0]);
+    const config: EncryptedConfig = JSON.parse(await services.ipfs.fetchFromPinata(cid));
     const accs = accsForRespondent(deployment.address, surveyId);
 
     let d: any;
@@ -61,7 +72,7 @@ export const fetchAndDecryptSurveyWithRespondent = async (services: any, deploym
 
     return {
     id: surveyId,
-    createdAt: surveyInfo[2],
+    createdAt: Number(surveyInfo[2]),
     ...d,
     ...config
     }

@@ -161,6 +161,8 @@ export class NilDBBuilderService {
 
         //     console.log('error reading collection', JSON.stringify(err.body))
         // }
+
+        // if exists .. delete first!
    
         try {
             return await this.builderClient.createStandardData({

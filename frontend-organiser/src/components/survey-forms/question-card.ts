@@ -58,7 +58,7 @@ class QuestionCard extends HTMLElement {
         return this._question
     }
     
-    set correctAnswer(value: number) { this._correctAnswer = value }
+    set correctAnswer(value: number) {  this._correctAnswer = value }
     set points(value: number) { this._points = value }
 
     private render() {
@@ -247,6 +247,7 @@ class QuestionCard extends HTMLElement {
         if (optionsEditor) {
             optionsEditor.options = q.options || []
             if (q.type === 'scored-single') {
+                console.log(4, this._correctAnswer);
                 optionsEditor.correctAnswer = this._correctAnswer
                 optionsEditor.points = this._points
             }

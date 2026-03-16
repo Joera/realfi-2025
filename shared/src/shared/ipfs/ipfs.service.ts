@@ -12,6 +12,15 @@ export class IPFSMethods {
         this.pinataGateway = pinataGateway
     }
 
+    isCID (value: string): boolean {
+        if (!value || typeof value !== 'string') return false
+        // CIDv0: base58, starts with 'Qm', 46 chars
+        if (/^Qm[1-9A-HJ-NP-Za-km-z]{44}$/.test(value)) return true
+        // CIDv1: starts with 'b' (base32), typically 59+ chars
+        if (/^b[a-z2-7]{58,}$/.test(value)) return true
+        return false
+    }
+
     async fetchFromKubo (cid: string): Promise<any> {
         
         const url = `https://${this.fixEndpoint(this.kuboGateway)}/api/v0/cat?arg=${cid}`;
@@ -92,7 +101,7 @@ export class IPFSMethods {
 
     async uploadToPinata(content: string | Blob, filename: string): Promise<string> {
 
-        console.log(this);
+        console.log("PINATA UPLOAD B4", content)
 
         const formData = new FormData();
         
@@ -110,19 +119,36 @@ export class IPFSMethods {
             body: formData
         });
 
+        console.log("PINATA UPLOAD", response)
+
         if (!response.ok) {
             throw new Error(`Pinata upload failed: ${response.statusText}`);
         }
 
         const data: any = await response.json();
+
+        console.log("AFTER UPLOAD", data)
+        
         return data.IpfsHash;
     }
 
     async fetchFromPinata(cid: string) : Promise<any> {
 
-        let res = await fetch(this.pinataGateway + "/ipfs/" + cid);
+        if (this.isCID(cid)) {
 
-        return res.text()
+            try {
+
+                const url = this.pinataGateway + "/ipfs/" + cid;
+                let res = await fetch(url);
+                return res.text()
+
+            } catch (e) {
+
+                console.log(e);
+            }
+        } else {
+            console.log("your requesting an invalid cid");
+        }
     }
 
     fixEndpoint (endpoint: string) {

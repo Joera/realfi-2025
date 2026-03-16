@@ -321,7 +321,6 @@ class SurveyQuestions extends HTMLElement {
           </div>
         ` : `
           <div class="completion-screen">
-            <h2>Thank you for your feedback!</h2>
           </div>
         `}
       </div>

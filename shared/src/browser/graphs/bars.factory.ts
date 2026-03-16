@@ -4,7 +4,7 @@ export const createBars = (data: any) : Bar[] => {
 
     const bs: Bar[] = [];
 
-    if (["radio","checkbox"].indexOf(data.type) > -1 ) {
+    if (["radio","checkbox","scored-single"].indexOf(data.type) > -1 ) {
 
       for (let option of data.options) {
           bs.push({
@@ -15,5 +15,5 @@ export const createBars = (data: any) : Bar[] => {
       }
     }
 
-    return bs;
+    return bs.sort((a, b) => a.value - b.value);
 }

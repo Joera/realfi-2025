@@ -229,7 +229,10 @@ export class SurveyController {
         });
 
         const talliedResults = await response.json();
+
         this.survey.results = talliedResults.results;
+
+        console.log("RESULTS", this.survey.results)
         store.addSurvey(this.survey);
         
     }
@@ -280,14 +283,51 @@ export class SurveyController {
             const { address, role, surveyId } = (e as CustomEvent).detail;
 
             if (role == 'owner') {
-                console.log(0)
                 await this.services.safe.addOwner(address);
             }
         });
 
         document.addEventListener('survey-save', async (e: Event) => {
             const { surveyId, groups } = (e as CustomEvent).detail
-                // TODO: PUT /api/surveys/:id — stub for now
+
+            await this.services.safe.connectToExistingSafe(this.survey.config?.safe || "");
+
+            // old state !
+            const existing = store.surveys.find((s: any) => s.id === surveyId)
+            if (existing) {
+
+                const surveyConfig: Survey = { ...existing, groups };
+        
+                let res: any = await fetch(`${import.meta.env.VITE_BACKEND}/api/surveys/${surveyId}`, {
+                    method: 'PUT',
+                    headers: {
+                    'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({   
+                        surveyId,      
+                        surveyConfig,
+                        safeAddress: this.survey.config?.safe
+                    })
+                });
+
+                const result = JSON.parse(await res.text());
+
+                if (this.services.ipfs.isCID(result.cid)) {
+
+                    const args = [surveyId, result.cid.toString()];
+
+                    const receipt = await this.services.safe.write(surveyStore.address, surveyStore.abi, 'updateSurvey', args, { waitForReceipt: true});
+                    console.log(receipt);
+
+                    store.addSurvey(surveyConfig)
+
+                } else {
+
+                    console.log("IPFS upload failed", result.cid)
+                }
+
+            }
+
             console.log('save groups', surveyId, groups)
         });
     }

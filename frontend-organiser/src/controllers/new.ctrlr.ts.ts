@@ -86,27 +86,27 @@ export class NewSurveyController {
         })
       });
 
-      const surveyCid = await res.text();
+      const result = await res.text();
+
+      if (this.services.ipfs.isCID(result.cid)) {
   
-      for (let batch of survey.batches) {
-        batch = await createBatch(this.services, batch, surveyId);
-         console.log(JSON.stringify(batch.cards.map( (c: any ) => c.url)));
+        for (let batch of survey.batches) {
+          batch = await createBatch(this.services, batch, surveyId);
+          console.log(JSON.stringify(batch.cards.map( (c: any ) => c.url)));
+        }
+
+        const args = [surveyId, result.cid.toString(), survey.batches.map( (b: Batch) => b.id)];
+
+        const receipt = await this.services.safe.write(surveyStore.address, surveyStore.abi, 'createSurvey', args, { waitForReceipt: true});
+        console.log(receipt);
+
+        for (let batch of survey.batches) {
+          batch = await createInvitations(batch);
+        }
+
+        store.addSurvey(surveyConfig);
+        router.navigate("/surveys")
       }
-
-      const args = [surveyId, surveyCid.toString(), survey.batches.map( (b: Batch) => b.id)];
-
-      const receipt = await this.services.safe.write(surveyStore.address, surveyStore.abi, 'createSurvey', args, { waitForReceipt: true});
-      console.log(receipt);
-
-
-      for (let batch of survey.batches) {
-        batch = await createInvitations(batch);
-      }
-
-      store.addSurvey(surveyConfig);
-
-      router.navigate("/surveys")
-      
     });
   }
 }
