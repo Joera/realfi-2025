@@ -1,5 +1,5 @@
 import { recoverMessageAddress, Signature } from "viem";
-import { accsForPoolMember, accsForPoolOwner, createSurveyCollectionSchema, EncryptedConfig, Survey } from "@s3ntiment/shared";
+import { accsForPoolMember, accsForPoolOwner, createSurveyCollectionSchema, EncryptedConfig, isScored, Survey } from "@s3ntiment/shared";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 import { calculateScore, stripScoring } from "@s3ntiment/shared";
 
@@ -21,13 +21,12 @@ export class SurveyController {
         const contract = surveyStore.address;
         const { surveyId, poolId, surveyConfig, safeAddress } = body;
         const { safeConfigWithScoring, safeConfig, scoring } = stripScoring(surveyConfig)
+        const _isScored = isScored(surveyConfig.groups);
 
         const rawSchema = createSurveyCollectionSchema(safeConfig, "standard")
         const collectionId = await this.nildb.createSurveyCollection(surveyId, rawSchema, this.nildb.builderDid.didString);
 
         const acc1 = accsForPoolOwner(poolId, contract, safeAddress);
-
-        console.log("ACC",acc1);
 
         const [ encryptedForOwner, encryptedForRespondent] = await Promise.all([
             this.lit.encrypt(safeConfigWithScoring, acc1),
@@ -43,7 +42,8 @@ export class SurveyController {
             encryptedForOwner,
             encryptedForRespondent,
             encryptedScoring,
-            config: surveyConfig.config
+            config: surveyConfig.config,
+            isScored: _isScored
         }
 
         return await this.ipfs.uploadToPinata(JSON.stringify(config))
@@ -56,7 +56,8 @@ export class SurveyController {
 
         console.log(surveyConfig)
 
-        const { safeConfigWithScoring, safeConfig, scoring } = stripScoring(surveyConfig)
+        const { safeConfigWithScoring, safeConfig, scoring } = stripScoring(surveyConfig);
+        const _isScored = isScored(surveyConfig.groups);
 
         const [ encryptedForOwner, encryptedForRespondent] = await Promise.all([
             this.lit.encrypt(safeConfigWithScoring, accsForPoolOwner(poolId, contract, safeAddress)),
@@ -72,11 +73,11 @@ export class SurveyController {
             encryptedForOwner,
             encryptedForRespondent,
             encryptedScoring,
-            config: surveyConfig.config
+            config: surveyConfig.config,
+            isScored: _isScored
         }
 
         return await this.ipfs.uploadToPinata(JSON.stringify(config))
-
     }
 
     async get(surveyId: string) {

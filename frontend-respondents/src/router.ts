@@ -37,6 +37,8 @@ export const initRouter = (services: IServices) => {
         {
           before(done, match) {
             (async () => {
+
+              console.log("ROUTING STARTS")
               const cardData: CardData | null = await parseCardURL();
               if (cardData == null) {
                 router.navigate('/invalid-card');
@@ -84,6 +86,8 @@ export const initRouter = (services: IServices) => {
         {
           before(done,match) {
             (async () => {
+
+              console.log("ROUTING STARTS")
 
               const surveyId = match?.params?.surveyId || match?.data?.surveyId || '';
               if (!surveyId) {

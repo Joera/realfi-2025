@@ -12,8 +12,10 @@ interface ImportMetaEnv {
   readonly VITE_ALCHEMY_KEY: string
   readonly VITE_PIMLICO_KEY: string
   readonly VITE_ETHERSCAN_API_KEY: string
-  readonly VITE_BACKEND: string
-  readonly VITE_FRONTEND: string
+  readonly VITE_BACKEND_PROD: string
+  readonly VITE_BACKEND_DEV: string
+  readonly VITE_FRONTEND_PROD: string
+  readonly VITE_FRONTEND_DEV: string
   readonly VITE_SURVEYSTORE_CONTRACT: string
   readonly VITE_L2: string
   readonly VITE_KUBO_ENDPOINT: string

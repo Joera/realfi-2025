@@ -34,15 +34,18 @@ export function injectGlobalStyles() {
         flex-direction: column;
         justify-content: flex-start;
         align-items: center;
-        min-height: calc(100vh - 6rem - 3rem);
+        min-height: calc(100vh - 6rem - 11rem);
     }
 
     footer {
-        height: 3rem;
+        height: 5rem;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        background: var(--color-too-dark);
+        color: white;
+
     }
 
     #splash {
@@ -136,7 +139,7 @@ export function injectGlobalStyles() {
         .container {
 
             flex-direction: row;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
         }
 

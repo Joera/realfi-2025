@@ -3,8 +3,7 @@ import '@s3ntiment/shared/components';
 import { IServices } from '../services.js';
 import { store } from '../state/store.js';
 
-import { router } from '../router.js';
-
+const BACKENDURL = import.meta.env.VITE_PROD ? import.meta.env.VITE_BACKEND_PROD : import.meta.env.VITE_BACKEND_DEV;
 
 export class CompletedController {
 
@@ -29,12 +28,23 @@ export class CompletedController {
         const view = reactive('#completed-content', () => {
 
             return `
-                <div> You scored</div>
-                <div class="completed-container score"><div><span class="large">${this.score.score}<span></div><div><span>out of ${this.score.max}</span></div></div>
-                <div class="onboarding-message">
-                 <h3>Thank you for your feedback</h3>
-                 <button id="btn-close" class="btn-primary">Close</button>
-                </div>
+                ${store.activeSurvey?.isScored
+                    ? this.score
+                        ? `<div>You scored</div>
+                        <div class="completed-container score">
+                            <div><span class="large">${this.score.score}</span></div>
+                            <div><span>out of ${this.score.max}</span></div>
+                        </div>
+                        <div class="onboarding-message">
+                            <h3>Thank you for your feedback</h3>
+                            <p>It's fine to close this window now.</p>
+                        </div>`
+                        : `<loading-spinner color="rgb(32, 85, 74)" message="calculating<br/>your score"></loading-spinner>`
+                    : `<div class="onboarding-message">
+                        <h3>Thank you for your feedback</h3>
+                        <p>It's fine to close this window.</p>
+                    </div>`
+                }
             `;
         });
 
@@ -46,35 +56,30 @@ export class CompletedController {
 
     async render() {
 
-        const backendUrl = import.meta.env.VITE_BACKEND;
+        
+
+        this.renderTemplate();
+        this.attachListeners();
 
         if (store.activeSurvey?.isScored) {
-
             const signer = this.services.account.getSignerAddress();
-            const signature = await this.services.account.signMessage(`s3ntiment:score:${this.surveyId}`)
+            const signature = await this.services.account.signMessage(`s3ntiment:score:${this.surveyId}`);
 
-            const response = await fetch(`${backendUrl}/api/surveys/${this.surveyId}/score`, {
+            const response = await fetch(`${BACKENDURL}/api/surveys/${this.surveyId}/score`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ docId: this.docId , signer, signature })
+                body: JSON.stringify({ signer, signature, poolId: store.activeSurvey.pool })
             });
 
             if (response.ok) {
-
                 const r: any = await response.json();
                 this.score = r.score;
             } else {
-
                 console.log("ERROR", response);
             }
+
+            store.setUI({});
         }
-
-
-
-        this.renderTemplate();
-
-        this.attachListeners();
-
     }
 
     destroy() {

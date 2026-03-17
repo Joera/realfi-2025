@@ -167,7 +167,7 @@ router.post('/surveys/:id/submit', async (req: Request, res: Response) => {
 // Body: { signature, signer }
 router.post('/surveys/:id/score', async (req: Request, res: Response) => {
     try {
-        const { signature, signer } = req.body;
+        const { signature, signer, poolId } = req.body;
         const surveyId = req.params.id;
 
         const isValidSignature = await verifyMessage({
@@ -180,7 +180,7 @@ router.post('/surveys/:id/score', async (req: Request, res: Response) => {
             surveyStore.address as `0x${string}`,
             surveyStore.abi,
             'isPoolMember',
-            [surveyId, signer]
+            [poolId, signer]
         );
 
         if (!isValidSignature || !isRespondent) {

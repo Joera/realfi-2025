@@ -10,6 +10,8 @@ import { store } from '../state';
 import { createUserDataObject } from '@s3ntiment/shared'
 import { router } from '../router.js';
 
+const BACKENDURL = import.meta.env.VITE_PROD ? import.meta.env.VITE_BACKEND_PROD : import.meta.env.VITE_BACKEND_DEV;
+
 export class SurveyController {
   private reactiveViews: any[] = [];
   documentId: any;
@@ -18,11 +20,20 @@ export class SurveyController {
   config?: Survey;
 
   constructor(services: IServices, surveyId: string) {
-
     this.services = services;
     this.surveyId = surveyId;
   }
 
+  private renderLoading() {
+    const app = document.querySelector('#app');
+    if (!app) return;
+
+    app.innerHTML = `
+      <div id="survey-content" class="container centered">
+        <loading-spinner color="rgb(32, 85, 74)" message="decrypting<br/>survey"></loading-spinner>
+      </div>
+    `;
+  }
 
   private renderTemplate() {
     const app = document.querySelector('#app');
@@ -37,7 +48,7 @@ export class SurveyController {
     });
 
     if (view) {
-      view.bind(store.surveys$);       
+      view.bind(store.surveys$);
       this.reactiveViews.push(view);
     }
   }
@@ -45,22 +56,22 @@ export class SurveyController {
   async process() {}
 
   async render() {
+    this.renderLoading();
 
     const capabilityDelegation = await store.ensureCapabilityDelegation(
-      import.meta.env.VITE_BACKEND,
+      BACKENDURL,
       this.services.account
     );
 
     const authContext = await this.services.lit.createAuthContext(this.services.account.getSigner(), capabilityDelegation, window.location.host);
     const survey = await fetchAndDecryptSurveyWithRespondent(this.services, surveyStore, this.surveyId, authContext)
-    survey.isScored = isScored(survey);
     this.config = survey;
     console.log("SURVEY", survey)
     store.setSurveyData(this.surveyId, survey)
     store.persistSurveys();
+
     this.renderTemplate();
     this.setSurveyListener();
-    
   }
 
   destroy() {
@@ -68,9 +79,8 @@ export class SurveyController {
     this.reactiveViews = [];
   }
 
-
   async setSurveyListener() {
-    
+
     document.addEventListener('survey-complete', async (event: any) => {
       console.log('Survey completed!');
       console.log('event:', event);
@@ -85,7 +95,7 @@ export class SurveyController {
       const signerAddress = this.services.account.getSignerAddress();
       const userData = createUserDataObject(docIUd, event.detail.answers, this.config!, signerAddress);
 
-      const result = await this.services.nillDB.storeStandard(import.meta.env.VITE_BACKEND, this.surveyId, store.activeSurvey!.pool || '', userData, signature, signerAddress!);
+      const result = await this.services.nillDB.storeStandard(BACKENDURL, this.surveyId, store.activeSurvey!.pool || '', userData, signature, signerAddress!);
       console.log(result)
 
       if (result.ok) {
@@ -104,10 +114,9 @@ export class SurveyController {
         }
 
       }
-  
 
-      // FLOW AS DESIGNED FOR OWNED COLLECTIONS    
-      // const delegationToken = await this.services.nillDB.getUserDelegationToken("", this.surveyId, import.meta.env.VITE_BACKEND);
+      // FLOW AS DESIGNED FOR OWNED COLLECTIONS
+      // const delegationToken = await this.services.nillDB.getUserDelegationToken("", this.surveyId, BACKENDURL);
 
       // if (event.detail.documentId != undefined) {
       //   await this.services.nillDB.updateOwned(this.config!, event.detail.answers, this.surveyId, delegationToken, event.detail.documentId);

@@ -15,6 +15,7 @@ import { renderIcon } from "@s3ntiment/shared/assets";
 import '@s3ntiment/shared/components';
 import { authenticate } from "../factories/auth.factory.js";
 
+const BACKENDURL = import.meta.env.VITE_PROD ? import.meta.env.VITE_BACKEND_PROD : import.meta.env.VITE_BACKEND_DEV;
 
 export class SurveyController {
     private reactiveViews: any[] = [];
@@ -177,8 +178,10 @@ export class SurveyController {
     async process() {
 
         
+
+        
         const capabilityDelegation = await store.ensureCapabilityDelegation(
-            import.meta.env.VITE_BACKEND,
+            BACKENDURL,
             this.services.safe
         );
 
@@ -234,7 +237,7 @@ export class SurveyController {
 
     async resreshResponses () {
 
-        const response = await fetch(`${import.meta.env.VITE_BACKEND}/api/surveys/${this.surveyId}/results`, {
+        const response = await fetch(`${BACKENDURL}/api/surveys/${this.surveyId}/results`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -307,6 +310,7 @@ export class SurveyController {
 
                 const surveyConfig: Survey = { 
                     id: existing.id,
+                    pool: existing. pool,
                     title: existing.title,
                     introduction: existing.introduction,
                     createdAt: existing.createdAt, /// ???? 
@@ -317,7 +321,7 @@ export class SurveyController {
 
                 console.log("UPDATING WITH THIS", surveyConfig)
         
-                let res: any = await fetch(`${import.meta.env.VITE_BACKEND}/api/surveys/${surveyId}`, {
+                let res: any = await fetch(`${BACKENDURL}/api/surveys/${surveyId}`, {
                     method: 'PUT',
                     headers: {
                     'Content-Type': 'application/json',
@@ -325,7 +329,8 @@ export class SurveyController {
                     body: JSON.stringify({   
                         surveyId,      
                         surveyConfig,
-                        safeAddress: this.survey.config?.safe
+                        safeAddress: this.survey.config?.safe,
+                        poolId: existing.pool
                     })
                 });
 

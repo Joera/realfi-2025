@@ -57,9 +57,7 @@ export class PermissionlessSafeService implements IPermissionlessSafeService {
     }
 
     async updateSignerWithKey(key: `0x${string}`): Promise<`0x${string}`> {
-        console.log(key)
         this.signer = privateKeyToAccount(key);
-        console.log(this.signer)
         return this.signer.address;
     }
 
@@ -84,14 +82,13 @@ export class PermissionlessSafeService implements IPermissionlessSafeService {
                 return false;
             }
 
-            console.log("Checking if Safe is deployed:", checkAddress);
 
             const code = await this.publicClient.getBytecode({
                 address: checkAddress as `0x${string}`,
             });
 
             const deployed = code !== undefined && code !== "0x" && code.length > 2;
-            console.log("Safe deployment status:", deployed);
+            // console.log("Safe deployment status:", deployed);
             return deployed;
 
         } catch (error: any) {
@@ -150,8 +147,7 @@ export class PermissionlessSafeService implements IPermissionlessSafeService {
 
         this.smartAccount = smartAccount;
 
-        const factoryArgs = await smartAccount.getFactoryArgs();
-        console.log("Factory args after connect:", factoryArgs);
+        // const factoryArgs = await smartAccount.getFactoryArgs();
 
         this.smartAccountClient = createSmartAccountClient({
             account: smartAccount,

@@ -7,7 +7,7 @@ import { saveAs } from 'file-saver';
 import { privateKeyToAccount } from 'viem/accounts';
 import { Batch, CardSecret } from '@s3ntiment/shared';
 
-const baseUrl = import.meta.env.VITE_FRONTEND;  
+const BASEURL = import.meta.env.VITE_PROD ? import.meta.env.VITE_FRONTEND_PROD : import.meta.env.VITE_FRONTEND_DEV;  
 
 function generateRandomNullifier() {
   const randomBytes = crypto.getRandomValues(new Uint8Array(16));
@@ -68,7 +68,7 @@ export const generateCardSecrets = async (
       const messageHash = keccak256(packed);
       const signature = await batchAccount.signMessage({ message: { raw: messageHash } });
       
-      const url = `${baseUrl}?n=${nullifier}&b=${batch.id}&sig=${signature}&s=${batch.survey}`;
+      const url = `${BASEURL}?n=${nullifier}&b=${batch.id}&sig=${signature}&s=${batch.survey}`;
       return { nullifier, signature, url, svgString: await generateQRCodeSVG(url) };
     })
   );

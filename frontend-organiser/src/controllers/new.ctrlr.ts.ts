@@ -10,6 +10,8 @@ import { authenticate } from '../factories/auth.factory.js';
 import { store } from '../state/store.js';
 import { router } from '../router.js';
 
+const BACKENDURL = import.meta.env.VITE_PROD ? import.meta.env.VITE_BACKEND_PROD : import.meta.env.VITE_BACKEND_DEV;
+
 export class NewSurveyController {
   private reactiveViews: any[] = [];
   private services: IServices;
@@ -85,7 +87,8 @@ export class NewSurveyController {
 
       console.log(surveyConfig)
 
-      let res: any = await fetch(`${import.meta.env.VITE_BACKEND}/api/surveys`, {
+
+      let res: any = await fetch(`${BACKENDURL}/api/surveys`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
