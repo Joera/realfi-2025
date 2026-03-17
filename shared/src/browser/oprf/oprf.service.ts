@@ -25,9 +25,7 @@ export class OPRFService {
     }
 
     async getSecp256k1(inputData: string): Promise<`0x${string}`> {
-        console.log(inputData)
         const hashed = keccak256(toBytes(inputData)); // 32 bytes → 64 hex chars
-        console.log(hashed);
         const messageBytes = toBytes(hashed).slice(0, 24);
         const point = msg_to_point(messageBytes);
         const key = await request_from_signer(point, "OPRFSecp256k1", this.signerUrl);

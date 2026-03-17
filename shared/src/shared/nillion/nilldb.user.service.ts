@@ -132,7 +132,7 @@ export class NillDBUserService {
 
 
 
-    async storeStandard(backendUrl: string, surveyId: string, userData: any, signature: Signature | `0x${string}`, signer: string) {
+    async storeStandard(backendUrl: string, surveyId: string, poolId: string, userData: any, signature: Signature | `0x${string}`, signer: string) {
 
         // possibly perform blindfold encryption here 
 
@@ -141,6 +141,7 @@ export class NillDBUserService {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 surveyId,
+                poolId,
                 userData,
                 signature,
                 signer

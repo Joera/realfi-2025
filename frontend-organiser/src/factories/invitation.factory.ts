@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 import QRCode from 'qrcode'
 import { encodePacked, keccak256, toBytes, toHex } from 'viem'
 import JSZip from 'jszip';
@@ -50,7 +52,6 @@ export const createBatchWallet = async (services: any) => {
     batchAccount, // kept in memory, never persisted
   };
 }
-
 
 export const generateCardSecrets = async (
   batchAccount: any,

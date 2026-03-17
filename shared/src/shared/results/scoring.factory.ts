@@ -1,5 +1,8 @@
 import { QuestionGroup, Survey } from "@s3ntiment/shared"
 
+export const isScored = (surveyConfig: Survey): boolean =>
+  surveyConfig.groups?.some((group: any) => group.scoring) ?? false;
+
 export const stripScoring = (surveyConfig: Survey) => { 
 
         const scoring: Record<string, any> = {}

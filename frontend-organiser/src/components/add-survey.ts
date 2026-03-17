@@ -5,7 +5,7 @@ import { buttonStyles } from '../styles/shared-button-styles.js'
 import { formStyles } from '../styles/shared-form-styles.js'
 import { store } from '../state/index.js'
 
-class AddSurveyInput extends HTMLElement {
+class AddSurvey extends HTMLElement {
   constructor() {
     super()
     this.attachShadow({ mode: 'open' })
@@ -72,6 +72,6 @@ class AddSurveyInput extends HTMLElement {
   }
 }
 
-customElements.define('add-survey-input', AddSurveyInput)
+customElements.define('add-survey', AddSurvey)
 
-export { AddSurveyInput }
+export { AddSurvey }

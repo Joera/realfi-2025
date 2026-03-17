@@ -1,8 +1,7 @@
 import { recoverMessageAddress, Signature } from "viem";
-import { accsForSurveyOwner, createSurveyCollectionSchema, EncryptedConfig, Survey } from "@s3ntiment/shared";
+import { accsForPoolMember, accsForPoolOwner, createSurveyCollectionSchema, EncryptedConfig, Survey } from "@s3ntiment/shared";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
-import { accsForRespondent } from "@s3ntiment/shared";
-import { calculateScore, stripScoring } from "./scoring.factory.js";
+import { calculateScore, stripScoring } from "@s3ntiment/shared";
 
 export class SurveyController {
     private nildb: any;
@@ -20,21 +19,26 @@ export class SurveyController {
     async create(body: any) {
 
         const contract = surveyStore.address;
-        const { surveyId, surveyConfig, safeAddress } = body;
+        const { surveyId, poolId, surveyConfig, safeAddress } = body;
         const { safeConfigWithScoring, safeConfig, scoring } = stripScoring(surveyConfig)
 
         const rawSchema = createSurveyCollectionSchema(safeConfig, "standard")
-        const collectionId = await this.nildb.createSurveyCollection(surveyId, rawSchema, this.nildb.builderDid.didString)
+        const collectionId = await this.nildb.createSurveyCollection(surveyId, rawSchema, this.nildb.builderDid.didString);
+
+        const acc1 = accsForPoolOwner(poolId, contract, safeAddress);
+
+        console.log("ACC",acc1);
 
         const [ encryptedForOwner, encryptedForRespondent] = await Promise.all([
-            this.lit.encrypt(safeConfigWithScoring, accsForSurveyOwner(surveyId, contract, safeAddress)),
-            this.lit.encrypt(safeConfig, accsForRespondent(contract, surveyId))
+            this.lit.encrypt(safeConfigWithScoring, acc1),
+            this.lit.encrypt(safeConfig, accsForPoolMember(contract, poolId))
         ])
 
         const encryptedScoring = this.nildb.encryptToBuilder({scoring: scoring, groups: surveyConfig.groups});
 
         const config: EncryptedConfig = {
             surveyId: collectionId,
+            poolId: poolId,
             nilDid: this.nildb.builderDid.didString,
             encryptedForOwner,
             encryptedForRespondent,
@@ -48,21 +52,22 @@ export class SurveyController {
     async update(body: any) {
 
         const contract = surveyStore.address;
-        const { surveyId, surveyConfig, safeAddress } = body;
+        const { surveyId, poolId, surveyConfig, safeAddress } = body;
 
         console.log(surveyConfig)
 
         const { safeConfigWithScoring, safeConfig, scoring } = stripScoring(surveyConfig)
 
         const [ encryptedForOwner, encryptedForRespondent] = await Promise.all([
-            this.lit.encrypt(safeConfigWithScoring, accsForSurveyOwner(surveyId, contract, safeAddress)),
-            this.lit.encrypt(safeConfig, accsForRespondent(contract, surveyId))
+            this.lit.encrypt(safeConfigWithScoring, accsForPoolOwner(poolId, contract, safeAddress)),
+            this.lit.encrypt(safeConfig, accsForPoolMember(contract, poolId))
         ])
 
         const encryptedScoring = this.nildb.encryptToBuilder({scoring: scoring, groups: surveyConfig.groups});
 
         const config: EncryptedConfig = {
             surveyId,
+            poolId: poolId,
             nilDid: this.nildb.builderDid.didString,
             encryptedForOwner,
             encryptedForRespondent,

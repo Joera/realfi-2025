@@ -4,14 +4,14 @@ import { buttonStyles } from '../../styles/shared-button-styles.js'
 import { store } from '../../state/store.js'
 import type { Batch } from '@s3ntiment/shared'
 
-class SurveyFormBatches extends HTMLElement {
+class PoolFormBatches extends HTMLElement {
     private _existingBatches: Batch[] = []  // from contract, read-only
     private _newBatches: Batch[] = []  // editable drafts
     private _mode: 'draft' | 'existing' = 'draft'
-    private _surveyId: string = ''
+    private _poolId: string = ''
 
     static get observedAttributes() {
-        return ['survey-id', 'mode']
+        return ['pool-id', 'mode']
     }
 
     constructor() {
@@ -26,8 +26,9 @@ class SurveyFormBatches extends HTMLElement {
             this._newBatches.push({
                 id: '',
                 name: '',
-                survey: this._surveyId,
-                amount: 50,
+                survey: '',
+                pool: '',
+                amount: 20,
                 medium: 'zip-file',
                 createdAt: Date.now()
             })
@@ -43,17 +44,23 @@ class SurveyFormBatches extends HTMLElement {
             this.attachEventListeners()
         }
         
-        if (name === 'survey-id' && oldValue !== newValue) {
-            this._surveyId = newValue
-            this._mode = 'existing'  // survey-id implies existing survey
-            const survey = store.surveys.find((s: any) => s.id === newValue)
-            if (survey) {
-                this._existingBatches = survey.batches || []
+        if (name === 'pool-id' && oldValue !== newValue) {
+            this._poolId = newValue
+            this._mode = 'existing'  // pool-id implies existing pool
+            const pool = store.pools.find((p: any) => p.id === newValue)
+            if (pool) {
+                this._existingBatches = pool.batches || []
                 this._newBatches = []
                 this.render()
                 this.attachEventListeners()
             }
         }
+    }
+
+    private get _poolSurveys(): Array<{ id: string; title: string }> {
+        return store.surveys
+            .filter((s: any) => s.poolId === this._poolId || s.pool === this._poolId)
+            .map((s: any) => ({ id: s.id, title: s.title }))
     }
 
     // For draft editor - sets new batches being created
@@ -65,7 +72,8 @@ class SurveyFormBatches extends HTMLElement {
             this._newBatches.push({
                 id: '',
                 name: '',
-                survey: this._surveyId,
+                survey: '',
+                pool: '',
                 amount: 50,
                 medium: 'zip-file',
                 createdAt: Date.now()
@@ -102,6 +110,8 @@ class SurveyFormBatches extends HTMLElement {
     private render() {
         if (!this.shadowRoot) return
 
+        const poolSurveys = this._poolSurveys
+
         this.shadowRoot.innerHTML = `
         <style>
             :host {
@@ -132,7 +142,6 @@ class SurveyFormBatches extends HTMLElement {
             }
 
             .batch-card.existing {
-                // background: #f9fafb;
                 border: none;
             }
 
@@ -201,11 +210,8 @@ class SurveyFormBatches extends HTMLElement {
             }
 
             .readonly-value {
-                // padding: 0.75rem;
-                // background: #f3f4f6;
-                // border-radius: 8px;
                 font-size: 1rem;
-                color: var(--green)
+                color: var(--green);
             }
 
             .empty-state {
@@ -250,13 +256,16 @@ class SurveyFormBatches extends HTMLElement {
 
         <div class="form-container">
             ${this._existingBatches.length > 0 ? `
-       
                 ${this._existingBatches.map((batch) => `
                     <div class="batch-card existing">
                         <div class="form-row">
                             <div class="form-group">
                                 <label>Name</label>
                                 <div class="readonly-value">${batch.name}</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Survey</label>
+                                <div class="readonly-value">${poolSurveys.find((s: any) => s.id === batch.survey)?.title || batch.survey || '—'}</div>
                             </div>
                             <div class="form-group small">
                                 <label>Amount</label>
@@ -285,6 +294,15 @@ class SurveyFormBatches extends HTMLElement {
                             <input type="text" data-field="name" data-index="${index}" 
                                    value="${batch.name}" placeholder="e.g., ETH Denver 2025" />
                         </div>
+                        <div class="form-group">
+                            <label>Survey</label>
+                            <select data-field="survey" data-index="${index}">
+                                <option value="">Select survey…</option>
+                                ${poolSurveys.map((s: any) => `
+                                    <option value="${s.id}" ${batch.survey === s.id ? 'selected' : ''}>${s.title || s.id}</option>
+                                `).join('')}
+                            </select>
+                        </div>
                         <div class="form-group small">
                             <label>Amount</label>
                             <input type="number" data-field="amount" data-index="${index}" 
@@ -293,7 +311,7 @@ class SurveyFormBatches extends HTMLElement {
                         <div class="form-group small">
                             <label>Medium</label>
                             <select data-field="medium" data-index="${index}">
-                                <option value="qr-code" ${batch.medium === 'zip-file' ? 'selected' : ''}>ZIP File</option>
+                                <option value="zip-file" ${batch.medium === 'zip-file' ? 'selected' : ''}>ZIP File</option>
                                 <option value="cdn" ${batch.medium === 'cdn' ? 'selected' : ''}>CDN Link</option>
                             </select>
                         </div>
@@ -321,7 +339,8 @@ class SurveyFormBatches extends HTMLElement {
             this._newBatches.push({ 
                 id: '',
                 name: '', 
-                survey: this._surveyId,
+                pool: this._poolId,
+                survey: '',
                 amount: 50, 
                 medium: 'zip-file',
                 createdAt: Date.now()
@@ -348,9 +367,12 @@ class SurveyFormBatches extends HTMLElement {
                 const index = parseInt((e.target as HTMLElement).dataset.index!)
                 const batch = this._newBatches[index]
                 
-                // Validate before dispatching
                 if (!batch.name.trim()) {
                     alert('Please enter a batch name')
+                    return
+                }
+                if (!batch.survey) {
+                    alert('Please select a survey')
                     return
                 }
                 if (!batch.amount || batch.amount <= 0) {
@@ -359,7 +381,7 @@ class SurveyFormBatches extends HTMLElement {
                 }
 
                 this.dispatchEvent(new CustomEvent('batch-create', {
-                    detail: { batch, index, surveyId: this._surveyId },
+                    detail: { batch, index, poolId: this._poolId, surveyId: batch.survey },
                     bubbles: true,
                     composed: true
                 }))
@@ -379,6 +401,8 @@ class SurveyFormBatches extends HTMLElement {
                     this._newBatches[index][field] = target.value as 'zip-file' | 'cdn'
                 } else if (field === 'name') {
                     this._newBatches[index][field] = target.value
+                } else if (field === 'survey') {
+                    this._newBatches[index][field] = target.value
                 }
                 
                 this.emitChange()
@@ -390,7 +414,6 @@ class SurveyFormBatches extends HTMLElement {
     markBatchCreated(index: number) {
         const batch = this._newBatches[index]
         if (batch) {
-            // Move from new to existing
             this._existingBatches.push(batch)
             this._newBatches.splice(index, 1)
             this.emitChange()
@@ -402,7 +425,6 @@ class SurveyFormBatches extends HTMLElement {
     validate(): string[] {
         const errors: string[] = []
         
-        // Only validate if no existing batches and no new batches
         if (this._existingBatches.length === 0 && this._newBatches.length === 0) {
             errors.push('Add at least one batch')
             return errors
@@ -411,6 +433,9 @@ class SurveyFormBatches extends HTMLElement {
         this._newBatches.forEach((batch, index) => {
             if (!batch.name.trim()) {
                 errors.push(`New Batch ${index + 1}: Name is required`)
+            }
+            if (!batch.survey) {
+                errors.push(`New Batch ${index + 1}: Survey is required`)
             }
             if (!batch.amount || batch.amount <= 0) {
                 errors.push(`New Batch ${index + 1}: Amount must be positive`)
@@ -421,6 +446,6 @@ class SurveyFormBatches extends HTMLElement {
     }
 }
 
-customElements.define('survey-form-batches', SurveyFormBatches)
+customElements.define('pool-form-batches', PoolFormBatches)
 
-export { SurveyFormBatches }
+export { PoolFormBatches }

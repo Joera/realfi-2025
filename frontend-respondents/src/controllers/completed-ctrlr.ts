@@ -48,23 +48,25 @@ export class CompletedController {
 
         const backendUrl = import.meta.env.VITE_BACKEND;
 
-        // has no effect ...  we need owned collections
-        const signer = this.services.account.getSignerAddress();
-        const signature = await this.services.account.signMessage(`s3ntiment:score:${this.surveyId}`)
+        if (store.activeSurvey?.isScored) {
 
-        const response = await fetch(`${backendUrl}/api/surveys/${this.surveyId}/score`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ docId: this.docId , signer, signature })
-        });
+            const signer = this.services.account.getSignerAddress();
+            const signature = await this.services.account.signMessage(`s3ntiment:score:${this.surveyId}`)
 
-        if (response.ok) {
+            const response = await fetch(`${backendUrl}/api/surveys/${this.surveyId}/score`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ docId: this.docId , signer, signature })
+            });
 
-            const r: any = await response.json();
-            this.score = r.score;
-        } else {
+            if (response.ok) {
 
-            console.log("ERROR", response);
+                const r: any = await response.json();
+                this.score = r.score;
+            } else {
+
+                console.log("ERROR", response);
+            }
         }
 
 

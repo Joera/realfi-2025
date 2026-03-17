@@ -1,31 +1,33 @@
 import { typograhyStyles } from '../../../shared/src/assets/styles/typography-styles.js'
 import { colourStyles } from '../styles/shared-colour-styles.js'
 import { buttonStyles } from '../styles/shared-button-styles.js'
+import { formStyles } from '../styles/shared-form-styles.js'
 import { store } from '../state/store.js'
 import { router } from '../router.js';
+import { Pool } from '@s3ntiment/shared';
 
-class SurveyDetailAccess extends HTMLElement {
+class PoolDetailAccess extends HTMLElement {
     private unsubscribe?: () => void;
-    private surveyId!: string;
+    private poolId!: string;
 
     constructor() {
         super()
         this.attachShadow({ mode: 'open' })
-        this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, colourStyles, buttonStyles]
+        this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, colourStyles, buttonStyles, formStyles]
     }
 
     connectedCallback() {
 
-        this.surveyId = this.getAttribute('survey-id') || '';
+        this.poolId = this.getAttribute('pool-id') || '';
 
         // Subscribe to store changes
-        this.unsubscribe = store.subscribe('surveys', (surveys) => {
+        this.unsubscribe = store.subscribePools((pools) => {
             console.log("subscription comes in")
-            this.render(surveys);
+            this.render(pools);
         });
 
         // Initial render
-        this.render(store.surveys);
+        this.render(store.pools);
     }
 
     disconnectedCallback() {
@@ -33,15 +35,27 @@ class SurveyDetailAccess extends HTMLElement {
          this.unsubscribe?.();
     }
 
-    private render(surveys: any[]) {
+    private render(pools: Pool[]) {
 
         if (!this.shadowRoot) return;
         
-        const survey = surveys.find(s => s.id === this.surveyId);
+        const pool = pools.find(p => p.id === this.poolId);
 
         this.shadowRoot.innerHTML = `
         <style>
             /* ...existing styles... */
+
+            .access-container {
+            
+                padding: 1.5rem;
+                
+            }
+
+            .readonly {
+            
+                color: var(--color-too-dark);
+                margin: .75rem 0;
+            }
 
             .co-organiser-section {
                 margin-top: 2rem;
@@ -67,29 +81,29 @@ class SurveyDetailAccess extends HTMLElement {
             }
         </style>
 
-        ${!survey ? `
+        ${!pool ? `
             <div class="loading">Loading survey...</div>
         ` : `
             <div class="access-container">
 
                 <div class="readonly">
-                    <label>Survey ID:</label>
-                    <span>${survey.id}</span>
+                    <label>Pool ID:</label>
+                    <span>${pool.id}</span>
                 </div>
 
                 <div class="readonly">
                     <label>Safe:</label>
-                    <span>${survey.config.safe || '—'}</span>
+                    <span>${pool.safeAddress || '—'}</span>
                 </div>
 
                 <div class="readonly">
                     <label>Owners:</label>
-                    <span>${survey.owners?.join(', ') || '—'}</span>
+                    <span>${pool.owners?.join(', ') || '—'}</span>
                 </div>
 
                 <div class="readonly">
                     <label>Readers:</label>
-                    <span>${survey.readers?.join(', ') || '—'}</span>
+                    <span>${pool.readers?.join(', ') || '—'}</span>
                 </div>
 
                 <div class="co-organiser-section">
@@ -125,7 +139,7 @@ class SurveyDetailAccess extends HTMLElement {
             if (!address) return;
 
             this.dispatchEvent(new CustomEvent('add-co-organiser', {
-                detail: { address, role, surveyId: this.surveyId },
+                detail: { address, role, poolId: this.poolId },
                 bubbles: true,
                 composed: true
             }));
@@ -136,6 +150,6 @@ class SurveyDetailAccess extends HTMLElement {
 
 }
 
-customElements.define('survey-detail-access', SurveyDetailAccess)
+customElements.define('pool-detail-access', PoolDetailAccess)
 
-export { SurveyDetailAccess }
+export { PoolDetailAccess }

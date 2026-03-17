@@ -5,7 +5,7 @@ import { layoutStyles} from '../styles/shared-layout-styles.js'
 import { store } from '../state/index.js'
 import './survey-forms/survey-form-intro.js'
 import './survey-forms/survey-form-questions.js'
-import './survey-forms/survey-form-batches.js'
+import './survey-forms/pool-form-batches.js'
 
 type Step = 'intro' | 'questions' | 'batches'
 
@@ -130,7 +130,7 @@ class DraftSurveyEditor extends HTMLElement {
             case 'questions':
                 return `<survey-form-questions class="container"></survey-form-questions>`
             case 'batches':
-                return `<survey-form-batches mode="draft" class="container"></survey-form-batches>`
+                return `<pool-form-batches mode="draft" class="container"></pool-form-batches>`
             default:
                 return ''
         }
@@ -148,7 +148,10 @@ class DraftSurveyEditor extends HTMLElement {
                 return `
                     <div class="form-actions">
                         <button class="btn-secondary" id="back-btn">< Back</button>
-                        <button class="btn-secondary" id="next-btn">Next ></button>
+                        ${this.isNewPool
+                            ? `<button class="btn-secondary" id="next-btn">Next ></button>`
+                            : `<button class="btn-primary" id="submit-btn">Create Survey</button>`
+                        }
                     </div>
                 `
             case 'batches':
@@ -167,6 +170,10 @@ class DraftSurveyEditor extends HTMLElement {
         // Form change events - intro
         this.shadowRoot?.addEventListener('title-change', ((e: CustomEvent) => {
             this.updateStore({ title: e.detail.value })
+        }) as EventListener)
+
+        this.shadowRoot?.addEventListener('pool-change', ((e: CustomEvent) => {
+            this.updateStore({ pool: e.detail.value })
         }) as EventListener)
 
         this.shadowRoot?.addEventListener('introduction-change', ((e: CustomEvent) => {
@@ -197,6 +204,10 @@ class DraftSurveyEditor extends HTMLElement {
         })
     }
 
+    private get isNewPool(): boolean {
+        return !store.surveyDraft.pool;
+    }
+
     private goBack() {
         switch (this.currentStep) {
             case 'questions':
@@ -217,7 +228,11 @@ class DraftSurveyEditor extends HTMLElement {
                 break
             case 'questions':
                 if (this.validateQuestions()) {
-                    store.setUI({ newStep: 'batches' })
+                    if (this.isNewPool) {
+                        store.setUI({ newStep: 'batches' })
+                    } else {
+                        this.submit()
+                    }
                 }
                 break
         }

@@ -3,42 +3,57 @@ pragma solidity ^0.8.0;
 
 /**
  * @title S3ntimentSurveyStore
- * @notice Stores surveys and validates anonymous survey card submissions.
+ * @notice Manages pools, surveys, and anonymous respondent registration.
+ *
+ * Core model:
+ *   - A pool is a named collection of surveys with a shared respondent registry
+ *   - A standalone survey is just a pool with one survey — no special casing
+ *   - Respondents join a pool once via a physical card (one on-chain write)
+ *   - Survey participation is off-chain (nilDB); no per-survey on-chain interaction
+ *
+ * Ownership model:
+ *   - Pool owner is a Safe multisig
+ *   - A pool is created implicitly when the first survey references it
+ *   - All pool/survey mutations are Safe-executed (msg.sender = Safe)
+ *   - registerBatch() is Safe-executed (governance)
  *
  * Card generation flow (off-chain):
- *   1. Survey owner signs a random seed once → derives an ephemeral batch wallet (one popup)
+ *   1. Pool Safe signs a random seed → derives an ephemeral batch wallet
  *   2. Batch wallet address is registered on-chain via createSurvey() or registerBatch()
- *   3. Each card's nullifier is signed locally by the batch wallet (no further popups)
- *   4. Cards are printed as QR codes containing: nullifier, batchId, signature, surveyId
+ *   3. Each card's nullifier is signed locally by the batch wallet (no popups)
+ *   4. Cards are printed as QR codes: { nullifier, batchId, signature, poolId }
  *
- * Card submission flow (on-chain):
- *   1. registerRespondent() recovers the signer from the card's signature
- *   2. Verifies signer === registered batch wallet (batchId)
- *   3. Marks nullifier as used to prevent double submission
- *   4. Recovers WaaP signer via ISMC(msg.sender).owner() — the SMC is just the gas payer
- *   5. Registers the WaaP signer as the respondent — this is the identity that matters
+ * Registration flow (on-chain):
+ *   1. WaaP creates a fresh EOA — the pool wallet (unlinkable to master identity)
+ *   2. Pool wallet EOA owns an SMC; SMC calls registerInPool()
+ *   3. Contract resolves identity via ISMC(msg.sender).owner() → pool wallet EOA
+ *   4. Nullifier is burned, pool wallet EOA is recorded as pool member
+ *   5. One on-chain write, ever, for this respondent in this pool
  *
- * Child wallet derivation (off-chain):
- *   1. User logs in once via WaaP → app-scoped master account (WaaP signer)
- *   2. WaaP signer signs surveyId → signature used as vOPRF secret input
- *   3. vOPRF(salt=surveyId, secret=signature) → deterministic child private key
- *   4. Child wallet is unlinkable to master account and to other surveys
- *   5. Child wallet (via SMC) calls registerRespondent()
- *   6. Lit Protocol uses isRespondent() as access condition — checks WaaP signer address
- *      which matches :userAddress since Lit auth is signed by the WaaP key
+ * Survey participation flow (off-chain):
+ *   1. Lit Protocol checks isPoolMember(poolId, address) as access condition
+ *   2. :userAddress resolves to the pool wallet EOA (Lit auth signed by that key)
+ *   3. Survey-level nullifiers (double-response prevention) live in nilDB
+ *
+ * Privacy properties:
+ *   - Pool wallet is a fresh EOA — no link to any existing identity
+ *   - Chain only records "this address is a member of this pool"
+ *   - Survey participation is invisible on-chain
+ *   - Cross-survey correlation within a pool is expected (panel model)
+ *   - No cross-pool correlation possible
  *
  * Key design decisions:
- *   - batchId === batch wallet address — no separate UUID needed
+ *   - batchId === batch wallet address (no separate UUID)
+ *   - Batches are scoped to a pool, not a survey
  *   - Batch signers are immutable once registered — protects printed cards
- *   - Batches are scoped to a survey — a batch wallet cannot be reused across surveys
- *   - createSurvey() accepts an array of batchIds to minimize signatures in new survey flow
- *   - The SMC is purely a gas abstraction layer — identity is always the WaaP signer
- *   - No events are emitted — storage is read directly by Lit and frontend
+ *   - The SMC is purely a gas abstraction — identity is ISMC(msg.sender).owner()
+ *   - No events emitted — storage is read directly by Lit and frontend
  */
 
 interface ISMC {
     function owner() external view returns (address);
 }
+
 
 contract S3ntimentSurveyStore {
 
@@ -46,206 +61,258 @@ contract S3ntimentSurveyStore {
     // Data structures
     // -------------------------------------------------------------------------
 
+    struct Pool {
+        address safe;           // Safe multisig that owns this pool
+        uint256 createdAt;
+    }
+
     struct Survey {
         string ipfsCid;
-        address owner;
+        string poolId;
         uint256 createdAt;
     }
 
     struct Batch {
         uint256 createdAt;
-        uint256 cardCount;
+        uint256 cardCount;      // cards redeemed from this batch
     }
 
     // -------------------------------------------------------------------------
     // Storage
     // -------------------------------------------------------------------------
 
+    // Pool registry
+    mapping(string => Pool) private pools;
+    mapping(address => string[]) private safePools;         // safe → poolIds
+
+    // Surveys — keyed by surveyId, linked to a pool
     mapping(string => Survey) private surveys;
-    mapping(address => string[]) private ownerSurveys;
+    mapping(string => string[]) private poolSurveys;        // poolId → surveyIds
 
+    // Batch management — scoped to pool
     mapping(string => mapping(address => Batch)) private batches;
-    mapping(string => address[]) private surveyBatchIds;
+    mapping(string => address[]) private poolBatchIds;
 
+    // Nullifiers — globally unique, prevent card reuse
     mapping(bytes32 => bool) public usedNullifiers;
 
-    // WaaP signer address → respondent tracking
-    // :userAddress in Lit ACCs resolves to this address
-    mapping(string => mapping(address => bool)) private surveyRespondents;
+    // Pool membership — pool wallet EOA is the member identity
+    mapping(string => mapping(address => bool)) private poolMembers;
 
     // -------------------------------------------------------------------------
     // Errors
     // -------------------------------------------------------------------------
 
+    error PoolNotFound();
+    error PoolAlreadyExists();
+    error NotPoolSafe();
     error SurveyNotFound();
     error SurveyAlreadyExists();
-    error NotSurveyOwner();
     error BatchNotFound();
     error BatchAlreadyRegistered();
     error InvalidBatchId();
     error NullifierAlreadyUsed();
     error InvalidSignature();
-
+    error AlreadyPoolMember();
 
     // =========================================================================
-    // Survey management
+    // Survey management (creates pool implicitly)
     // =========================================================================
 
     /**
-     * @dev Create a new survey with an optional initial set of batch wallets.
-     *      Pass an empty array to create the survey without any batches.
+     * @dev Create a survey. If the pool does not exist yet, it is created
+     *      implicitly and msg.sender is recorded as the pool's Safe.
+     *      Always Safe-executed (msg.sender = Safe address).
+     *
+     *      New pool (poolId not yet registered):
+     *        - Pool is bootstrapped with msg.sender as the owning Safe
+     *        - batchIds are registered for the new pool
+     *
+     *      Existing pool:
+     *        - msg.sender must be the pool's Safe
+     *        - batchIds are ignored (use registerBatch() for new print runs)
      *
      * @param surveyId  Unique identifier, generated client-side
+     * @param poolId    Pool this survey belongs to (created if new)
      * @param ipfsCid   IPFS content identifier for survey metadata
-     * @param batchIds  Ephemeral batch wallet addresses. Pass [] to skip.
+     * @param batchIds  Batch wallet addresses — only used when bootstrapping a new pool
      */
     function createSurvey(
         string memory surveyId,
+        string memory poolId,
         string memory ipfsCid,
         address[] memory batchIds
     ) external {
         require(bytes(surveyId).length > 0, "Survey ID cannot be empty");
+        require(bytes(poolId).length > 0, "Pool ID cannot be empty");
         require(bytes(ipfsCid).length > 0, "IPFS CID cannot be empty");
+        if (surveys[surveyId].createdAt != 0) revert SurveyAlreadyExists();
 
-        if (surveys[surveyId].owner != address(0)) revert SurveyAlreadyExists();
+        // Pool bootstrap or signer check
+        if (pools[poolId].safe == address(0)) {
+            // New pool — msg.sender becomes the Safe
+            _createPool(poolId, msg.sender);
+            for (uint256 i = 0; i < batchIds.length; i++) {
+                _registerBatch(poolId, batchIds[i]);
+            }
+        } else {
+            // Existing pool — caller must be the pool's Safe
+            if (pools[poolId].safe != msg.sender) revert NotPoolSafe();
+        }
 
         surveys[surveyId] = Survey({
             ipfsCid: ipfsCid,
-            owner: msg.sender,
+            poolId: poolId,
             createdAt: block.timestamp
         });
 
-        ownerSurveys[msg.sender].push(surveyId);
-
-        for (uint256 i = 0; i < batchIds.length; i++) {
-            _registerBatch(surveyId, batchIds[i]);
-        }
+        poolSurveys[poolId].push(surveyId);
     }
 
     /**
-     * @dev Update survey IPFS CID — survey content is mutable post-creation.
+     * @dev Update survey IPFS CID. Must be Safe-executed by the pool's Safe.
      */
-    function updateSurvey(string memory surveyId, string memory newIpfsCid) external {
+    function updateSurvey(
+        string memory surveyId,
+        string memory newIpfsCid
+    ) external {
         Survey storage survey = surveys[surveyId];
-        if (survey.owner != msg.sender) revert NotSurveyOwner();
+        if (survey.createdAt == 0) revert SurveyNotFound();
+
+        if (pools[survey.poolId].safe != msg.sender) revert NotPoolSafe();
+
         survey.ipfsCid = newIpfsCid;
     }
 
     function getSurvey(string memory surveyId)
         external
         view
-        returns (string memory ipfsCid, address owner, uint256 createdAt)
+        returns (string memory ipfsCid, string memory poolId, uint256 createdAt)
     {
         Survey memory survey = surveys[surveyId];
-        if (survey.owner == address(0)) revert SurveyNotFound();
-        return (survey.ipfsCid, survey.owner, survey.createdAt);
+        if (survey.createdAt == 0) revert SurveyNotFound();
+        return (survey.ipfsCid, survey.poolId, survey.createdAt);
     }
 
     function surveyExists(string memory surveyId) external view returns (bool) {
-        return surveys[surveyId].owner != address(0);
+        return surveys[surveyId].createdAt != 0;
     }
 
-    function isOwner(address authSigAddress, string memory surveyId) external view returns (bool) {
-        return surveys[surveyId].owner == authSigAddress;
-    }
-
-    function getOwnerSurveys(address owner) external view returns (string[] memory) {
-        return ownerSurveys[owner];
-    }
-
-    function getOwnerSurveyCount(address owner) external view returns (uint256) {
-        return ownerSurveys[owner].length;
+    function getPoolSurveys(string memory poolId) external view returns (string[] memory) {
+        return poolSurveys[poolId];
     }
 
     // =========================================================================
-    // Batch management
+    // Pool read methods
+    // =========================================================================
+
+    function getPool(string memory poolId)
+        external
+        view
+        returns (address safe, uint256 createdAt)
+    {
+        Pool memory pool = pools[poolId];
+        if (pool.safe == address(0)) revert PoolNotFound();
+        return (pool.safe, pool.createdAt);
+    }
+
+    function poolExists(string memory poolId) external view returns (bool) {
+        return pools[poolId].safe != address(0);
+    }
+
+    function isPoolSafe(address addr, string memory poolId) external view returns (bool) {
+        return pools[poolId].safe == addr;
+    }
+
+    function getSafePools(address safe) external view returns (string[] memory) {
+        return safePools[safe];
+    }
+
+    // =========================================================================
+    // Batch management (Safe-executed)
     // =========================================================================
 
     /**
-     * @dev Register an additional batch for an existing survey.
+     * @dev Register an additional batch wallet for an existing pool.
+     *      Called by the pool's Safe (governance tx).
+     *      For initial batches, pass them in createSurvey() when bootstrapping the pool.
      *
-     * @param surveyId  Survey this batch belongs to
-     * @param batchId   Ephemeral batch wallet address
+     * @param poolId   Pool this batch belongs to
+     * @param batchId  Ephemeral batch wallet address
      */
     function registerBatch(
-        string memory surveyId,
+        string memory poolId,
         address batchId
     ) external {
-        if (surveys[surveyId].owner != msg.sender) revert NotSurveyOwner();
-        _registerBatch(surveyId, batchId);
+        if (pools[poolId].safe == address(0)) revert PoolNotFound();
+        if (pools[poolId].safe != msg.sender) revert NotPoolSafe();
+        _registerBatch(poolId, batchId);
     }
 
-    function _registerBatch(
-        string memory surveyId,
-        address batchId
-    ) internal {
-        if (batchId == address(0)) revert InvalidBatchId();
-        if (batches[surveyId][batchId].createdAt != 0) revert BatchAlreadyRegistered();
-
-        batches[surveyId][batchId] = Batch({
-            createdAt: block.timestamp,
-            cardCount: 0
-        });
-
-        surveyBatchIds[surveyId].push(batchId);
-    }
-
-    function getBatch(string memory surveyId, address batchId)
+    function getBatch(string memory poolId, address batchId)
         external
         view
         returns (uint256 createdAt, uint256 cardCount)
     {
-        Batch memory batch = batches[surveyId][batchId];
+        Batch memory batch = batches[poolId][batchId];
         if (batch.createdAt == 0) revert BatchNotFound();
         return (batch.createdAt, batch.cardCount);
     }
 
-    function getSurveyBatches(string memory surveyId) external view returns (address[] memory) {
-        return surveyBatchIds[surveyId];
-    }
-
-    function getBatchCardCount(string memory surveyId, address batchId) external view returns (uint256) {
-        return batches[surveyId][batchId].cardCount;
+    function getPoolBatches(string memory poolId) external view returns (address[] memory) {
+        return poolBatchIds[poolId];
     }
 
     // =========================================================================
-    // Respondent registration
+    // Pool registration (one-time, card-based, via SMC)
     // =========================================================================
 
     /**
-     * @dev Validate a card and register the WaaP signer as a respondent.
-     *      Called by the user's survey-scoped child wallet via SMC.
-     *      The SMC is purely a gas abstraction — identity is ISMC(msg.sender).owner().
+     * @dev Validate a card and register the pool wallet EOA as a pool member.
+     *      Called by the respondent's SMC (gas abstraction layer).
+     *      Identity resolved via ISMC(msg.sender).owner() → pool wallet EOA.
      *
-     * @param surveyId   Survey this card is for
+     * @param poolId     Pool to join
      * @param nullifier  Unique card identifier from QR code
      * @param batchId    Batch wallet address this card belongs to
-     * @param signature  Signature produced by the ephemeral batch wallet
+     * @param signature  Signature of (nullifier | batchId) by the batch wallet
      */
-    function registerRespondent(
-        string memory surveyId,
+    function registerInPool(
+        string memory poolId,
         string memory nullifier,
         address batchId,
         bytes memory signature
     ) external {
-        if (surveys[surveyId].owner == address(0)) revert SurveyNotFound();
-        if (batches[surveyId][batchId].createdAt == 0) revert BatchNotFound();
+        if (pools[poolId].safe == address(0)) revert PoolNotFound();
+        if (batches[poolId][batchId].createdAt == 0) revert BatchNotFound();
 
+        // Verify card signature
         bytes32 messageHash = keccak256(abi.encodePacked(nullifier, "|", batchId));
-        bytes32 ethSignedHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
-        address signer = recoverSigner(ethSignedHash, signature);
+        bytes32 ethSignedHash = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash)
+        );
+        address signer = _recoverSigner(ethSignedHash, signature);
 
         if (signer != batchId) revert InvalidSignature();
         if (usedNullifiers[messageHash]) revert NullifierAlreadyUsed();
 
+        // Burn nullifier
         usedNullifiers[messageHash] = true;
-        batches[surveyId][batchId].cardCount++;
+        batches[poolId][batchId].cardCount++;
 
-        // Resolve identity: SMC owner is the WaaP signer, not the SMC itself
-        address waapSigner = ISMC(msg.sender).owner();
-        if (!surveyRespondents[surveyId][waapSigner]) {
-            surveyRespondents[surveyId][waapSigner] = true;
-        }
+        // Resolve identity: SMC owner is the pool wallet EOA
+        address poolWallet = ISMC(msg.sender).owner();
+        if (poolMembers[poolId][poolWallet]) revert AlreadyPoolMember();
+        poolMembers[poolId][poolWallet] = true;
+    }
+
+    /**
+     * @dev Check if an address is a registered member of a pool.
+     *      Used by Lit Protocol as an access condition.
+     *      :userAddress resolves to the pool wallet EOA.
+     */
+    function isPoolMember(string memory poolId, address member) external view returns (bool) {
+        return poolMembers[poolId][member];
     }
 
     function isNullifierUsed(string memory nullifier, address batchId) external view returns (bool) {
@@ -253,23 +320,38 @@ contract S3ntimentSurveyStore {
         return usedNullifiers[cardHash];
     }
 
-    /**
-     * @dev Check if a WaaP signer address is a registered respondent for a survey.
-     *      Used by Lit Protocol as an access condition for both question and response decryption.
-     *      :userAddress in Lit ACCs resolves to the WaaP signer since Lit auth is signed by that key.
-     *
-     * @param surveyId    Survey to check
-     * @param respondent  WaaP signer address to check
-     */
-    function isRespondent(string memory surveyId, address respondent) external view returns (bool) {
-        return surveyRespondents[surveyId][respondent];
+    // =========================================================================
+    // Internal
+    // =========================================================================
+
+    function _createPool(
+        string memory poolId,
+        address safe
+    ) internal {
+        pools[poolId] = Pool({
+            safe: safe,
+            createdAt: block.timestamp
+        });
+
+        safePools[safe].push(poolId);
     }
 
-    // =========================================================================
-    // Internal helpers
-    // =========================================================================
+    function _registerBatch(
+        string memory poolId,
+        address batchId
+    ) internal {
+        if (batchId == address(0)) revert InvalidBatchId();
+        if (batches[poolId][batchId].createdAt != 0) revert BatchAlreadyRegistered();
 
-    function recoverSigner(bytes32 messageHash, bytes memory signature)
+        batches[poolId][batchId] = Batch({
+            createdAt: block.timestamp,
+            cardCount: 0
+        });
+
+        poolBatchIds[poolId].push(batchId);
+    }
+
+    function _recoverSigner(bytes32 messageHash, bytes memory signature)
         internal
         pure
         returns (address)
@@ -292,3 +374,4 @@ contract S3ntimentSurveyStore {
         return ecrecover(messageHash, v, r, s);
     }
 }
+

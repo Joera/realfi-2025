@@ -2,10 +2,11 @@ import { reactive } from '../utils/reactive.js';
 import '@s3ntiment/shared/components';
 import { IServices } from '../services.js';
 import { store } from '../state/store.js';
+import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' };
 
 import { router } from '../router.js';
 import { authenticate } from '../auth.factory.js';
-import { CardData } from '@s3ntiment/shared';
+import { CardData, fetchSurvey } from '@s3ntiment/shared';
 import { Card, parseCardURL } from '../card.factory.js';
 import { removeSplash } from '../onpageload.js';
 
@@ -60,9 +61,16 @@ export class AuthController {
 
             this.renderTemplate();
 
-            const isParticipant = await authenticate(this.services, cardData.surveyId);
+            const [ipfsCid, poolId, createdAt] = await fetchSurvey(this.services, surveyStore, cardData.surveyId);
 
-            console.log(`${this.services.account.getAddress()} - ${ cardData.surveyId} : ${isParticipant}`)
+            store.setSurveyData(cardData.surveyId, {
+                id: cardData.surveyId,
+                pool: poolId
+            })
+
+            const isParticipant = await authenticate(this.services, poolId);
+
+            console.log(`${this.services.account.getAddress()} : ${poolId} - ${isParticipant}`)
 
             // if(isParticipant ) {  // && import.meta.env.VITE_PROD == 'true'
             //  //   alert("your mailadress was already used for this survey. Skip if you're just tesing")
@@ -71,7 +79,7 @@ export class AuthController {
             if(!isParticipant || import.meta.env.VITE_PROD !== 'true') {
 
                 try {
-                    const tx = await card.register(this.services);
+                    const tx = await card.register(this.services, poolId);
 
                     console.log(tx)
                 

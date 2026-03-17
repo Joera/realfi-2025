@@ -4,7 +4,7 @@ import '@s3ntiment/shared/components';
 import '../components/survey-questions.js';
 import { IServices } from '../services.js';
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
-import { fetchAndDecryptSurveyWithRespondent, Survey } from '@s3ntiment/shared';
+import { fetchAndDecryptSurveyWithRespondent, isScored, Survey } from '@s3ntiment/shared';
 
 import { store } from '../state';
 import { createUserDataObject } from '@s3ntiment/shared'
@@ -42,13 +42,9 @@ export class SurveyController {
     }
   }
 
-
-  async process() {
-    
-  }
+  async process() {}
 
   async render() {
-
 
     const capabilityDelegation = await store.ensureCapabilityDelegation(
       import.meta.env.VITE_BACKEND,
@@ -57,9 +53,11 @@ export class SurveyController {
 
     const authContext = await this.services.lit.createAuthContext(this.services.account.getSigner(), capabilityDelegation, window.location.host);
     const survey = await fetchAndDecryptSurveyWithRespondent(this.services, surveyStore, this.surveyId, authContext)
+    survey.isScored = isScored(survey);
     this.config = survey;
     console.log("SURVEY", survey)
     store.setSurveyData(this.surveyId, survey)
+    store.persistSurveys();
     this.renderTemplate();
     this.setSurveyListener();
     
@@ -77,6 +75,8 @@ export class SurveyController {
       console.log('Survey completed!');
       console.log('event:', event);
 
+      console.log("FROM STORE", store.activeSurvey)
+
       const seed = await this.services.account.createNillDBSeed();
       await this.services.nillDB.init(seed);
 
@@ -85,7 +85,7 @@ export class SurveyController {
       const signerAddress = this.services.account.getSignerAddress();
       const userData = createUserDataObject(docIUd, event.detail.answers, this.config!, signerAddress);
 
-      const result = await this.services.nillDB.storeStandard(import.meta.env.VITE_BACKEND, this.surveyId, userData, signature, signerAddress!);
+      const result = await this.services.nillDB.storeStandard(import.meta.env.VITE_BACKEND, this.surveyId, store.activeSurvey!.pool || '', userData, signature, signerAddress!);
       console.log(result)
 
       if (result.ok) {

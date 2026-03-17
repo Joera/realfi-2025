@@ -15,6 +15,8 @@ import { authenticate, hasParticipatingAccount } from './auth.factory.js';
 import { removeSplash } from './onpageload.js';
 import { AuthController } from './controllers/auth-ctrlr.js';
 import { CompletedController } from './controllers/completed-ctrlr.js';
+import { fetchSurvey } from '@s3ntiment/shared/browser';
+import { store } from './state/store.js';
 
 
 
@@ -88,11 +90,20 @@ export const initRouter = (services: IServices) => {
                 router.navigate('/surveys');
                 done();
               }
-         
+
+              const [ipfsCid, poolId, createdAt] = await fetchSurvey(services, surveyStore, surveyId);
+
+              store.setSurveyData(surveyId, {
+                  id: surveyId,
+                  pool: poolId
+              })
+
+              store.setActiveSurvey(surveyId);
+
               // store in session // or LS
-              let isParticipant = await hasParticipatingAccount(services, surveyId);
+              let isParticipant = await hasParticipatingAccount(services, poolId);
               if(!isParticipant) {
-                isParticipant = await authenticate(services, surveyId)  // separate route // with controller + spinner ? 
+                isParticipant = await authenticate(services, poolId)  // separate route // with controller + spinner ? 
               }
               if (isParticipant) {
                 console.log("isParticipant")

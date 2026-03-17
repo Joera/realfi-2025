@@ -7,7 +7,7 @@ import { router } from '../router.js';
 import { layoutStyles } from '../styles/shared-layout-styles.js';
 import { Survey } from '@s3ntiment/shared';
 
-class SurveyResultsList extends HTMLElement {
+class SurveyList extends HTMLElement {
    
     private unsubscribe?: () => void;
 
@@ -58,7 +58,7 @@ class SurveyResultsList extends HTMLElement {
 
             .survey-table {
                 display: grid;
-                grid-template-columns: 1fr 2fr 1fr 1fr;  /* Survey ID | Date | Collection */
+                grid-template-columns: 2fr 2fr 1fr;  /* Survey ID | Date | Collection */
                 gap: 0;
                 border: 1px solid var(--green);
                 border-radius: 8px;
@@ -95,19 +95,17 @@ class SurveyResultsList extends HTMLElement {
         <h1>My surveys</h1>
         <div class="survey-table">
             <!-- Header Row -->
-            <div class="table-header">Name</div>
+            <div class="table-header">Title</div>
             <div class="table-header">ID</div>
             <div class="table-header">Created</div>
-            <div class="table-header">Safe</div>
-            
+
             
             <!-- Data Rows -->
             ${surveys.map(survey => `
                 <div class="table-row" data-survey-id="${survey.id}">
-                    <div class="table-cell">${survey.title}...</div>
+                    <div class="table-cell">${survey.title}</div>
                     <div class="table-cell">${survey.id}</div>
                     <div class="table-cell">${new Date(Number(survey.createdAt) * 1000).toLocaleDateString()}</div>
-                    <div class="table-cell">${survey.config != undefined ? survey.config.safe : ""}</div>
                     
                 </div>
             `).join('')}
@@ -133,6 +131,6 @@ class SurveyResultsList extends HTMLElement {
 
 }
 
-customElements.define('survey-results-list', SurveyResultsList)
+customElements.define('survey-list', SurveyList)
 
-export { SurveyResultsList }
+export { SurveyList }

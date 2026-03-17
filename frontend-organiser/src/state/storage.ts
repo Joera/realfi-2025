@@ -4,6 +4,7 @@ const DRAFTS_STORAGE_KEY = 'surveyDrafts';
 const CURRENT_DRAFT_KEY = 'currentDraftId';
 const CAP_DELEGATION_KEY = 'litCapabilityDelegation';
 const SURVEYS_STORAGE_KEY = 'surveys';
+const POOLS_STORAGE_KEY = 'pools';
 
 
 export function loadSurveysFromStorage(): SurveysMap {
@@ -21,6 +22,24 @@ export function saveSurveysToStorage(surveys: SurveysMap): void {
     localStorage.setItem(SURVEYS_STORAGE_KEY, JSON.stringify(surveys));
   } catch (e) {
     console.warn('Failed to save surveys to localStorage:', e);
+  }
+}
+
+export function loadPoolsFromStorage(): SurveysMap {
+  try {
+    const stored = localStorage.getItem(POOLS_STORAGE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch (e) {
+    console.warn('Failed to load pools from localStorage:', e);
+  }
+  return {};
+}
+
+export function savePoolsToStorage(surveys: SurveysMap): void {
+  try {
+    localStorage.setItem(POOLS_STORAGE_KEY, JSON.stringify(surveys));
+  } catch (e) {
+    console.warn('Failed to save pools to localStorage:', e);
   }
 }
 

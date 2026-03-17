@@ -1,5 +1,5 @@
-import { accsForSurveyOwner, EncryptedConfig } from '../index.js';
-import { accsForRespondent } from '../lit/accs.js';
+import { accsForPoolOwner, EncryptedConfig } from '../index.js';
+import { accsForPoolMember } from '../lit/accs.js';
 
 const extractCid = (result: unknown): string => {
   if (typeof result === 'string') {
@@ -11,21 +11,24 @@ const extractCid = (result: unknown): string => {
   return result as string
 }
 
-export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: any, surveyId: string, authContext: any, safeAddress?: string) => {
+export const fetchSurvey = async (services: any, deployment: any, surveyId: string) => {
 
-    const surveyInfo = await services.viem.read(
+  return await services.viem.read(
       deployment.address as `0x{string}`, 
       deployment.abi,
       'getSurvey',
       [surveyId]
     );  
+}
 
-    console.log("FROM CONTRACT", surveyInfo)
+export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: any, surveyId: string, authContext: any, safeAddress?: string) => {
 
-    const cid = extractCid(surveyInfo[0])
+    const [ipfsCid, poolId, createdAt] = await fetchSurvey(services, deployment, surveyId);
+
+    const cid = extractCid(ipfsCid)
     const config: EncryptedConfig = JSON.parse(await services.ipfs.fetchFromPinata(cid));
     console.log("CONFIG", config)
-    const accs = accsForSurveyOwner(surveyId, deployment.address, config.config.safe || "0x");
+    const accs = accsForPoolOwner(poolId, deployment.address, config.config.safe || "0x");
 
     let d: any;
 
@@ -40,7 +43,7 @@ export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: 
 
     return {
         id: surveyId,
-        createdAt: Number(surveyInfo[2]),
+        createdAt: Number(createdAt),
         ...d,
         ...config
     }
@@ -48,16 +51,17 @@ export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: 
 
 export const fetchAndDecryptSurveyWithRespondent = async (services: any, deployment: any, surveyId: string, authContext: any) => {
 
-    const surveyInfo = await services.viem.read(
+   // should get this from store 
+    const [ ipfsCid, poolId, createdAt] = await services.viem.read(
       deployment.address as `0x{string}`, 
       deployment.abi,
       'getSurvey',
       [surveyId]
     );
 
-    const cid = extractCid(surveyInfo[0]);
+    const cid = extractCid(ipfsCid);
     const config: EncryptedConfig = JSON.parse(await services.ipfs.fetchFromPinata(cid));
-    const accs = accsForRespondent(deployment.address, surveyId);
+    const accs = accsForPoolMember(deployment.address, poolId);
 
     let d: any;
 
@@ -72,7 +76,7 @@ export const fetchAndDecryptSurveyWithRespondent = async (services: any, deploym
 
     return {
     id: surveyId,
-    createdAt: Number(surveyInfo[2]),
+    createdAt,
     ...d,
     ...config
     }

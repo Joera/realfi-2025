@@ -7,13 +7,14 @@ import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveySto
 import { toSafeSmartAccount } from "permissionless/accounts";
 
 
-export const createBatch = async (services: any, batch: Batch, surveyId: string) => {
+export const createBatch = async (services: any, batch: Batch, poolId: string, surveyId: string) => {
 
     console.log("creating batch")
 
     const { batchId, batchAccount } = await createBatchWallet(services);
     batch.id = getAddress(batchId);
     batch.survey = surveyId;
+    batch.pool = poolId;
     batch.cards = await generateCardSecrets(batchAccount, batch);
     return batch;
 }
@@ -32,7 +33,7 @@ export const createInvitations = async (batch: Batch) => {
 export const registerBatch = async (services: any, batch: Batch) => {
 
     const args = [
-        batch.survey,
+        batch.pool,
         batch.id,
     ]
 

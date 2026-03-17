@@ -1,16 +1,16 @@
-const surveyOwner = (surveyId: string, contract: string, safeAddress: string) => ({
+const isPoolSafe = (poolId: string, contract: string, safeAddress: string) => ({
   conditionType: "evmContract" as const,
   contractAddress: contract,
   chain: "base" as const,
-  functionName: "isOwner",
-  functionParams: [safeAddress, surveyId],
+  functionName: "isPoolSafe",
+  functionParams: [safeAddress, poolId],
   functionAbi: {
     type: "function",
-    name: "isOwner",
+    name: "isPoolSafe",
     stateMutability: "view",
     inputs: [
-      { name: "authSigAddress", type: "address" },
-      { name: "surveyId", type: "string" },
+      { name: "addr", type: "address" },
+      { name: "poolId", type: "string" },
     ],
     outputs: [{ name: "", type: "bool" }],
   },
@@ -21,19 +21,19 @@ const surveyOwner = (surveyId: string, contract: string, safeAddress: string) =>
   },
 });
 
-const isRespondent = (contract: string, surveyId: string) => ({
+const isPoolMember = (contract: string, poolId: string) => ({
   conditionType: "evmContract" as const,
   contractAddress: contract,
   chain: "base" as const,
-  functionName: "isRespondent",
-  functionParams: [surveyId, ":userAddress"],
+  functionName: "isPoolMember",
+  functionParams: [poolId, ":userAddress"],
   functionAbi: {
     type: "function",
-    name: "isRespondent",
+    name: "isPoolMember",
     stateMutability: "view",
     inputs: [
-      { name: "surveyId", type: "string" },
-      { name: "respondent", type: "address" },
+      { name: "poolId", type: "string" },
+      { name: "member", type: "address" },
     ],
     outputs: [{ name: "", type: "bool" }],
   },
@@ -43,28 +43,6 @@ const isRespondent = (contract: string, surveyId: string) => ({
     value: "true",
   },
 });
-
-
-// const isOwnerOFSMC = (smartAccountAddress: string) => ({
-
-//     conditionType: "evmContract" as const,
-//     contractAddress: smartAccountAddress,
-//     chain: "base" as const,
-//     functionName: "owner",
-//     functionParams: [],
-//     functionAbi: {
-//       type: "function",
-//       name: "owner",
-//       stateMutability: "view",
-//       inputs: [],
-//       outputs: [{ name: "", type: "address" }],
-//     },
-//     returnValueTest: {
-//       key: "",
-//       comparator: "=" as const,
-//       value: ":userAddress",
-//     }
-// })
 
 const isOwnerOfSafe = (safeAddress: string) => ({
   conditionType: "evmContract" as const,
@@ -83,21 +61,21 @@ const isOwnerOfSafe = (safeAddress: string) => ({
     key: "",
     comparator: "=" as const,
     value: "true",
-  }
-})
+  },
+});
 
-export const accsForSurveyOwner = (surveyId: string, contract: string, safeAddress: string) => {
-  return [surveyOwner(surveyId, contract, safeAddress), { operator: "and" }, isOwnerOfSafe(safeAddress)];
+// Pool owner: Safe owns the pool AND :userAddress is a Safe signer
+export const accsForPoolOwner = (poolId: string, contract: string, safeAddress: string) => {
+  console.log(poolId, contract, safeAddress)
+  return [isPoolSafe(poolId, contract, safeAddress), { operator: "and" }, isOwnerOfSafe(safeAddress)];
 };
 
-export const accsForRespondent = (contract: string, surveyId: string) => {
-
-  console.log("accs:", contract, surveyId)
-  return [isRespondent(contract, surveyId)];
+// Pool member: :userAddress (pool wallet EOA) is registered in the pool
+export const accsForPoolMember = (contract: string, poolId: string) => {
+  return [isPoolMember(contract, poolId)];
 };
 
-
-export const alwaysTrue =  [
+export const alwaysTrue = [
   {
     conditionType: "evmBasic" as const,
     contractAddress: "",
@@ -109,5 +87,5 @@ export const alwaysTrue =  [
       comparator: "=" as const,
       value: ":userAddress",
     },
-  }
+  },
 ];

@@ -48,6 +48,7 @@ export interface QuestionGroup {
 export interface Batch {
     id: string
     name: string
+    pool: string
     survey: string
     amount: number
     medium: 'zip-file' | 'cdn'
@@ -68,6 +69,7 @@ export interface EncryptedData {
 
 export interface EncryptedConfig {
     surveyId: string
+    poolId: string,
     nilDid: string, // surveyOwnerDid.didString,
     encryptedForOwner: EncryptedData
     encryptedForRespondent: EncryptedData
@@ -77,6 +79,7 @@ export interface EncryptedConfig {
 
 export interface Survey {
     id?: string
+    pool?: string
     title?: string
     createdAt?: number
     introduction?: string
@@ -84,6 +87,16 @@ export interface Survey {
     batches?: Batch[]
     config?: Config
     results?: SurveyResultsTally
+    isScored?: boolean
+}
+export interface Pool {
+    id: string, 
+    name: string,
+    safeAddress: string, 
+    batches: Batch[], 
+    owners?: string[],
+    readers?: string[],
+    createdAt: number 
 }
 
 // Event detail types

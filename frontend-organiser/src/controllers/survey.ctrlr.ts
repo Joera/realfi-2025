@@ -3,9 +3,9 @@ import { IServices } from "../services/services.js";
 import { store } from "../state/store.js";
 import { reactive } from "../utils/reactive.js";
 import '../components/survey-detail-responses.js';
-import '../components/survey-detail-access.js';
+import '../components/pool-detail-access.js';
 // import '../components/survey-forms/survey-form-questions.js';
-import '../components/survey-forms/survey-form-batches.js';
+import '../components/survey-forms/pool-form-batches.js';
 import '../components/registered-questions-editor.js';
 import { router } from "../router.js";
 import { createBatch, createInvitations } from "../factories/survey.factory.js";
@@ -111,12 +111,7 @@ export class SurveyController {
                 </div>
 
                 <div class="tabs-container">
-                    <div class="tabs" id="tabs-container">
-                        <button class="tab active" data-tab="results">Results</button>
-                        <button class="tab" data-tab="intro">Config</button>
-                        <button class="tab" data-tab="questions">Questions</button>
-                        <button class="tab" data-tab="batches">Batches</button>
-                    </div>
+                    <div class="tabs" id="tabs-container"></div>
                 </div>
 
                 <div id="survey-container" class="container container-large centered"></div>
@@ -125,8 +120,7 @@ export class SurveyController {
 
         // Reactive survey title
         const titleView = reactive('#survey-title', () => {
-
-            // console.log("should update", this.survey)
+            console.log("should update", this.survey)
             return this.survey?.title || '...';
         });
 
@@ -141,9 +135,7 @@ export class SurveyController {
             
             return `
                 <button class="tab ${resultTab === 'results' ? 'active' : ''}" data-tab="results">Results</button>
-                <button class="tab ${resultTab === 'access' ? 'active' : ''}" data-tab="access">Access</button>
                 <button class="tab ${resultTab === 'questions' ? 'active' : ''}" data-tab="questions">Questions</button>
-                <button class="tab ${resultTab === 'batches' ? 'active' : ''}" data-tab="batches">Batches</button>
 
             `;
         });
@@ -162,12 +154,12 @@ export class SurveyController {
                     return `<loading-spinner></loading-spinner>`
                 case 'results':
                     return `<survey-detail-responses class="container" survey-id="${this.surveyId}"></survey-detail-responses>`
-                case 'access':
-                    return `<survey-detail-access class="container" survey-id="${this.surveyId}"></survey-detail-access>`;
+                // case 'access':
+                //     return `<survey-detail-access class="container" survey-id="${this.surveyId}"></survey-detail-access>`;
                 case 'questions':
                     return `<registered-questions-editor class="container" survey-id="${this.surveyId}"></registered-questions-editor>`
-                case 'batches':
-                    return `<survey-form-batches class="container" survey-id="${this.surveyId}"></survey-form-batches>`;
+                // case 'batches':
+                //     return `<survey-form-batches class="container" survey-id="${this.surveyId}"></survey-form-batches>`;
                 default: 
                     return ``;
             }
@@ -184,12 +176,7 @@ export class SurveyController {
     
     async process() {
 
-        const survey = store.surveys.find((s: any) => s.id === this.surveyId);
-
-         if (survey && survey !== undefined) {
-            this.survey = survey;
-         } 
-
+        
         const capabilityDelegation = await store.ensureCapabilityDelegation(
             import.meta.env.VITE_BACKEND,
             this.services.safe
@@ -229,6 +216,12 @@ export class SurveyController {
     }
 
     async render() {
+
+        const survey = store.surveys.find((s: any) => s.id === this.surveyId);
+
+        if (survey && survey !== undefined) {
+            this.survey = survey;
+        } 
 
         this.renderTemplate();
         this.process();
@@ -272,32 +265,31 @@ export class SurveyController {
             if (!tab) return;
             
             const tabName = (tab as HTMLElement).dataset.tab as 'results' | 'access' | 'questions';
-            console.log("click", tabName);
             store.setUI({ resultTab: tabName });
         });
 
-        document.addEventListener('batch-create', async (e) => {
-            const event = e as CustomEvent
-            const { batch, index, surveyId } = event.detail;
+        // document.addEventListener('batch-create', async (e) => {
+        //     const event = e as CustomEvent
+        //     const { batch, index, surveyId } = event.detail;
 
-            console.log(batch, surveyId)
+        //     console.log(batch, surveyId)
 
-            const b = await createBatch(this.services, batch, surveyId)
+        //     const b = await createBatch(this.services, batch, poolId, surveyId)
 
-            const receipt = await this.services.safe.write(surveyStore.address, surveyStore.abi, 'registerBatch', [surveyId, b.id], { waitForReceipt: true});
-            console.log(receipt);
+        //     const receipt = await this.services.safe.write(surveyStore.address, surveyStore.abi, 'registerBatch', [poolId, b.id], { waitForReceipt: true});
+        //     console.log(receipt);
 
-            await createInvitations(b);
+        //     await createInvitations(b);
             
-        })
+        // })
 
-        document.addEventListener('add-co-organiser', async (e: Event) => {
-            const { address, role, surveyId } = (e as CustomEvent).detail;
+        // document.addEventListener('add-co-organiser', async (e: Event) => {
+        //     const { address, role, surveyId } = (e as CustomEvent).detail;
 
-            if (role == 'owner') {
-                await this.services.safe.addOwner(address);
-            }
-        });
+        //     if (role == 'owner') {
+        //         await this.services.safe.addOwner(address);
+        //     }
+        // });
 
         document.addEventListener('refresh-responses', async (e: Event) => {
 

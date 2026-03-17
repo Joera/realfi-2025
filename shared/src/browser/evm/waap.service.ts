@@ -56,7 +56,7 @@ export class WaapService {
 
         const accounts: any = await window.waap.request({ method: "eth_requestAccounts" });
 
-        console.log("accounts", accounts);
+        // console.log("accounts", accounts);
 
         await window.waap.request({
             method: "wallet_switchEthereumChain",
@@ -116,16 +116,10 @@ export class WaapService {
             throw new Error("Not logged in");
         }
 
-        console.log('a', this.address)
-
         const signature = await window.waap.request({
             method: "personal_sign",
             params: [toHex(message), this.address],
         });
-
-        console.log('s', signature)
-
-
 
         return signature as `0x${string}`;
     }

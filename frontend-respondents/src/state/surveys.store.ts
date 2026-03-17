@@ -1,11 +1,9 @@
 import { Observable, Listener } from './observable.js';
-import { CardState } from '../controllers/landing.ctrlr.js';
 import { Survey } from '@s3ntiment/shared';
 import { loadSurveysFromStorage, saveSurveysToStorage, clearSurveysFromStorage } from './storage.js';
 
 export interface SurveyEntry extends Survey {
   answeredQuestions: number[];
-  cardState?: CardState;
 }
 
 export type SurveyMap = Record<string, SurveyEntry>;

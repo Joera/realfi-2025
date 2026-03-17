@@ -521,7 +521,7 @@ class SurveyQuestions extends HTMLElement {
       detail: {
         answers: this.answers,
         timestamp: new Date().toISOString(),
-        documentId: this.previousDocument,
+        documentId: this.previousDocument
       },
       bubbles: true,
       composed: true,

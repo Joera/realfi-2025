@@ -124,7 +124,7 @@ router.post('/surveys/:id/delegation', async (req: Request, res: Response) => {
 // Body: { userData, signature, signer }
 router.post('/surveys/:id/submit', async (req: Request, res: Response) => {
     try {
-        const { userData, signature, signer } = req.body;
+        const { userData, signature, signer, poolId } = req.body;
         const surveyId = req.params.id;
 
         const isValidSignature = await verifyMessage({
@@ -133,27 +133,26 @@ router.post('/surveys/:id/submit', async (req: Request, res: Response) => {
             address: signer
         });
 
-        const isRespondent = await viem.read(
+        const isPoolMember = await viem.read(
             surveyStore.address as `0x${string}`,
             surveyStore.abi,
-            'isRespondent',
-            [surveyId, signer]
+            'isPoolMember',
+            [poolId, signer]
         );
 
-        if (!isValidSignature || !isRespondent) {
+        if (!isValidSignature || !isPoolMember) {
             console.log("ERROR", {
                 isValidSignature, 
-                isRespondent, 
+                isPoolMember, 
                 userData, 
                 signature, 
                 signer, 
+                poolId,
                 surveyId
             })
-            res.status(403).json({ error: 'UNAUTHORIZED', isValidSignature, isRespondent });
+            res.status(403).json({ error: 'UNAUTHORIZED', isValidSignature, isPoolMember });
             return;
         }
-
-        console.log("ONCE")
 
         await nildb.submitResponseForUser(surveyId, userData);
         res.json({ success: true });
@@ -180,7 +179,7 @@ router.post('/surveys/:id/score', async (req: Request, res: Response) => {
         const isRespondent = await viem.read(
             surveyStore.address as `0x${string}`,
             surveyStore.abi,
-            'isRespondent',
+            'isPoolMember',
             [surveyId, signer]
         );
 

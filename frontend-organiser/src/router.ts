@@ -4,11 +4,12 @@ import Navigo from 'navigo';
 import type { Match } from 'navigo';
 import { LandingController } from './controllers/landing.ctrlr';
 import { IServices } from './services/services.ts';
-import { SurveyListController } from './controllers/survey-list.ts';
+import { OverviewController } from './controllers/overview.ctrlr.ts';
 import { SurveyController } from './controllers/survey.ctrlr.ts';
 import { NewSurveyController } from './controllers/new.ctrlr.ts';
 import { LogoutController } from './controllers/logout.ctrlr.ts';
 import { AccountController } from './controllers/account.ctrlr.ts';
+import { PoolController } from './controllers/pool.ctrlr.ts';
 
 const router = new Navigo('/');
 
@@ -28,7 +29,7 @@ export const initRouter = (services: IServices) => {
     })
     .on('/surveys', () => {
       if (currentController?.destroy) currentController.destroy();
-      currentController = new SurveyListController(services);
+      currentController = new OverviewController(services);
       currentController.render();
     })
     .on('/survey/:surveyId', function(match) {
@@ -41,6 +42,18 @@ export const initRouter = (services: IServices) => {
       }
       
       currentController = new SurveyController(services, surveyId);
+      currentController.render();
+    })
+    .on('/pool/:poolId', function(match) {
+      if (currentController?.destroy) currentController.destroy();      
+      const poolId = match?.params?.poolId || match?.data?.poolId || '';
+
+      if (!poolId) {
+        router.navigate('/surveys');
+        return;
+      }
+      
+      currentController = new PoolController(services, poolId);
       currentController.render();
     })
     .on('/logout', () => {

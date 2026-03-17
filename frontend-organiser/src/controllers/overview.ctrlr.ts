@@ -1,11 +1,13 @@
 
 import { IServices } from "../services/services.js";
 import { reactive } from "../utils/reactive.js";
-import '../components/survey-results-list.js';
-import '../components/add-survey-input.js';
+import '../components/pool-list.js';
+import '../components/add-pool.js';
+import '../components/survey-list.js';
+import '../components/add-survey.js';
 import '../components/access-request.js';
 
-export class SurveyListController {
+export class OverviewController {
     private reactiveViews: any[] = [];
     services: IServices
 
@@ -20,8 +22,10 @@ export class SurveyListController {
         if (!app) return;
     
         app.innerHTML = `
-          <survey-results-list class="centered"></survey-results-list>
-          <add-survey-input class="container container-large"></add-survey-input>
+          <pool-list class="centered"></pool-list>
+          <add-pool class="container container-large"></add-pool>
+          <survey-list class="centered"></survey-list>
+          <add-survey class="container container-large"></add-survey>
         `;
     }
     
@@ -45,8 +49,20 @@ export class SurveyListController {
             const event = e as CustomEvent
             const { surveyId } = event.detail;
             console.log(surveyId);
-
-            
         })
+
+        document.addEventListener('import-pool', async (e) => {
+            const event = e as CustomEvent
+            const { poolId } = event.detail;
+            console.log(poolId);
+        })
+        
+
+        document.addEventListener('import-survey', async (e) => {
+            const event = e as CustomEvent
+            const { surveyId } = event.detail;
+            console.log(surveyId);
+        })
+        
     }
 }
