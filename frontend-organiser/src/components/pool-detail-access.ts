@@ -79,6 +79,19 @@ class PoolDetailAccess extends HTMLElement {
                 flex: 0 0 140px;
                 margin-bottom: 0;
             }
+
+            .owner-list {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            .owner-pill {
+                background: var(--color-too-dark);
+                color: white;
+                border-radius: 6px;
+                padding: 0.25rem 0.6rem;
+            }
         </style>
 
         ${!pool ? `
@@ -98,7 +111,11 @@ class PoolDetailAccess extends HTMLElement {
 
                 <div class="readonly">
                     <label>Owners:</label>
-                    <span>${pool.owners?.join(', ') || '—'}</span>
+                    <div class="owner-list">
+                        ${pool.owners?.map((addr: string) => `
+                        <copy-hash class="owner-pill" value="${addr}"></copy-hash>
+                        `).join('') || '—'}
+                    </div>
                 </div>
 
                 <div class="co-organiser-section">

@@ -99,6 +99,8 @@ class CopyHash extends HTMLElement {
           width: 14px;
           height: 14px;
         }
+
+
       </style>
 
       <span class="text" title="${this.value}">${this.truncate(this.value)}</span>
