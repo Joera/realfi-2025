@@ -5,6 +5,8 @@ import { formStyles } from '../styles/shared-form-styles.js'
 import { store } from '../state/index.js'
 
 class AddPool extends HTMLElement {
+  private open: boolean = false
+
   constructor() {
     super()
     this.attachShadow({ mode: 'open' })
@@ -27,10 +29,37 @@ class AddPool extends HTMLElement {
 
         .add-pool {
           display: flex;
-          gap: 1rem;
-          align-items: flex-start;
+          align-items: stretch;
           margin-top: 1.5rem;
-          margin-left: .75rem;
+          margin-bottom: 3rem;
+          overflow: hidden;
+        }
+
+        .add-pool__input {
+          width: 0;
+          opacity: 0;
+          padding: 0;
+          border: none;
+          outline: none;
+          transition: width 0.3s ease, opacity 0.25s ease, padding 0.3s ease;
+          margin: 0;
+          border-top-right-radius: 0;
+          border-bottom-right-radius: 0;
+        }
+
+        :host([open]) .add-pool__input {
+          width: 14rem;
+          opacity: 1;
+          padding: 0 .75rem;
+        }
+
+        #add-btn {
+          border-top-left-radius: 0;
+          border-bottom-left-radius: 0;
+        }
+
+        :host(:not([open])) #add-btn {
+          border-radius: revert;
         }
 
         .error {
@@ -48,6 +77,7 @@ class AddPool extends HTMLElement {
             class="add-pool__input"
             placeholder="Enter pool ID"
             autocomplete="off"
+            tabindex="-1"
           />
           <button class="btn-primary" id="add-btn">Add</button>
         </div>
@@ -64,20 +94,39 @@ class AddPool extends HTMLElement {
     const submit = () => {
       const id = input.value.trim()
       if (!id) return
-      
+
+      console.log("fire")
+
       this.dispatchEvent(new CustomEvent('import-pool', {
-            detail: { surveyId: id },
-            bubbles: true,
-            composed: true
-        }))
+        detail: { poolId: id },
+        bubbles: true,
+        composed: true
+      }))
 
       input.value = ''
       input.focus()
     }
 
-    button?.addEventListener('click', submit)
+    button?.addEventListener('click', () => {
+      if (!this.open) {
+        this.open = true
+        this.setAttribute('open', '')
+        input.tabIndex = 0
+        input.focus()
+        return
+      }
+
+      submit()
+    })
+
     input?.addEventListener('keydown', (e: KeyboardEvent) => {
       if (e.key === 'Enter') submit()
+      if (e.key === 'Escape') {
+        this.open = false
+        this.removeAttribute('open')
+        input.tabIndex = -1
+        input.value = ''
+      }
     })
   }
 }

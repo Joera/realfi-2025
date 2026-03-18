@@ -18,9 +18,10 @@ let currentController: any = null;
 export const initRouter = (services: IServices) => {
   router
     .on('/', () => {
-      if (currentController?.destroy) currentController.destroy();
-      currentController = new LandingController(services);
-      currentController.render();
+      // if (currentController?.destroy) currentController.destroy();
+      // currentController = new LandingController(services);
+      // currentController.render();
+      router.navigate('/surveys');
     })
     .on('/new', () => {
       if (currentController?.destroy) currentController.destroy();

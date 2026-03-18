@@ -54,6 +54,7 @@ export interface Batch {
     medium: 'zip-file' | 'cdn'
     createdAt: number
     cards?: CardSecret[]
+    cardCount?: number
 }
 
 export interface Config {

@@ -38,15 +38,51 @@ export function injectGlobalStyles() {
     }
 
     footer {
-        height: 5rem;
+        min-height: 5rem;
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
         align-items: center;
-        justify-content: center;
+        justify-content: space-between;
         background: var(--color-too-dark);
         color: white;
 
+        > .container {
+         
+            flex-direction: row;
+         
+            > * {
+                padding: 1.5rem;
+                flex: 1;
+                position: relative;
+            }   
+        }
+
+        h1 {
+            color: var(--color-bg);
+            font-size: 2.8rem;
+            margin: 0;
+                > span {
+                    font-size 2.8rem;
+                }
+        }
+
+        nav {
+            width: 100%;
+
+            ul {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+
+                a {
+                    color: white;
+                }
+            }
+        }
     }
+
+
 
     #splash {
     
@@ -153,8 +189,8 @@ export function injectGlobalStyles() {
 
         svg {
 
-            margin: auto 1.5rem auto 0 ;
-            width: 4.8rem;
+            margin: auto 0 auto 0 ;
+            width: 6.4rem;
             height: auto;
             align-self: center;
             transition: all 0.3s ease;
@@ -205,9 +241,9 @@ export function injectGlobalStyles() {
         font-weight: 700;
         color: var(--color-too-dark);
 
-        @media(min-width: 1000px) {
-            font-size: 3.6rem;
-        }
+        // @media(min-width: 1000px) {
+        //     font-size: 3.6rem;
+        // }
 
         span {
             font-size: 2.4rem;
@@ -216,9 +252,9 @@ export function injectGlobalStyles() {
             font-weight: 700;
             color: white;
 
-            @media(min-width: 1000px) {
-                font-size: 3.6rem;
-            }
+            // @media(min-width: 1000px) {
+            //     font-size: 3.6rem;
+            // }
         }
     }
 

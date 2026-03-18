@@ -12,12 +12,8 @@ injectGlobalStyles();
 import { initRouter } from './router';
 import { getServices } from './services/services';
 import { authenticate } from "./factories/auth.factory";
+import { removeSplash } from "./onpageload";
 
-const onPagePainted = () => {
-
-  const header = document.querySelector('header') as HTMLElement;
-  header!.style.display = "flex";
-};
 
 
 const main = async () => {
@@ -28,6 +24,7 @@ const main = async () => {
 
   await authenticate(services);
   initRouter(services);
+  removeSplash()
 }
 
 if (document.readyState === 'loading') {
@@ -35,6 +32,4 @@ if (document.readyState === 'loading') {
 } else {
   main()
 }
-
-window.addEventListener('load', onPagePainted);
 

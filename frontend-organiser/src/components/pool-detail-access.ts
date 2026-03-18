@@ -88,22 +88,17 @@ class PoolDetailAccess extends HTMLElement {
 
                 <div class="readonly">
                     <label>Pool ID:</label>
-                    <span>${pool.id}</span>
+                    <copy-string>${pool.id}</copy-string>
                 </div>
 
                 <div class="readonly">
                     <label>Safe:</label>
-                    <span>${pool.safeAddress || '—'}</span>
+                    <copy-string>${pool.safeAddress || '—'}</copy-string>
                 </div>
 
                 <div class="readonly">
                     <label>Owners:</label>
                     <span>${pool.owners?.join(', ') || '—'}</span>
-                </div>
-
-                <div class="readonly">
-                    <label>Readers:</label>
-                    <span>${pool.readers?.join(', ') || '—'}</span>
                 </div>
 
                 <div class="co-organiser-section">

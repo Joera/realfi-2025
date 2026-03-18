@@ -6,6 +6,8 @@ import '../components/add-pool.js';
 import '../components/survey-list.js';
 import '../components/add-survey.js';
 import '../components/access-request.js';
+import { getPoolInfo } from "../factories/pool.factory.js";
+import { store } from "../state/store.js";
 
 export class OverviewController {
     private reactiveViews: any[] = [];
@@ -22,9 +24,9 @@ export class OverviewController {
         if (!app) return;
     
         app.innerHTML = `
-          <pool-list class="centered"></pool-list>
+          <pool-list class="container centered"></pool-list>
           <add-pool class="container container-large"></add-pool>
-          <survey-list class="centered"></survey-list>
+          <survey-list class="container centered"></survey-list>
           <add-survey class="container container-large"></add-survey>
         `;
     }
@@ -36,6 +38,7 @@ export class OverviewController {
         
         this.renderTemplate();
         this.process();
+        this.setListeners();
     }
 
     destroy() {
@@ -54,7 +57,10 @@ export class OverviewController {
         document.addEventListener('import-pool', async (e) => {
             const event = e as CustomEvent
             const { poolId } = event.detail;
-            console.log(poolId);
+        
+            // get infor from contract
+            const pool = await getPoolInfo(this.services, poolId)
+            store.addPool(pool)
         })
         
 
