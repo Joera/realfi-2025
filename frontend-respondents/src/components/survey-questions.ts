@@ -93,6 +93,7 @@ class SurveyQuestions extends HTMLElement {
       <style>
         .survey-container {
           padding: 1.5rem;
+          width: calc(100% - 3rem);
         }
 
         h1 {
@@ -282,7 +283,7 @@ class SurveyQuestions extends HTMLElement {
           
       </style>
 
-      <div class="survey-container container">
+      <div class="survey-container">
         ${this.currentStep < this.totalSteps ? `
           <h1>${this.config.title}</h1>
 

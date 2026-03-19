@@ -53,6 +53,15 @@ export function injectTokens(color: string) {
     --color-light:  ${adjustLightness(color, 0.03)};
     --color-dark:   ${adjustLightness(color, -0.10)};
     --color-too-dark: ${adjustLightness(color, -0.42)};
+
+    --breakpoint-xs: 480px;
+    --breakpoint-sm: 640px;
+    --breakpoint-md: 768px;
+    --breakpoint-lg: 1024px;
+    --breakpoint-xl: 1280px;
+    --breakpoint-xxl: 1536px;
+
+
     }
   `;
   document.head.insertBefore(style, document.head.firstChild);

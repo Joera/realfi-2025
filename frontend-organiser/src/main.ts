@@ -14,8 +14,6 @@ import { getServices } from './services/services';
 import { authenticate } from "./factories/auth.factory";
 import { removeSplash } from "./onpageload";
 
-
-
 const main = async () => {
 
   const services = getServices();

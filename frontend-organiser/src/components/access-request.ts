@@ -1,15 +1,14 @@
 // components/add-survey-input.ts
 import { typograhyStyles } from '../../../shared/src/assets/styles/typography-styles.js'
-import { colourStyles } from '../styles/shared-colour-styles.js'
-import { buttonStyles } from '../styles/shared-button-styles.js'
-import { formStyles } from '../styles/shared-form-styles.js'
+import { buttonStyles } from '@s3ntiment/shared/assets'
+import { formStyles } from '@s3ntiment/shared/assets'
 import { store } from '../state/index.js'
 
 class AccessRequest extends HTMLElement {
   constructor() {
     super()
     this.attachShadow({ mode: 'open' })
-    this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, colourStyles, buttonStyles, formStyles]
+    this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, buttonStyles, formStyles]
   }
 
   connectedCallback() {

@@ -1,4 +1,9 @@
 import { buttonStylesString } from './button-styles';
+import { layoutStylesString } from './layout-styles';
+import { typograhyStylestring } from './typography-styles';
+import { navStylesString } from './nav-styles';
+import { headerStylesString } from './header-styles';
+import { footerStylesString } from './footer-styles';
 
 export function injectGlobalStyles() {
   if (document.getElementById("app-global")) return;
@@ -37,53 +42,6 @@ export function injectGlobalStyles() {
         min-height: calc(100vh - 6rem - 11rem);
     }
 
-    footer {
-        min-height: 5rem;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-        background: var(--color-too-dark);
-        color: white;
-
-        > .container {
-         
-            flex-direction: row;
-         
-            > * {
-                padding: 1.5rem;
-                flex: 1;
-                position: relative;
-            }   
-        }
-
-        h1 {
-            color: var(--color-bg);
-            font-size: 2.8rem;
-            margin: 0;
-                > span {
-                    font-size 2.8rem;
-                }
-        }
-
-        nav {
-            width: 100%;
-
-            ul {
-                width: 100%;
-                display: flex;
-                flex-direction: column;
-                align-items: flex-start;
-
-                a {
-                    color: white;
-                }
-            }
-        }
-    }
-
-
-
     #splash {
     
         position: fixed;
@@ -112,13 +70,6 @@ export function injectGlobalStyles() {
         align-items: center;
     }
 
-    #landing-content { 
-
-        position: relative;
-        width: 100%;
-        height: 100%;
-    }
-
     .onboarding-message {
 
         margin: 0 1.5rem 1.5rem 1.5rem;
@@ -139,146 +90,6 @@ export function injectGlobalStyles() {
             font-family: "Monaspace Neon";
             color: var(--color-too-dark);
         }
-    }
-
-    .container {
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        align-items: flex-start;
-        width: 100%; 
-    }
-        
-    .container-small {
-        
-        max-width: 600px;
-    } 
-    
-    .container-large {
-        max-width: 1000px;
-    } 
-
-    .centered {
-        justify-content: center;
-        align-items: center;
-    }
-
-    header {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        height: 9rem;
-        margin-bottom: 3rem;
-
-        .container {
-
-            flex-direction: row;
-            justify-content: center;
-            align-items: center;
-        }
-
-        h1 {
-          
-            margin: 0;
-            margin-left: 1.5rem;
-            margin-top: -0.75rem;
-        }
-
-
-        svg {
-
-            margin: auto 0 auto 0 ;
-            width: 6.4rem;
-            height: auto;
-            align-self: center;
-            transition: all 0.3s ease;
-        
-
-            path {
-                fill: var(--color-too-dark);
-            }
-        }
-    }
-
-    nav { 
-
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: center;
-
-        ul {
-
-            list-style: none;
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: center;
-            margin: 0;
-            padding: 0;
-
-        }
-
-        a { 
-            margin: 0 1.5rem;
-            color: var(--color-too-dark);
-        
-            font-style: normal;
-            font-weight: 400;
-            font-size: 1rem;
-            text-transform: lowercase;
-        }
-
-    }
-
-    h1 {
-
-        font-size: 2.8rem;
-        font-family: "Cormorant Garamond";
-        font-style: normal;
-        font-weight: 700;
-        color: var(--color-too-dark);
-
-        // @media(min-width: 1000px) {
-        //     font-size: 3.6rem;
-        // }
-
-        span {
-            font-size: 2.4rem;
-            font-family: "Cormorant Garamond";
-            font-style: normal;
-            font-weight: 700;
-            color: white;
-
-            // @media(min-width: 1000px) {
-            //     font-size: 3.6rem;
-            // }
-        }
-    }
-
-    h2 {
-
-        // font-family: "Oswald", sans-serif;
-        font-family: "Monaspace Neon";
-        font-optical-sizing: auto;
-        font-weight: 600;
-        font-style: normal;
-
-        font-size: 1.8rem;
-        // text-transform: uppercase;
-        // letter-spacing: 1px;
-        color: var(--color-too-dark);
-        // margin: 0 auto 5rem auto;
-    }
-
-    *, p {
-        font-family: "Monaspace Neon";
-        font-style: normal;
-        font-weight: 400;
-        font-size: 1rem;
-        line-height: 1.55;
     }
 
     #completed-content {
@@ -327,9 +138,18 @@ export function injectGlobalStyles() {
         }
     }
 
+    ${typograhyStylestring}
 
     ${buttonStylesString}
-    
+
+    ${layoutStylesString}
+
+    ${navStylesString}
+
+    ${footerStylesString}
+
+    ${headerStylesString}
+
     `;
   document.head.appendChild(style);
 

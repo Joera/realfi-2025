@@ -6,14 +6,15 @@ export const buttonStylesString = `
         }
 
         button {
-          flex: 1;
           padding: 0.75rem 1.5rem;
-          border: none;
+          border: 2px solid var(--color-too-dark);
           border-radius: 6px;
           font-size: 1rem;
+          line-height: 1.55;
           font-weight: 500;
           cursor: pointer;
           transition: background-color 0.2s;
+          flex-grow: 0;
         }
 
         button:disabled {
@@ -24,14 +25,16 @@ export const buttonStylesString = `
         .btn-primary {
           background-color: var(--color-too-dark);
           color: white;
-        }s
+        }
 
         .btn-primary:hover:not(:disabled) {
           background-color: var(--color-too-dark);
+        }
 
         .btn-secondary {
-          background-color: #f3f4f6;
-          color: #374151;
+          background-color: var(--color-bg);
+          color: var(--color-too-dark);
+          border-color: var(--color-too-dark);
         }
 
         .btn-secondary:hover:not(:disabled) {

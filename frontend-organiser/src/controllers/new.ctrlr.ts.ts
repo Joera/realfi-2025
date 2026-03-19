@@ -18,6 +18,7 @@ export class NewSurveyController {
 
   constructor(services: IServices) {
     this.services = services;
+   // this.handleSurveySubmit = this.handleSurveySubmit.bind(this);
   }
 
   private renderTemplate() {
@@ -44,85 +45,87 @@ export class NewSurveyController {
   }
 
   destroy() {
+    document.removeEventListener('survey-submit', this.handleSurveySubmit);
     this.reactiveViews.forEach(view => view.destroy());
     this.reactiveViews = [];
   }
 
-  async setSurveyListener() {
+  private handleSurveySubmit = async (event: any) => {
 
-    document.addEventListener('survey-submit', async (event: any) => {
-      const survey = event.detail.survey;
-      console.log("ready to submit", survey)
+    const survey = event.detail.survey;
+    console.log("ready to submit", survey)
 
-      const surveyId = crypto.randomUUID();
-      const poolId = survey.pool ?? crypto.randomUUID();
-      const isNewPool = !survey.pool;
-      let safeAddress; 
+    const surveyId = crypto.randomUUID();
+    const poolId = survey.pool ?? crypto.randomUUID();
+    const isNewPool = !survey.pool;
+    let safeAddress; 
+    if (isNewPool) {
+      safeAddress = await this.services.safe.connectToFreshSafe(poolId);
+    } else {
+        const pool = store.getPool(poolId);
+        safeAddress = pool!.safeAddress;
+        await this.services.safe.connectToExistingSafe(safeAddress);
+    }
+
+    console.log("safeAddress", safeAddress)
+
+    const config = {
+      safe: safeAddress,
+      chainId: import.meta.env.VITE_L2 == 'base' ? 8543 : 1,
+      litNetwork: import.meta.env.VITE_LIT_NETWORK
+    }
+
+    const surveyConfig: Survey =  {
+      id: surveyId,
+      title: survey.title,
+      pool: poolId,
+      introduction: survey.introduction,
+      groups: survey.groups,
+      batches: survey.batches,
+      config,
+      // createdAt: BigInt(Math.floor(Date.now() / 1000))
+    }
+
+    console.log(surveyConfig)
+
+    let res: any = await fetch(`${BACKENDURL}/api/surveys`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({   
+        surveyId,  
+        poolId,
+        surveyConfig,
+        safeAddress
+      })
+    });
+
+    const result = await res.json();
+
+    console.log(result);
+
+    if (this.services.ipfs.isCID(result.cid)) {
+
+      let batchIds = [];
+
       if (isNewPool) {
-        safeAddress = await this.services.safe.connectToFreshSafe(poolId);
-      } else {
-          const pool = store.getPool(poolId);
-          safeAddress = pool!.safeAddress;
-          await this.services.safe.connectToExistingSafe(safeAddress);
-      }
 
-      console.log("safeAddress", safeAddress)
-  
-      const config = {
-        safe: safeAddress,
-        chainId: import.meta.env.VITE_L2 == 'base' ? 8543 : 1,
-        litNetwork: import.meta.env.VITE_LIT_NETWORK
-      }
-
-      const surveyConfig: Survey =  {
-            id: surveyId,
-            title: survey.title,
-            pool: poolId,
-            introduction: survey.introduction,
-            groups: survey.groups,
-            batches: survey.batches,
-            config,
-            // createdAt: BigInt(Math.floor(Date.now() / 1000))
-          }
-
-      console.log(surveyConfig)
-
-
-      let res: any = await fetch(`${BACKENDURL}/api/surveys`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({   
-          surveyId,  
-          poolId,
-          surveyConfig,
-          safeAddress
-        })
-      });
-
-      const result = await res.json();
-
-      console.log(result);
-
-      if (this.services.ipfs.isCID(result.cid)) {
-
-        let batchIds = [];
-
-        if (isNewPool) {
-  
-          for (let batch of survey.batches) {
-              batch = await createBatch(this.services, batch, poolId, surveyId);
-              console.log(JSON.stringify(batch.cards.map((c: any) => c.url)));
-          }
-
-          batchIds = survey.batches.map((b: Batch) => b.id)
+        for (let batch of survey.batches) {
+            batch = await createBatch(this.services, batch, poolId, surveyId);
+            console.log(JSON.stringify(batch.cards.map((c: any) => c.url)));
         }
 
-        const args = [surveyId, poolId, result.cid.toString(), batchIds];
+        batchIds = survey.batches.map((b: Batch) => b.id)
+      }
 
-        const receipt = await this.services.safe.write(surveyStore.address, surveyStore.abi, 'createSurvey', args, { waitForReceipt: true });
-        console.log(receipt);
+      const args = [surveyId, poolId, result.cid.toString(), batchIds];
+
+      const res = await this.services.safe.write(surveyStore.address, surveyStore.abi, 'createSurvey', args, { waitForReceipt: true });
+      
+      console.log(res);
+
+      if (res.receipt?.status == "success") {
 
         if (isNewPool) {
           for (let batch of survey.batches) {
@@ -134,16 +137,24 @@ export class NewSurveyController {
 
         if (isNewPool) {
           store.addPool({
-              id: poolId,
-              name: surveyConfig.title ?? poolId,
-              safeAddress,
-              batches: survey.batches,
-              createdAt: Math.floor(Date.now() / 1000)
-          });
+                id: poolId,
+                name: surveyConfig.title ?? poolId,
+                safeAddress,
+                batches: survey.batches,
+                createdAt: Math.floor(Date.now() / 1000)
+            });
         }
 
         router.navigate("/surveys")
       }
-    });
+
+      else {
+        alert('create survey tx failed ' +  res.txHash)
+      }
+    }
+  };
+
+  async setSurveyListener() {
+    document.addEventListener('survey-submit', this.handleSurveySubmit);
   }
 }

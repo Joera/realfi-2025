@@ -1,6 +1,5 @@
 import { typograhyStyles } from '../../../../shared/src/assets/styles/typography-styles.js'
-import { colourStyles } from '../../styles/shared-colour-styles.js'
-import { buttonStyles } from '../../styles/shared-button-styles.js'
+import { buttonStyles } from '@s3ntiment/shared/assets'
 import type { Question } from '@s3ntiment/shared'
 import './scale-config.js'
 import './options-editor.js'
@@ -22,7 +21,7 @@ class QuestionCard extends HTMLElement {
     constructor() {
         super()
         this.attachShadow({ mode: 'open' })
-        this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, colourStyles, buttonStyles]
+        this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, buttonStyles]
     }
 
     connectedCallback() {

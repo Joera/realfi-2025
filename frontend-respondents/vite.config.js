@@ -32,6 +32,7 @@ export default defineConfig({
         }
       }
     },
+    minify: 'esbuild',
     assetsInlineLimit: 0,
     commonjsOptions: {
       transformMixedEsModules: true

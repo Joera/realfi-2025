@@ -1,9 +1,9 @@
-import { typograhyStyles } from '../../../../shared/src/assets/styles/typography-styles.js'
-import { colourStyles } from '../../styles/shared-colour-styles.js'
-import { buttonStyles } from '../../styles/shared-button-styles.js'
+
+import { buttonStyles, typograhyStyles, layoutStyles } from '@s3ntiment/shared/assets'
 import type { Question, QuestionGroup } from '@s3ntiment/shared'
 import './question-group.js'
 import { store } from '../../state/store.js'
+import { router } from '../../router.js'
 
 class SurveyFormQuestions extends HTMLElement {
     private _groups: QuestionGroup[] = []
@@ -13,7 +13,7 @@ class SurveyFormQuestions extends HTMLElement {
     constructor() {
         super()
         this.attachShadow({ mode: 'open' })
-        this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, colourStyles, buttonStyles]
+        this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, buttonStyles, layoutStyles]
     }
 
     connectedCallback() {
@@ -102,6 +102,7 @@ class SurveyFormQuestions extends HTMLElement {
             <div id="groups-container"></div>
             <button class="btn-secondary add-group-btn" id="add-group">+ New Group</button>
         </div>
+        
         `
 
         this.renderGroups()
@@ -228,6 +229,7 @@ class SurveyFormQuestions extends HTMLElement {
             }
             this.emitChange()
         }) as EventListener)
+
 
 
     }

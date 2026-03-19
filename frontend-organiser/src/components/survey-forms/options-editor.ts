@@ -1,6 +1,5 @@
 import { typograhyStyles } from '../../../../shared/src/assets/styles/typography-styles.js'
-import { colourStyles } from '../../styles/shared-colour-styles.js'
-import { buttonStyles } from '../../styles/shared-button-styles.js'
+import { buttonStyles } from '@s3ntiment/shared/assets'
 
 class OptionsEditor extends HTMLElement {
     private _options: string[] = []
@@ -18,7 +17,7 @@ class OptionsEditor extends HTMLElement {
     constructor() {
         super()
         this.attachShadow({ mode: 'open' })
-        this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, colourStyles, buttonStyles]
+        this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, buttonStyles]
     }
 
     connectedCallback() {

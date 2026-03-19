@@ -1,7 +1,4 @@
-import { typograhyStyles } from '../../../shared/src/assets/styles/typography-styles.js'
-import { colourStyles } from '../styles/shared-colour-styles.js'
-import { buttonStyles } from '../styles/shared-button-styles.js'
-import { layoutStyles } from '../styles/shared-layout-styles.js'
+import { buttonStyles, layoutStyles, typograhyStyles } from '@s3ntiment/shared/assets'
 import { store } from '../state/store.js'
 import { router } from '../router.js';
 import { Survey, SurveyResultsTally } from '@s3ntiment/shared';
@@ -19,7 +16,7 @@ class SurveyDetailResponses extends HTMLElement {
     constructor() {
         super()
         this.attachShadow({ mode: 'open' })
-        this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, colourStyles, buttonStyles, layoutStyles]
+        this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, layoutStyles, buttonStyles]
 
        
     }

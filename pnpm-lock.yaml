@@ -10083,7 +10083,7 @@ snapshots:
   '@types/fs-extra@11.0.4':
     dependencies:
       '@types/jsonfile': 6.1.4
-      '@types/node': 25.3.1
+      '@types/node': 24.10.14
 
   '@types/geojson@7946.0.16': {}
 
@@ -10101,7 +10101,7 @@ snapshots:
 
   '@types/jsonfile@6.1.4':
     dependencies:
-      '@types/node': 25.3.1
+      '@types/node': 24.10.14
 
   '@types/long@4.0.2': {}
 
@@ -10132,7 +10132,7 @@ snapshots:
 
   '@types/prompts@2.4.9':
     dependencies:
-      '@types/node': 25.3.1
+      '@types/node': 24.10.14
       kleur: 3.0.3
 
   '@types/qrcode@1.5.6':
@@ -13000,7 +13000,7 @@ snapshots:
 
   md5.js@1.3.5:
     dependencies:
-      hash-base: 3.0.5
+      hash-base: 3.1.2
       inherits: 2.0.4
       safe-buffer: 5.2.1
 

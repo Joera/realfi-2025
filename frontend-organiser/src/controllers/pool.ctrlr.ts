@@ -14,6 +14,7 @@ import {  fetchAndDecryptSurveyWithOwner, Pool, Survey } from "@s3ntiment/shared
 import { renderIcon } from "@s3ntiment/shared/assets";
 import '@s3ntiment/shared/components';
 import { authenticate } from "../factories/auth.factory.js";
+import { getPoolInfo } from "../factories/pool.factory.js";
 
 
 export class PoolController {
@@ -102,9 +103,15 @@ export class PoolController {
                 .back-btn:hover {
                     text-decoration: underline;
                 }
+
+                .forget-container {
+                    margin: 3rem 1.5rem;
+                    borer-top: 1px solid var(--color-too-dark);
+                }
+
             </style>
 
-            <div class="container container-large centered">
+            <div class="container container-large">
                 <div class="pool-header">
                     <button class="back-btn" id="back-btn">${renderIcon('caret')}</button>
                     <h2 id="pool-title">Loading...</h2>
@@ -115,6 +122,10 @@ export class PoolController {
                 </div>
 
                 <div id="pool-container" class="container container-large centered"></div>
+
+                <div class="forget-container">
+                    <button class="btn-primary" id="btn-forget">Forget</button>
+                </div>
             </div>
         `;
 
@@ -137,7 +148,6 @@ export class PoolController {
             return `
                 <button class="tab ${resultTab === 'access' ? 'active' : ''}" data-tab="access">Access</button>
                 <button class="tab ${resultTab === 'batches' ? 'active' : ''}" data-tab="batches">Batches</button>
-
             `;
         });
 
@@ -175,20 +185,25 @@ export class PoolController {
 
         store.setUI({resultTab : "access"})
 
-        const pool = store.pools.find((s: any) => s.id === this.poolId);
+        let pool = store.pools.find((s: any) => s.id === this.poolId);
 
         console.log("POOL", pool, this.poolId)
 
-         if (pool && pool !== undefined) {
+        const _pool = await getPoolInfo(this.services, this.poolId)
+        
+        if (pool) {
+            pool.owners = _pool.owners;
+            store.addPool(pool)
+        }
+
+        if (pool && pool !== undefined) {
             this.pool = pool;
-         } 
+        } 
 
          // get batches on chain
          // get owners and readers on chain 
 
         await this.services.safe.connectToExistingSafe(this.pool.safeAddress || "") 
-
-        
     }
 
     async render() {
@@ -238,8 +253,29 @@ export class PoolController {
             const { address, role, surveyId } = (e as CustomEvent).detail;
 
             if (role == 'owner') {
+
+                const isOwnerAbi = [{
+                    name: 'isOwner',
+                    type: 'function',
+                    stateMutability: 'view',
+                    inputs: [{ name: 'owner', type: 'address' }],
+                    outputs: [{ name: '', type: 'bool' }]
+                }] as const
+
+                const isAlreadyOwner = await this.services.viem.read(this.services.safe.getAddress() || "0x", isOwnerAbi, "isOwner", [address]);
+
+                if (isAlreadyOwner) {
+                    console.log('Already an owner, skipping addOwner')
+                    return
+                }
+                
                 await this.services.safe.addOwner(address);
             }
+        });
+
+        document?.querySelector('#btn-forget')?.addEventListener('click', () => {
+            store.forgetPool(this.poolId);
+            router.navigate("/surveys")
         });
 
     }

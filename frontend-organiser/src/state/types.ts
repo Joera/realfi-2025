@@ -1,4 +1,4 @@
-import { Survey } from "@s3ntiment/shared";
+import { Pool, Survey } from "@s3ntiment/shared";
 
 export interface DraftMeta {
   config: Survey;
@@ -12,6 +12,10 @@ export interface DraftsMap {
 
 export interface SurveysMap {
   [id: string]: Survey;
+}
+
+export interface PoolsMap {
+  [id: string]: Pool;
 }
 
 export interface UIState {

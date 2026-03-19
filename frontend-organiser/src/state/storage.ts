@@ -1,4 +1,4 @@
-import { DraftsMap, SurveysMap } from './types.js';
+import { DraftsMap, PoolsMap, SurveysMap } from './types.js';
 
 const DRAFTS_STORAGE_KEY = 'surveyDrafts';
 const CURRENT_DRAFT_KEY = 'currentDraftId';
@@ -25,7 +25,7 @@ export function saveSurveysToStorage(surveys: SurveysMap): void {
   }
 }
 
-export function loadPoolsFromStorage(): SurveysMap {
+export function loadPoolsFromStorage(): PoolsMap {
   try {
     const stored = localStorage.getItem(POOLS_STORAGE_KEY);
     if (stored) return JSON.parse(stored);
@@ -35,7 +35,7 @@ export function loadPoolsFromStorage(): SurveysMap {
   return {};
 }
 
-export function savePoolsToStorage(surveys: SurveysMap): void {
+export function savePoolsToStorage(surveys: PoolsMap): void {
   try {
     localStorage.setItem(POOLS_STORAGE_KEY, JSON.stringify(surveys));
   } catch (e) {

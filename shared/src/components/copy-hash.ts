@@ -1,3 +1,4 @@
+import { breakpoints } from '../assets/index.js'
 import { typograhyStyles } from '../assets/styles/typography-styles.js'
 
 class CopyHash extends HTMLElement {
@@ -39,8 +40,10 @@ class CopyHash extends HTMLElement {
   }
 
   private truncate(str: string): string {
-    if (str.length <= 11) return str
-    return `${str.slice(0, 4)}...${str.slice(-4)}`
+    if (str.length <= 4) return str
+
+    console.log("HUH");
+    return window.innerWidth > breakpoints.md ? `${str.slice(0, 4)}...${str.slice(-4)}` : `..${str.slice(-3)}`
   }
 
   private async copy() {

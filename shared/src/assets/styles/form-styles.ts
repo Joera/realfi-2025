@@ -17,10 +17,15 @@ formStyles.replaceSync(`
           font-family: inherit;
           box-sizing: border-box;
           margin-bottom: 1.5rem;
+          line-height: 1.55;
 
           &:last-child {
             margin-bottom: 0;
           }
+        }
+
+        select {
+          padding: 1rem;
         }
 
         select:focus, input:focus {

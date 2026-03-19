@@ -98,6 +98,10 @@ class Store {
     this.surveysStore.add(survey);
   }
 
+  forgetSurvey(id: string): void {
+    this.surveysStore.remove(id);
+  }
+
   // ============= Pools ============
 
    get pools(): Pool[] {
@@ -119,6 +123,11 @@ class Store {
   getPool(id: string): Pool | undefined {
     return this.poolStore.get(id);
   }
+
+  forgetPool(id: string): void {
+    this.poolStore.remove(id);
+  }
+
 
   subscribeSurveys(listener: Listener<Survey[]>): () => void {
     return this.surveysStore.subscribe(listener);

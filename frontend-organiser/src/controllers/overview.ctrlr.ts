@@ -2,12 +2,13 @@
 import { IServices } from "../services/services.js";
 import { reactive } from "../utils/reactive.js";
 import '../components/pool-list.js';
-import '../components/add-pool.js';
+import '../components/import-pool.js';
 import '../components/survey-list.js';
-import '../components/add-survey.js';
+import '../components/import-survey.js';
 import '../components/access-request.js';
 import { getPoolInfo } from "../factories/pool.factory.js";
 import { store } from "../state/store.js";
+import { router } from "../router.js";
 
 export class OverviewController {
     private reactiveViews: any[] = [];
@@ -25,9 +26,14 @@ export class OverviewController {
     
         app.innerHTML = `
           <pool-list class="container centered"></pool-list>
-          <add-pool class="container container-large"></add-pool>
+          <div class="container container-large flex-row" style="margin-top:1.5rem; margin-bottom: 3rem;">
+            <import-pool></import-pool>
+          </div>
           <survey-list class="container centered"></survey-list>
-          <add-survey class="container container-large"></add-survey>
+          <div class="container container-large flex-row" style="margin-top:1.5rem; margin-bottom: 3rem;">
+            <import-survey ></import-survey>
+            <button id="btn-new" class="btn-primary">New</button>
+          </div>
         `;
     }
     
@@ -47,6 +53,15 @@ export class OverviewController {
     }
 
     setListeners() {
+
+        const button = document.getElementById("btn-new");
+
+        console.log(onabort,button)
+
+        button?.addEventListener('click', () => {
+            console.log("NEW")
+            router.navigate("/new")
+        })
 
         document.addEventListener('access-request', async (e) => {
             const event = e as CustomEvent

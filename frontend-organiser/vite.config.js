@@ -26,11 +26,12 @@ export default defineConfig({
         main: './index.html'
       },
       output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) return 'vendor';
-        }
+        // manualChunks(id) {
+        //   if (id.includes('node_modules')) return 'vendor';
+        // }
       }
     },
+    minify: 'esbuild',
     assetsInlineLimit: 0,
     commonjsOptions: {
       transformMixedEsModules: true

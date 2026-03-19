@@ -1,6 +1,6 @@
 import { typograhyStyles } from '../../../../shared/src/assets/styles/typography-styles.js'
-import { colourStyles } from '../../styles/shared-colour-styles.js'
-import { buttonStyles } from '../../styles/shared-button-styles.js'
+
+import { buttonStyles } from '@s3ntiment/shared/assets'
 import { store } from '../../state/store.js'
 import type { Batch } from '@s3ntiment/shared'
 
@@ -11,13 +11,13 @@ class PoolFormBatches extends HTMLElement {
     private _poolId: string = ''
 
     static get observedAttributes() {
-        return ['pool-id', 'mode']
+        return ['pool-id', 'mode','new-pool']
     }
 
     constructor() {
         super()
         this.attachShadow({ mode: 'open' })
-        this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, colourStyles, buttonStyles]
+        this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, buttonStyles]
     }
 
     connectedCallback() {
@@ -33,6 +33,7 @@ class PoolFormBatches extends HTMLElement {
                 createdAt: Date.now()
             })
         }
+        
         this.render()
         this.attachEventListeners()
     }
@@ -110,7 +111,9 @@ class PoolFormBatches extends HTMLElement {
     private render() {
         if (!this.shadowRoot) return
 
-        const poolSurveys = this._poolSurveys
+        const poolSurveys = this._poolSurveys;
+
+        console.log("FFF", this._poolId);
 
         this.shadowRoot.innerHTML = `
         <style>
@@ -292,17 +295,19 @@ class PoolFormBatches extends HTMLElement {
                         <div class="form-group">
                             <label>Name</label>
                             <input type="text" data-field="name" data-index="${index}" 
-                                   value="${batch.name}" placeholder="e.g., ETH Denver 2025" />
+                                   value="${batch.name}" placeholder="e.g., ETH Denver 2026" />
                         </div>
-                        <div class="form-group">
-                            <label>Survey</label>
-                            <select data-field="survey" data-index="${index}">
-                                <option value="">Select survey…</option>
-                                ${poolSurveys.map((s: any) => `
-                                    <option value="${s.id}" ${batch.survey === s.id ? 'selected' : ''}>${s.title || s.id}</option>
-                                `).join('')}
-                            </select>
-                        </div>
+                        ${this._poolId !== "" ? `
+                            <div class="form-group">
+                                <label>Survey</label>
+                                <select data-field="survey" data-index="${index}">
+                                    <option value="">Select survey…</option>
+                                    ${poolSurveys.map((s: any) => `
+                                        <option value="${s.id}" ${batch.survey === s.id ? 'selected' : ''}>${s.title || s.id}</option>
+                                    `).join('')}
+                                </select>
+                            </div>
+                        ` : ''}
                         <div class="form-group small">
                             <label>Amount</label>
                             <input type="number" data-field="amount" data-index="${index}" 

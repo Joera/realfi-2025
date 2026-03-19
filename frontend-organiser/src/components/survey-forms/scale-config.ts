@@ -1,5 +1,4 @@
-import { typograhyStyles } from '../../../../shared/src/assets/styles/typography-styles.js'
-import { colourStyles } from '../../styles/shared-colour-styles.js'
+import { typograhyStyles } from '@s3ntiment/shared/assets'
 
 class ScaleConfig extends HTMLElement {
     private _min: number = 1
@@ -16,7 +15,7 @@ class ScaleConfig extends HTMLElement {
     constructor() {
         super()
         this.attachShadow({ mode: 'open' })
-        this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, colourStyles]
+        this.shadowRoot!.adoptedStyleSheets = [typograhyStyles]
     }
 
     connectedCallback() {

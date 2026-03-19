@@ -103,9 +103,16 @@ export class SurveyController {
                 .back-btn:hover {
                     text-decoration: underline;
                 }
+
+                .actions-container {
+                    margin: 3rem 1.5rem;
+                    borer-top: 1px solid var(--color-too-dark);
+                }
+
+
             </style>
 
-            <div class="container container-large centered">
+            <div class="container container-large">
                 <div class="survey-header">
                     <button class="back-btn" id="back-btn">${renderIcon('caret')}</button>
                     <h2 id="survey-title">Loading...</h2>
@@ -116,6 +123,11 @@ export class SurveyController {
                 </div>
 
                 <div id="survey-container" class="container container-large centered"></div>
+
+                <div class="actions-container">
+                    <button class="btn-primary" id="btn-forget">Forget</button>
+                    <button class="btn-primary" id="btn-copy">Copy</button>
+                </div>
             </div>
         `;
 
@@ -270,6 +282,29 @@ export class SurveyController {
             const tabName = (tab as HTMLElement).dataset.tab as 'results' | 'access' | 'questions';
             store.setUI({ resultTab: tabName });
         });
+
+        document.querySelector('#btn-forget')?.addEventListener('click', () => {
+            store.forgetSurvey(this.surveyId);
+            router.navigate("/surveys")
+        });
+
+        document.querySelector('#btn-copy')?.addEventListener('click', () => {
+
+            const original = store.surveys.find( s => s.id === this.surveyId);
+            if (!original) return;
+
+            store.updateSurveyDraft({
+                title: `${original.title} (copy)`,
+                pool: original.pool,
+                introduction: original.introduction,
+                groups: structuredClone(original.groups),
+                batches: [],           
+            });
+
+            store.setUI({ newStep: 'intro' });
+            router.navigate("/new")
+        });
+
 
         // document.addEventListener('batch-create', async (e) => {
         //     const event = e as CustomEvent

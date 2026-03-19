@@ -1,7 +1,5 @@
 import { typograhyStyles } from '../../../shared/src/assets/styles/typography-styles.js'
-import { colourStyles } from '../styles/shared-colour-styles.js'
-import { buttonStyles } from '../styles/shared-button-styles.js'
-import { layoutStyles } from '../styles/shared-layout-styles.js'
+import { buttonStyles } from '@s3ntiment/shared/assets'
 import type { QuestionGroup } from '@s3ntiment/shared'
 import { store } from '../state/index.js'
 import './survey-forms/survey-form-questions.js'
@@ -16,7 +14,7 @@ class RegisteredQuestionsEditor extends HTMLElement {
     constructor() {
         super()
         this.attachShadow({ mode: 'open' })
-        this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, colourStyles, buttonStyles, layoutStyles]
+        this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, buttonStyles]
     }
 
     connectedCallback() {

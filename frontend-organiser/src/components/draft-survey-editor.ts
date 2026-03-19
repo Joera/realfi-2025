@@ -1,7 +1,6 @@
-import { typograhyStyles } from '../../../shared/src/assets/styles/typography-styles.js'
-import { colourStyles } from '../styles/shared-colour-styles.js'
-import { buttonStyles } from '../styles/shared-button-styles.js'
-import { layoutStyles} from '../styles/shared-layout-styles.js'
+import { typograhyStyles } from '@s3ntiment/shared/assets'
+import { buttonStyles } from '@s3ntiment/shared/assets'
+import { layoutStyles } from '@s3ntiment/shared/assets'
 import { store } from '../state/index.js'
 import './survey-forms/survey-form-intro.js'
 import './survey-forms/survey-form-questions.js'
@@ -18,7 +17,7 @@ class DraftSurveyEditor extends HTMLElement {
     constructor() {
         super()
         this.attachShadow({ mode: 'open' })
-        this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, colourStyles, buttonStyles, layoutStyles]
+        this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, buttonStyles, layoutStyles]
     }
 
     connectedCallback() {
@@ -275,6 +274,9 @@ class DraftSurveyEditor extends HTMLElement {
         if (!this.validateBatches()) {
             return
         }
+
+        const btn = this.shadowRoot?.querySelector('#submit-btn') as HTMLButtonElement;
+        if (btn) btn.disabled = true;
 
         const draft = store.surveyDraft
 
