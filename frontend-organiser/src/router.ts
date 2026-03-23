@@ -10,6 +10,7 @@ import { NewSurveyController } from './controllers/new.ctrlr.ts';
 import { LogoutController } from './controllers/logout.ctrlr.ts';
 import { AccountController } from './controllers/account.ctrlr.ts';
 import { PoolController } from './controllers/pool.ctrlr.ts';
+import { BatchController } from './controllers/batch.ctrlr.ts';
 
 const router = new Navigo('/');
 
@@ -55,6 +56,19 @@ export const initRouter = (services: IServices) => {
       }
       
       currentController = new PoolController(services, poolId);
+      currentController.render();
+    })
+    .on('/batch/:poolId/:batchId', function(match) {
+      if (currentController?.destroy) currentController.destroy();      
+      const batchId = match?.params?.batchId || match?.data?.batchId || '';
+      const poolId = match?.params?.poolId || match?.data?.poolId || '';
+
+      if (!batchId) {
+        router.navigate(`/pool/${poolId}`);
+        return;
+      }
+      
+      currentController = new BatchController(services, poolId, batchId);
       currentController.render();
     })
     .on('/logout', () => {

@@ -8,10 +8,12 @@ export const getPoolInfo = async (services:IServices, poolId: string) : Promise<
     console.log(safeAddress)
 
     // batches ??
-    const batches: Batch[] = [];
+
     const _batches = await services.viem.read(surveyStore.address as `0x${string}`, surveyStore.abi,"getPoolBatches", [poolId]);
 
     console.log(_batches)
+
+    const batches = _batches.map( (b:any ) => b.id)
 
     const abi = [{
         "inputs": [],
@@ -34,7 +36,7 @@ export const getPoolInfo = async (services:IServices, poolId: string) : Promise<
             id: poolId, 
             name: "",
             safeAddress, 
-            batches: [],
+            batches,
             owners,
             readers: [],
             createdAt: Number(createdAt)

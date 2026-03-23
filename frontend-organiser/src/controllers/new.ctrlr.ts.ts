@@ -6,7 +6,6 @@ import '../components/draft-survey-editor.js';
 import { createBatch, createInvitations } from '../factories/survey.factory.js';
 import { IServices } from '../services/services.js';
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
-import { authenticate } from '../factories/auth.factory.js';
 import { store } from '../state/store.js';
 import { router } from '../router.js';
 
@@ -130,7 +129,9 @@ export class NewSurveyController {
         if (isNewPool) {
           for (let batch of survey.batches) {
             batch = await createInvitations(batch);
+            store.addBatch(batch)
           }
+
         }
 
         store.addSurvey(surveyConfig);
@@ -140,7 +141,7 @@ export class NewSurveyController {
                 id: poolId,
                 name: surveyConfig.title ?? poolId,
                 safeAddress,
-                batches: survey.batches,
+                batches: survey.batches.map( (b:any) => b.id),
                 createdAt: Math.floor(Date.now() / 1000)
             });
         }

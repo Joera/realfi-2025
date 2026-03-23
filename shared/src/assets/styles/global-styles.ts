@@ -4,6 +4,7 @@ import { typograhyStylestring } from './typography-styles';
 import { navStylesString } from './nav-styles';
 import { headerStylesString } from './header-styles';
 import { footerStylesString } from './footer-styles';
+import { tabStylesString } from './tab-styles';
 
 export function injectGlobalStyles() {
   if (document.getElementById("app-global")) return;
@@ -39,7 +40,7 @@ export function injectGlobalStyles() {
         flex-direction: column;
         justify-content: flex-start;
         align-items: center;
-        min-height: calc(100vh - 6rem - 11rem);
+        min-height: calc(100vh - 7rem - 12rem);
     }
 
     #splash {
@@ -149,6 +150,8 @@ export function injectGlobalStyles() {
     ${footerStylesString}
 
     ${headerStylesString}
+
+    ${tabStylesString}
 
     `;
   document.head.appendChild(style);

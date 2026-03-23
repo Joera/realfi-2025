@@ -6,7 +6,7 @@ import { AboutController } from './controllers/about.ctrlr.js';
 import { SurveyController } from './controllers/survey.ctrlr.js';
 import { LogoutController } from './components/logout.ctrlr.js';
 import { CardData } from '@s3ntiment/shared';
-import { Card, parseCardURL } from './card.factory.js';
+import { Card, parseCardURL } from '@s3ntiment/shared'
 import { base } from 'viem/chains';
 import { InvalidCardController } from './controllers/invalid-card-ctrlr.js';
 import { UsedCardController } from './controllers/used-card-ctrlr.js';
@@ -39,14 +39,14 @@ export const initRouter = (services: IServices) => {
             (async () => {
 
               console.log("ROUTING STARTS")
-              const cardData: CardData | null = await parseCardURL();
+              const cardData: CardData | null = await parseCardURL(window.location.href);
               if (cardData == null) {
                 router.navigate('/invalid-card');
                 done();
               } else {
 
                 const card = new Card(cardData);         
-                const cardIsUsed = await card.isUsed(services);
+                const cardIsUsed = await card.isUsed(services, surveyStore);
 
                 if (cardIsUsed) {
                   router.navigate(`/used-card/${card.surveyId}`);

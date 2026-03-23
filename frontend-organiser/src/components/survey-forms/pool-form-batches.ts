@@ -1,8 +1,8 @@
-import { typograhyStyles } from '../../../../shared/src/assets/styles/typography-styles.js'
+import { typograhyStyles, tableStyles, buttonStyles, breakpoints} from '@s3ntiment/shared/assets'
 
-import { buttonStyles } from '@s3ntiment/shared/assets'
 import { store } from '../../state/store.js'
 import type { Batch } from '@s3ntiment/shared'
+import { router } from '../../router.js'
 
 class PoolFormBatches extends HTMLElement {
     private _existingBatches: Batch[] = []  // from contract, read-only
@@ -17,7 +17,7 @@ class PoolFormBatches extends HTMLElement {
     constructor() {
         super()
         this.attachShadow({ mode: 'open' })
-        this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, buttonStyles]
+        this.shadowRoot!.adoptedStyleSheets = [typograhyStyles, buttonStyles, tableStyles]
     }
 
     connectedCallback() {
@@ -50,7 +50,18 @@ class PoolFormBatches extends HTMLElement {
             this._mode = 'existing'  // pool-id implies existing pool
             const pool = store.pools.find((p: any) => p.id === newValue)
             if (pool) {
-                this._existingBatches = pool.batches || []
+
+                const directBatches = pool.batches.filter(
+                    (b: Batch | string): b is Batch => typeof b === 'object'
+                );
+                const resolvedBatches = Object.values(store.batches)
+                    // .filter((b: Batch | string): b is string => typeof b === 'string')
+                    // .map(s => store.batches.find(b => b.id === s))
+                    // .filter((b): b is Batch => b !== undefined);
+
+                this._existingBatches = [...directBatches, ...resolvedBatches];
+
+
                 this._newBatches = []
                 this.render()
                 this.attachEventListeners()
@@ -112,8 +123,6 @@ class PoolFormBatches extends HTMLElement {
         if (!this.shadowRoot) return
 
         const poolSurveys = this._poolSurveys;
-
-        console.log("FFF", this._poolId);
 
         this.shadowRoot.innerHTML = `
         <style>
@@ -237,51 +246,43 @@ class PoolFormBatches extends HTMLElement {
                 margin-top: 1.5rem;
             }
 
-            .create-btn {
-                background: var(--green);
-                color: white;
-                border: none;
-                padding: 0.5rem 1rem;
-                border-radius: 6px;
-                cursor: pointer;
-                font-weight: 500;
+
+            .table {
+                grid-template-columns: 2fr 2fr 1fr;
             }
 
-            .create-btn:hover {
-                opacity: 0.9;
+            @container (min-width: ${breakpoints.md}px) {           
+                .table {
+                    grid-template-columns: 2fr 2fr 1fr 1fr auto;
+                }
             }
 
-            .create-btn:disabled {
-                background: #9ca3af;
-                cursor: not-allowed;
-            }
         </style>
 
         <div class="form-container">
             ${this._existingBatches.length > 0 ? `
+
+                <div class="table">
+                    <div class="table-header">Name</div>
+                    <div class="table-header">Survey</div>
+                    <div class="table-header">Amount</div>
+                    <div class="table-header hide-sm">Medium</div>
+                    <div class="table-header hide-sm"></div>
+
                 ${this._existingBatches.map((batch) => `
-                    <div class="batch-card existing">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Name</label>
-                                <div class="readonly-value">${batch.name}</div>
-                            </div>
-                            <div class="form-group">
-                                <label>Survey</label>
-                                <div class="readonly-value">${poolSurveys.find((s: any) => s.id === batch.survey)?.title || batch.survey || '—'}</div>
-                            </div>
-                            <div class="form-group small">
-                                <label>Amount</label>
-                                <div class="readonly-value">${batch.amount}</div>
-                            </div>
-                            <div class="form-group small">
-                                <label>Medium</label>
-                                <div class="readonly-value">${batch.medium === 'zip-file' ? 'QR Code' : 'CDN Link'}</div>
-                            </div>
+                    <div class="table-row" data-batch-id="${batch.id}">
+                        <div class="table-cell">${batch.name}"</div>
+                        <div class="table-cell">${poolSurveys.find((s: any) => s.id === batch.survey)?.title || batch.survey || '—'}</div>
+                        <div class="table-cell hide">${batch.amount}</div>
+                        <div class="table-cell hide-sm">${batch.medium === 'zip-file' ? 'QR Code' : 'CDN Link'}</div>
+                        <div class="table-cell caret hide-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 58 93">
+                                <path d="M3.132 2.567l51.68 42.285-54.812 44.852V2.567z" fill-rule="evenodd"/>
+                            </svg>
                         </div>
                     </div>
                 `).join('')}
-            ` : ''}
+            </div>` : ''}
 
             ${this._mode === 'existing' && this._newBatches.length === 0 && this._existingBatches.length === 0 ? `
                 <div class="empty-state">
@@ -339,6 +340,14 @@ class PoolFormBatches extends HTMLElement {
     }
 
     private attachEventListeners() {
+
+        this.shadowRoot?.querySelectorAll('.table .table-row').forEach(row => {
+            row.addEventListener('click', (e) => {
+                const batchId = (e.currentTarget as HTMLElement).dataset.batchId;
+                router.navigate(`/batch/${this._poolId}/${batchId}`);
+            });
+        });
+        
         // Add batch
         this.shadowRoot?.querySelector('#add-batch')?.addEventListener('click', () => {
             this._newBatches.push({ 

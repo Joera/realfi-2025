@@ -5,7 +5,7 @@ import { encodePacked, keccak256, toBytes, toHex } from 'viem'
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { privateKeyToAccount } from 'viem/accounts';
-import { Batch, CardSecret } from '@s3ntiment/shared';
+import { Batch, CardData } from '@s3ntiment/shared';
 
 const BASEURL = import.meta.env.VITE_PROD ? import.meta.env.VITE_FRONTEND_PROD : import.meta.env.VITE_FRONTEND_DEV;  
 
@@ -56,7 +56,7 @@ export const createBatchWallet = async (services: any) => {
 export const generateCardSecrets = async (
   batchAccount: any,
   batch: Batch,
-) : Promise<CardSecret[]> => {
+) : Promise<CardData[]> => {
   const cards = await Promise.all(
     Array.from({ length: batch.amount }, async () => {
       const nullifier = generateRandomNullifier();

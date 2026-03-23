@@ -96,24 +96,21 @@ class SurveyQuestions extends HTMLElement {
           width: calc(100% - 3rem);
         }
 
-        h1 {
+        h2 {
           margin: 0 0 0.5rem 0;
-          font-size: 1.75rem;
-          font-weight: 700;
-          color: #000;
         }
 
         .group-title {
-          font-size: 1.1rem;
-          font-weight: 600;
-          color: #444;
-          margin: 0 0 1.5rem 0;
-          padding-bottom: 0.5rem;
-          border-bottom: 2px solid var(--bg-lightest);
+          font-size: 1.25rem;
+          font-weight: 700;
+          border-left: 6px solid black;
+          padding-left: .75rem;
+          color: var(--color-too-dark);
+          margin: 0 0 0 0;
         }
 
         .introduction {
-          margin: 0 0 2rem 0;
+          margin: 0 0 1.5rem 0;
           color: #000;
           font-size: 0.95rem;
           line-height: 1.5;
@@ -137,7 +134,7 @@ class SurveyQuestions extends HTMLElement {
           text-align: right;
           font-size: 0.875rem;
           color: #000;
-          margin-bottom: 1rem;
+          margin-bottom: .75rem;
         }
 
         .question-container {
@@ -171,7 +168,7 @@ class SurveyQuestions extends HTMLElement {
           display: flex;
           flex-direction: row;
           align-items: center;
-          padding: 1rem;
+          padding: .75rem 0;
           background: var(--bg-lightest);
           cursor: pointer;
           transition: all 0.2s;
@@ -285,7 +282,7 @@ class SurveyQuestions extends HTMLElement {
 
       <div class="survey-container">
         ${this.currentStep < this.totalSteps ? `
-          <h1>${this.config.title}</h1>
+          <h2>${this.config.title}</h2>
 
           ${this.currentStep === 0 && this.config.introduction ? `
             <p class="introduction">${this.config.introduction}</p>

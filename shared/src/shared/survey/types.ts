@@ -1,4 +1,4 @@
-import { CardData, CardSecret, SurveyResultsTally } from "../index.js"
+import { CardData, SurveyResultsTally } from "../index.js"
 
 export interface SurveyQuestion {
   id: string
@@ -53,7 +53,7 @@ export interface Batch {
     amount: number
     medium: 'zip-file' | 'cdn'
     createdAt: number
-    cards?: CardSecret[]
+    cards?: CardData[]
     cardCount?: number
 }
 
@@ -95,7 +95,7 @@ export interface Pool {
     id: string, 
     name: string,
     safeAddress: string, 
-    batches: Batch[], 
+    batches: string[] | Batch[], 
     owners?: string[],
     readers?: string[],
     createdAt: number 

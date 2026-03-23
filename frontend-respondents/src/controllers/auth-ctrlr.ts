@@ -7,7 +7,7 @@ import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveySto
 import { router } from '../router.js';
 import { authenticate } from '../auth.factory.js';
 import { CardData, fetchSurvey } from '@s3ntiment/shared';
-import { Card, parseCardURL } from '../card.factory.js';
+import { Card, parseCardURL } from '@s3ntiment/shared';
 import { removeSplash } from '../onpageload.js';
 
 
@@ -52,7 +52,7 @@ export class AuthController {
 
     async render() {
 
-        const cardData: CardData | null = await parseCardURL();
+        const cardData: CardData | null = await parseCardURL(window.location.href);
         
         if(cardData) {
 
@@ -61,9 +61,9 @@ export class AuthController {
 
             this.renderTemplate();
 
-            const [ipfsCid, poolId, createdAt] = await fetchSurvey(this.services, surveyStore, cardData.surveyId);
+            const [ipfsCid, poolId, createdAt] = await fetchSurvey(this.services, surveyStore, cardData.surveyId!);
 
-            store.setSurveyData(cardData.surveyId, {
+            store.setSurveyData(cardData.surveyId!, {
                 id: cardData.surveyId,
                 pool: poolId
             })
@@ -79,7 +79,7 @@ export class AuthController {
             if(!isParticipant || import.meta.env.VITE_PROD !== 'true') {
 
                 try {
-                    const tx = await card.register(this.services, poolId);
+                    const tx = await card.register(this.services, surveyStore, poolId);
 
                     console.log(tx)
                 

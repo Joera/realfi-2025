@@ -1,10 +1,7 @@
 import { encodePacked, keccak256, recoverMessageAddress, toHex } from "viem";
-import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' };
-import { IServices } from './services.js';
+
 import { CardData } from "@s3ntiment/shared";
 
-// console.log('surveyStore import:', surveyStore);
-console.log('contract address:', surveyStore.address);
 
 const encodeNullifierBatchCombo = (decodedNullifier: string, decodedBatchId: string) => {
 
@@ -23,10 +20,10 @@ const encodeNullifierBatchCombo = (decodedNullifier: string, decodedBatchId: str
 }
 
 
-export const parseCardURL = async (): Promise<CardData | null> => {
+export const parseCardURL = async (href: string): Promise<CardData | null> => {
 
     try {
-        const params = new URL(window.location.href).searchParams;
+        const params = new URL(href).searchParams;
 
         const nullifier  = params.get('n');
         const batchId    = params.get('b');
@@ -77,7 +74,8 @@ export class Card {
         this.data = data;
     }
 
-    async isUsed(services: IServices): Promise<boolean> {
+    async isUsed(services: any, surveyStore: any): Promise<boolean> {
+
         return await services.viem.read(
             surveyStore.address as `0x${string}`,
             surveyStore.abi,
@@ -86,9 +84,8 @@ export class Card {
         );
     }
 
-    async register(services: IServices, poolId: string) { // should be called register
+    async register(services: any, surveyStore: any, poolId: string) { // should be called register
 
-        console.log(surveyStore)    
         return await services.account.write(
             surveyStore.address as `0x${string}`,
             surveyStore.abi,

@@ -4,14 +4,16 @@ import { SurveysStore } from './surveys.store.js';
 import { PoolStore } from './pool.store.js';
 import { Listener } from './observable.js';
 import { UIState, DraftMeta, DraftsMap } from './types.js';
-import { Pool, Survey } from '@s3ntiment/shared';
+import { Batch, Pool, Survey } from '@s3ntiment/shared';
 import { CapabilityDelegationStore } from './capabilities.store.js';
+import { BatchStore } from './batch.store.js';
 
 class Store {
   private uiStore: UIStore;
   private draftsStore: DraftsStore;
   private surveysStore: SurveysStore;
   private poolStore: PoolStore;
+  private batchStore: BatchStore;
   private capabilityDelegationStore: CapabilityDelegationStore;
 
   constructor() {
@@ -19,6 +21,7 @@ class Store {
     this.draftsStore = new DraftsStore();
     this.surveysStore = new SurveysStore();
     this.poolStore = new PoolStore();
+    this.batchStore = new BatchStore();
     this.capabilityDelegationStore = new CapabilityDelegationStore();
   }
 
@@ -102,6 +105,11 @@ class Store {
     this.surveysStore.remove(id);
   }
 
+  subscribeSurveys(listener: Listener<Survey[]>): () => void {
+    return this.surveysStore.subscribe(listener);
+  }
+
+
   // ============= Pools ============
 
    get pools(): Pool[] {
@@ -129,8 +137,34 @@ class Store {
   }
 
 
-  subscribeSurveys(listener: Listener<Survey[]>): () => void {
-    return this.surveysStore.subscribe(listener);
+// ============= Batches ============
+
+   get batches(): Batch[] {
+    return this.batchStore.all;
+  }
+
+  subscribeBatches(listener: Listener<Batch[]>): () => void {
+    return this.batchStore.subscribe(listener);
+  }
+
+  setBatches(pools: Batch[]): void {
+    this.batchStore.set(pools);
+  }
+
+  addBatch(pool: Batch): void {
+    this.batchStore.add(pool);
+  }
+
+  getBatch(id: string): Batch | undefined {
+    return this.batchStore.get(id);
+  }
+
+  forgetBatch(id: string): void {
+    this.batchStore.remove(id);
+  }
+
+  removeCard(batchId: string, nullifier: string): void {
+    this.batchStore.removeCard(batchId, nullifier)
   }
 
 

@@ -1,10 +1,11 @@
-import { DraftsMap, PoolsMap, SurveysMap } from './types.js';
+import { DraftsMap, PoolsMap, BatchesMap, SurveysMap } from './types.js';
 
 const DRAFTS_STORAGE_KEY = 'surveyDrafts';
 const CURRENT_DRAFT_KEY = 'currentDraftId';
 const CAP_DELEGATION_KEY = 'litCapabilityDelegation';
 const SURVEYS_STORAGE_KEY = 'surveys';
 const POOLS_STORAGE_KEY = 'pools';
+const BATCHES_STORAGE_KEY = 'batches';
 
 
 export function loadSurveysFromStorage(): SurveysMap {
@@ -42,6 +43,25 @@ export function savePoolsToStorage(surveys: PoolsMap): void {
     console.warn('Failed to save pools to localStorage:', e);
   }
 }
+
+export function loadBatchesFromStorage(): BatchesMap {
+  try {
+    const stored = localStorage.getItem(BATCHES_STORAGE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch (e) {
+    console.warn('Failed to load bacthes from localStorage:', e);
+  }
+  return {};
+}
+
+export function saveBatchesToStorage(surveys: BatchesMap): void {
+  try {
+    localStorage.setItem(BATCHES_STORAGE_KEY, JSON.stringify(surveys));
+  } catch (e) {
+    console.warn('Failed to save batches to localStorage:', e);
+  }
+}
+
 
 export function loadDraftsFromStorage(): DraftsMap {
   try {
