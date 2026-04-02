@@ -1,5 +1,5 @@
 import { typograhyStyles } from '../../../../shared/src/assets/styles/typography-styles.js'
-import { buttonStyles } from '@s3ntiment/shared/assets'
+import { breakpoints, buttonStyles } from '@s3ntiment/shared/assets'
 import type { Question } from '@s3ntiment/shared'
 import './scale-config.js'
 import './options-editor.js'
@@ -60,6 +60,19 @@ class QuestionCard extends HTMLElement {
     set correctAnswer(value: number) {  this._correctAnswer = value }
     set points(value: number) { this._points = value }
 
+    /** Escape HTML to prevent XSS when inserting text into textarea */
+    private escapeHtml(text: string): string {
+        const div = document.createElement('div')
+        div.textContent = text
+        return div.innerHTML
+    }
+
+    /** Auto-resize textarea to fit content */
+    private autoResizeTextarea(textarea: HTMLTextAreaElement) {
+        textarea.style.height = 'auto'
+        textarea.style.height = `${textarea.scrollHeight}px`
+    }
+
     private render() {
         if (!this.shadowRoot || !this._question) return
 
@@ -71,6 +84,13 @@ class QuestionCard extends HTMLElement {
                 --green: #3473ab;
                 display: block;
                 margin-bottom: 1.5rem;
+
+                margin-left: -2.75rem;
+                @media (min-width: ${breakpoints.lg}px) {
+                    margin-left: 0;
+                }
+
+
             }
 
             :host(.dragging) {
@@ -79,14 +99,23 @@ class QuestionCard extends HTMLElement {
 
             .question-card {
                 display: flex;
-                gap: 0.5rem;
+                gap: 0.25rem;
+                padding: 0 0 1rem 1rem;
             }
 
             .question-left {
+
                 display: flex;
+                flex-direction: column;
+                justify-content: flex-start;
                 align-items: flex-start;
-                gap: 0.25rem;
+                gap: 0rem;
                 padding-top: 0.25rem;
+
+
+                @media (min-width: ${breakpoints.lg}px) {
+                     flex-direction: row;
+                }
             }
 
             .drag-handle {
@@ -103,6 +132,11 @@ class QuestionCard extends HTMLElement {
                 justify-content: center;
                 user-select: none;
                 flex-shrink: 0;
+                margin-top: -4px;
+
+                @media (min-width: ${breakpoints.lg}px) {
+                    margin-top: 4px;
+                }
             }
 
             .drag-handle:hover {
@@ -118,22 +152,29 @@ class QuestionCard extends HTMLElement {
                 font-weight: 600;
                 color: var(--green);
                 font-size: 1.25rem;
-                min-width: 1.5rem;
-                text-align: right;
+                min-width: 1rem;
+                text-align: center;
+                    width: 100%;
             }
 
             .question-content {
                 flex: 1;
+                position: relative;
             }
 
             .question-header {
                 display: flex;
                 justify-content: space-between;
-                align-items: center;
+                align-items: flex-start;
                 margin-bottom: 0.5rem;
-                border-left: 3px solid var(--green);
-                padding: 0 0.75rem;
+                // border-left: 3px solid var(--green);
+                // padding: 0 1rem 0rem .25rem;
                 gap: 1rem;
+                width: calc(100% - 6rem);
+
+                @media (min-width: ${breakpoints.lg}px) {
+                     width: calc(100% - 1rem);
+                }
             }
 
             .question-title-input {
@@ -145,12 +186,21 @@ class QuestionCard extends HTMLElement {
                 padding: 0.5rem;
                 border-radius: 6px;
                 margin: 0;
+                font-family: inherit;
+                line-height: 1.4;
+                resize: none;
+                overflow: hidden;
+                field-sizing: content;
+                box-sizing: border-box;
+                background: var(--color-too-dark);
+                color: white;
             }
 
             .question-title-input:hover,
             .question-title-input:focus {
                 border-color: #d1d5db;
                 background: white;
+                color: var(--color-too-dark);
             }
 
             .question-title-input::placeholder {
@@ -170,10 +220,17 @@ class QuestionCard extends HTMLElement {
                 display: flex;
                 justify-content: center;
                 align-items: center;
+                flex-shrink: 0;
+                margin-top: 0.25rem;
             }
 
             .question-body {
-                padding: 0 0.75rem;
+                padding: 0rem 1rem;
+                width: calc(100% - 7rem);
+
+                @media (min-width: ${breakpoints.lg}px) {
+                    width: calc(100% - 2rem);
+                }
             }
 
             .checkbox-group {
@@ -200,13 +257,12 @@ class QuestionCard extends HTMLElement {
             </div>
             <div class="question-content">
                 <div class="question-header">
-                    <input 
-                        type="text" 
+                    <textarea 
                         class="question-title-input" 
                         id="question-text"
-                        value="${q.question}" 
-                        placeholder="Enter question" 
-                    />
+                        rows="1"
+                        placeholder="Enter question"
+                    >${this.escapeHtml(q.question)}</textarea>
                     <button class="btn-icon" id="remove-question" title="Remove question">✕</button>
                 </div>
 
@@ -253,19 +309,37 @@ class QuestionCard extends HTMLElement {
     }
 
     private attachEventListeners() {
-        // Question text
-        this.shadowRoot?.querySelector('#question-text')?.addEventListener('input', (e) => {
-            this.dispatchEvent(new CustomEvent('question-update', {
-                detail: {
-                    groupIndex: this._groupIndex,
-                    questionIndex: this._questionIndex,
-                    field: 'question',
-                    value: (e.target as HTMLInputElement).value
-                },
-                bubbles: true,
-                composed: true
-            }))
-        })
+        // Question text (now textarea)
+        const questionTextarea = this.shadowRoot?.querySelector('#question-text') as HTMLTextAreaElement
+        if (questionTextarea) {
+            // Initial auto-resize
+            this.autoResizeTextarea(questionTextarea)
+
+            questionTextarea.addEventListener('input', (e) => {
+                const target = e.target as HTMLTextAreaElement
+                
+                // Auto-resize on input
+                this.autoResizeTextarea(target)
+
+                this.dispatchEvent(new CustomEvent('question-update', {
+                    detail: {
+                        groupIndex: this._groupIndex,
+                        questionIndex: this._questionIndex,
+                        field: 'question',
+                        value: target.value
+                    },
+                    bubbles: true,
+                    composed: true
+                }))
+            })
+
+            // Prevent Enter from creating newlines (question title should be single-line)
+            questionTextarea.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                }
+            })
+        }
 
         // Required checkbox
         this.shadowRoot?.querySelector('#required-checkbox')?.addEventListener('change', (e) => {

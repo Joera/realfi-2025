@@ -109,29 +109,41 @@ export class NewSurveyController {
       let batchIds = [];
 
       if (isNewPool) {
-
-        for (let batch of survey.batches) {
-            batch = await createBatch(this.services, batch, poolId, surveyId);
-            console.log(JSON.stringify(batch.cards.map((c: any) => c.url)));
+        survey.batches = await Promise.all(
+          survey.batches.map((batch: Batch) => createBatch(this.services, batch, poolId, surveyId))
+        );
+        
+        for (const batch of survey.batches) {
+          console.log("B", batch)
+          console.log(JSON.stringify(batch.cards.map((c: any) => c.url)));
         }
 
-        batchIds = survey.batches.map((b: Batch) => b.id)
+        batchIds = survey.batches.map((b: Batch) => b.id);
       }
+
+      console.log("BATCHIDS", batchIds)
+
+
 
       const args = [surveyId, poolId, result.cid.toString(), batchIds];
 
       const res = await this.services.safe.write(surveyStore.address, surveyStore.abi, 'createSurvey', args, { waitForReceipt: true });
       
       console.log(res);
+      console.log("Survey", survey)
 
       if (res.receipt?.status == "success") {
 
         if (isNewPool) {
-          for (let batch of survey.batches) {
-            batch = await createInvitations(batch);
-            store.addBatch(batch)
-          }
+          survey.batches = await Promise.all(
+            survey.batches.map((batch: Batch) => createInvitations(batch))
+          );
 
+          surveyConfig.batches = survey.batches;
+          
+          for (const batch of survey.batches) {
+            store.addBatch(batch);
+          }
         }
 
         store.addSurvey(surveyConfig);

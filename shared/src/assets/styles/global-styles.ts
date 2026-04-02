@@ -90,6 +90,7 @@ export function injectGlobalStyles() {
             margin: 0;
             font-family: "Monaspace Neon";
             color: var(--color-too-dark);
+            text-align: center;
         }
     }
 

@@ -27,6 +27,8 @@ export const createInvitations = async (batch: Batch) => {
 
         await createZipFile(batch.cards, batch.survey)
     }
+
+    return batch;
 }
 
 

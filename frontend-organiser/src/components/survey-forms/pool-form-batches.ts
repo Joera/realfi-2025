@@ -132,8 +132,12 @@ class PoolFormBatches extends HTMLElement {
             }
 
             .form-container {
-                padding: 1.5rem;
+                padding: .75rem 0;
                 width: 100%;
+
+                @media (min-width: ${breakpoints.lg}px) {
+                    padding: 1.5rem;
+                }
             }
 
             .section-title {
@@ -178,6 +182,11 @@ class PoolFormBatches extends HTMLElement {
                 display: flex;
                 gap: 1rem;
                 margin-bottom: 0.5rem;
+                flex-direction: column;
+
+                @media (min-width: ${breakpoints.lg}px) {
+                    flex-direction: row;
+                }
             }
 
             .form-group {
@@ -185,7 +194,10 @@ class PoolFormBatches extends HTMLElement {
             }
 
             .form-group.small {
-                flex: 0 0 120px;
+                
+                @media (min-width: ${breakpoints.lg}px) {
+                    flex: 0 0 120px;
+                }
             }
 
             label {

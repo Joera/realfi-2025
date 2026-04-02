@@ -41,8 +41,6 @@ class CopyHash extends HTMLElement {
 
   private truncate(str: string): string {
     if (str.length <= 4) return str
-
-    console.log("HUH");
     return window.innerWidth > breakpoints.md ? `${str.slice(0, 4)}...${str.slice(-4)}` : `..${str.slice(-3)}`
   }
 
@@ -99,8 +97,9 @@ class CopyHash extends HTMLElement {
         }
 
         svg {
-          width: 14px;
-          height: 14px;
+          width: 18px;
+          height: 18px;
+          stroke: var(--color-too-dark)
         }
 
 

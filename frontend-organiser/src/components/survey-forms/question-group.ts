@@ -82,7 +82,7 @@ class QuestionGroupElement extends HTMLElement {
                 border: none;
                 color: var(--green);
                 cursor: pointer;
-                font-size: 0.75rem;
+                font-size: 2rem;
                 padding: 0.25rem;
                 width: 1.5rem;
                 height: 1.5rem;
@@ -90,7 +90,9 @@ class QuestionGroupElement extends HTMLElement {
                 align-items: center;
                 justify-content: center;
                 flex-shrink: 0;
-                margin-top: 0.25rem;
+                margin-top: 0.75rem;
+                background: transparent;
+
             }
 
             .collapse-btn:hover {
@@ -109,7 +111,7 @@ class QuestionGroupElement extends HTMLElement {
                 margin-bottom: 1rem;
                 gap: 0.5rem;
                 border-left: 3px solid var(--color-too-dark);
-                padding: 0 .75rem;
+                padding: 0 1.05rem 0 .25rem;
             }
 
             .group-title-input {
@@ -160,7 +162,7 @@ class QuestionGroupElement extends HTMLElement {
             }
 
             #copy-group {
-                font-size: 2rem;
+                font-size: 2.5rem;
             }
 
             .questions-container {

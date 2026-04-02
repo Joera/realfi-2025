@@ -1,5 +1,5 @@
 import { typograhyStyles } from '../../../../shared/src/assets/styles/typography-styles.js'
-import { buttonStyles } from '@s3ntiment/shared/assets'
+import { breakpoints, buttonStyles } from '@s3ntiment/shared/assets'
 
 class OptionsEditor extends HTMLElement {
     private _options: string[] = []
@@ -88,6 +88,11 @@ class OptionsEditor extends HTMLElement {
             :host {
                 --green: #3473ab;
                 display: block;
+                margin-left: -2.25rem;
+
+                @media (min-width: ${breakpoints.lg}) {
+                    margin-left: 0rem;
+                }
             }
 
             .options-container {
@@ -98,17 +103,13 @@ class OptionsEditor extends HTMLElement {
                 display: flex;
                 gap: 0.5rem;
                 margin-bottom: 0.5rem;
-                align-items: center;
-            }
-
-            .option-item input[type="text"] {
-                flex: 1;
-                margin-bottom: 0;
+                align-items: flex-start; /* Changed from center for textarea alignment */
             }
 
             .correct-radio {
                 width: auto;
                 margin: 0;
+                margin-top: 0.75rem; /* Align with textarea text */
                 cursor: pointer;
                 accent-color: var(--green);
                 flex-shrink: 0;
@@ -125,17 +126,14 @@ class OptionsEditor extends HTMLElement {
                 display: flex;
                 justify-content: center;
                 align-items: center;
-            }
-
-            .btn-add-option {
-                margin-top: 1.5rem;
+                margin-top: 0.25rem; /* Align with textarea text */
+                flex-shrink: 0;
             }
 
             .points-row {
                 display: flex;
                 align-items: center;
                 gap: 0.75rem;
-                margin-top: 1rem;
             }
 
             .points-row label {
@@ -143,36 +141,70 @@ class OptionsEditor extends HTMLElement {
                 white-space: nowrap;
             }
 
-            .points-row input {
-                width: 5rem;
-                margin: 0;
-            }
-
             label {
                 display: block;
                 margin-bottom: 0.5rem;
                 font-size: 1rem;
                 color: var(--green);
+                margin-left: 2rem;
+
+                @media (min-width: ${breakpoints.lg}) {
+                    margin-left: 0; 
+                }
             }
 
+            /* Shared input/textarea styles */
             input[type="text"],
-            input[type="number"] {
+            input[type="number"],
+            textarea.option-input {
                 width: 100%;
                 padding: 0.75rem;
                 border: 1px solid white;
                 border-radius: 6px;
-                margin-bottom: 0.75rem;
                 font-size: 1rem;
+                font-family: inherit;
+                background: transparent;
+                color: inherit;
+                background: white;
             }
 
-            input::placeholder {
+            /* Textarea-specific: auto-grow behavior */
+            textarea.option-input {
+                flex: 1;
+                line-height: 1.4;
+                resize: none;
+                overflow: hidden;
+                field-sizing: content; /* Modern browsers: auto-grow */
+                margin-bottom: 0;
+                box-sizing: border-box;
+            }
+
+            input::placeholder,
+            textarea::placeholder {
                 color: white;
                 font-style: italic;
             }
 
-            input:focus {
+            input:focus,
+            textarea:focus {
                 outline: none;
                 border-color: var(--green);
+            }
+
+            .points-row input {
+                width: 3rem;
+                margin: 0;
+            }
+
+            .actions {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 1rem;
+                margin-top: 1.5rem;
+                margin-left: 1.5rem;
+                margin-right: 3.5rem;
+                justify-content: space-between;
             }
         </style>
 
@@ -190,29 +222,58 @@ class OptionsEditor extends HTMLElement {
                             title="Mark as correct answer"
                         />
                     ` : ''}
-                    <input type="text" data-option-index="${optIndex}" value="${opt}" placeholder="Enter option" />
+                    <textarea 
+                        class="option-input"
+                        rows="1"
+                        data-option-index="${optIndex}" 
+                        placeholder="Enter option"
+                    >${this.escapeHtml(opt)}</textarea>
                     <button class="btn-icon" data-remove-index="${optIndex}" title="Remove option">✕</button>
                 </div>
             `).join('')}
 
-            ${this._type === 'scored-single' ? `
+            <div class="actions">
+                <button class="btn-add-option btn-secondary" id="add-option">Add Option</button>
+                ${this._type === 'scored-single' ? `
                 <div class="points-row">
                     <label>Points:</label>
                     <input type="number" id="points-input" value="${this._points}" min="1" />
                 </div>
             ` : ''}
-
-            <button class="btn-add-option btn-secondary" id="add-option">Add Option</button>
+            </div>
         </div>
         `
     }
 
+    /** Escape HTML to prevent XSS when inserting option text into textarea */
+    private escapeHtml(text: string): string {
+        const div = document.createElement('div')
+        div.textContent = text
+        return div.innerHTML
+    }
+
+    /** Auto-resize textarea to fit content */
+    private autoResizeTextarea(textarea: HTMLTextAreaElement) {
+        textarea.style.height = 'auto'
+        textarea.style.height = `${textarea.scrollHeight}px`
+    }
+
     private attachEventListeners() {
-        // Option text changes
-        this.shadowRoot?.querySelectorAll('[data-option-index]').forEach(input => {
-            input.addEventListener('input', (e) => {
-                const optIndex = parseInt((e.target as HTMLInputElement).dataset.optionIndex!)
-                const value = (e.target as HTMLInputElement).value
+        // Option text changes (now textareas)
+        this.shadowRoot?.querySelectorAll('textarea[data-option-index]').forEach(ta => {
+            const textarea = ta as HTMLTextAreaElement
+            
+            // Initial auto-resize
+            this.autoResizeTextarea(textarea)
+
+            textarea.addEventListener('input', (e) => {
+                const target = e.target as HTMLTextAreaElement
+                
+                // Auto-resize on input (fallback for browsers without field-sizing)
+                this.autoResizeTextarea(target)
+
+                const optIndex = parseInt(target.dataset.optionIndex!)
+                const value = target.value
 
                 this.dispatchEvent(new CustomEvent('option-update', {
                     detail: {
@@ -224,6 +285,22 @@ class OptionsEditor extends HTMLElement {
                     bubbles: true,
                     composed: true
                 }))
+            })
+
+            // Prevent Enter from creating newlines (optional: treat as "move to next")
+            textarea.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    // Optionally: focus next option or add new option
+                    const nextItem = textarea.closest('.option-item')?.nextElementSibling
+                    const nextTextarea = nextItem?.querySelector('textarea') as HTMLTextAreaElement | null
+                    if (nextTextarea) {
+                        nextTextarea.focus()
+                    } else {
+                        // No next option — could trigger add
+                        this.shadowRoot?.querySelector<HTMLButtonElement>('#add-option')?.click()
+                    }
+                }
             })
         })
 

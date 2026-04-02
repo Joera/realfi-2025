@@ -58,6 +58,7 @@ class ScaleConfig extends HTMLElement {
             :host {
                 --green: #3473ab;
                 display: block;
+                width: calc(100% - 6rem);
             }
 
             .scale-config {

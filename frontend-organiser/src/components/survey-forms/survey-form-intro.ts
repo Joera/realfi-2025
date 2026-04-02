@@ -1,5 +1,5 @@
 import { typograhyStyles } from '../../../../shared/src/assets/styles/typography-styles.js'
-import { buttonStyles } from '@s3ntiment/shared/assets'
+import { breakpoints, buttonStyles } from '@s3ntiment/shared/assets'
 import { store } from '../../state/index.js'
 import { Pool } from '@s3ntiment/shared'
 
@@ -114,11 +114,19 @@ class SurveyFormIntro extends HTMLElement {
             :host {
                 --green: rgb(42.9834254144, 112.6165745856, 98.0022099448);
                 display: block;
+                container
             }
 
             .form-container {
-                padding: 1.5rem;
+
+                padding: 0;
                 width: 100%;
+
+                @media (min-width: ${breakpoints.lg}) { 
+
+                    padding: 1.5rem;
+                    width: calc(100% - 3rem);
+                }
             }
 
             label {

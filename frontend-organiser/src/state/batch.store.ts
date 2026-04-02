@@ -29,6 +29,10 @@ export class BatchStore {
   }
 
   add(batch: Batch): void {
+    if (!batch?.id) {
+      console.error('Attempted to add invalid batch:', batch);
+      return;
+    }
     this.observable.update(current => {
       const index = current.findIndex(b => b.id === batch.id);
       if (index === -1) return [...current, batch];

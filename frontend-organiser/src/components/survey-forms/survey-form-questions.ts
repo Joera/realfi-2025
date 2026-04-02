@@ -1,5 +1,5 @@
 
-import { buttonStyles, typograhyStyles, layoutStyles } from '@s3ntiment/shared/assets'
+import { buttonStyles, typograhyStyles, layoutStyles, breakpoints } from '@s3ntiment/shared/assets'
 import type { Question, QuestionGroup } from '@s3ntiment/shared'
 import './question-group.js'
 import { store } from '../../state/store.js'
@@ -78,10 +78,16 @@ class SurveyFormQuestions extends HTMLElement {
             }
 
             .form-container {
-                padding: 1.5rem 3rem 1.5rem 1.5rem;
+                padding: 1.5rem 0rem 1.5rem 0rem;
                 width: 100%;
                 max-height: calc(100vh - 24rem);
                 overflow-y: auto;
+
+                @media (min-width: ${breakpoints.lg}) {
+
+                    padding: 1.5rem 3rem 1.5rem 1.5rem;
+                    width: calc(100% - 4.5rem);
+                }
             }
 
             .empty-state {

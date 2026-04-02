@@ -66,6 +66,8 @@ export class SurveyController {
     const authContext = await this.services.lit.createAuthContext(this.services.account.getSigner(), capabilityDelegation, window.location.host);
     const survey = await fetchAndDecryptSurveyWithRespondent(this.services, surveyStore, this.surveyId, authContext)
     this.config = survey;
+    
+    survey.isScored = isScored(survey.groups)
     console.log("SURVEY", survey)
     store.setSurveyData(this.surveyId, survey)
     store.persistSurveys();
