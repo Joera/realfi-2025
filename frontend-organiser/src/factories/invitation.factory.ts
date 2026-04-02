@@ -7,7 +7,7 @@ import { saveAs } from 'file-saver';
 import { privateKeyToAccount } from 'viem/accounts';
 import { Batch, CardData } from '@s3ntiment/shared';
 
-const BASEURL = import.meta.env.VITE_PROD ? import.meta.env.VITE_FRONTEND_PROD : import.meta.env.VITE_FRONTEND_DEV;  
+const BASEURL = import.meta.env.VITE_PROD == "true" ? import.meta.env.VITE_FRONTEND_PROD : import.meta.env.VITE_FRONTEND_DEV;  
 
 function generateRandomNullifier() {
   const randomBytes = crypto.getRandomValues(new Uint8Array(16));

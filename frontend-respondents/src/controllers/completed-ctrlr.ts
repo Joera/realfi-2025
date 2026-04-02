@@ -3,7 +3,7 @@ import '@s3ntiment/shared/components';
 import { IServices } from '../services.js';
 import { store } from '../state/store.js';
 
-const BACKENDURL = import.meta.env.VITE_PROD ? import.meta.env.VITE_BACKEND_PROD : import.meta.env.VITE_BACKEND_DEV;
+const BACKENDURL = import.meta.env.VITE_PROD == "true" ? import.meta.env.VITE_BACKEND_PROD : import.meta.env.VITE_BACKEND_DEV;
 
 export class CompletedController {
 

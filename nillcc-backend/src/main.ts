@@ -30,11 +30,14 @@ const LIT_NETWORK = process.env.VITE_LIT_NETWORK || "";
 
 const viem = new ViemService(base, ALCHEMY_KEY);
 const nildb = new NilDBBuilderService();
-const lit = new LitService(LIT_NETWORK);
+const lit = new LitService({
+  environment: process.env.VITE_LIT_NETWORK == "prod" ? "prod" : "dev",
+  accountKey: process.env.VITE_LIT_NETWORK == "prod" ? process.env.VITE_LIT_API_ACCOUNT_KEY: process.env.VITE_LIT_API_DEV_ACCOUNT_KEY,
+});
 const ipfs = new IPFSMethods(KUBO_ENDPOINT, PINATA_JWT, PINATA_GATEWAY);
 const survey = new SurveyController(nildb, lit, ipfs, viem);
 await nildb.initBuilder();
-const litClient = await lit.init();
+
 
 // ====== MIDDLEWARE ======
 
@@ -213,10 +216,10 @@ router.post('/surveys/:id/results', async (req: Request, res: Response) => {
 // --- Lit Protocol ---
 
 // Request payment delegation for Lit decryption
-// Body: { userAddr, signature }
-router.post('/lit/payment-delegation', async (req: Request, res: Response) => {
+// Body: { userAddr, signature, poolId }
+router.post('/lit/usage-key', async (req: Request, res: Response) => {
     try {
-        const { userAddr, signature } = req.body;
+        const { userAddr, signature, poolId } = req.body;
 
         const hasValidSignature = await viem.publicClient.verifyMessage({
             address: userAddr,
@@ -229,21 +232,8 @@ router.post('/lit/payment-delegation', async (req: Request, res: Response) => {
             return;
         }
 
-        const sponsorAccount: Account = privateKeyToAccount(
-            `0x${process.env.VITE_LIT_PAYMASTER_KEY}` as `0x${string}`
-        );
-
-        const paymentDelegationAuthSig = await createPaymentDelegationAuthSig({
-            signer: sponsorAccount,
-            signerAddress: sponsorAccount.address,
-            delegateeAddresses: [userAddr],
-            maxPrice: '1000000000000000000',
-            scopes: ['encryption_sign', 'sign_session_key', 'lit_action'],
-            litClient,
-            expiration: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
-        });
-
-        res.json({ payload: paymentDelegationAuthSig });
+        const key = lit.getPoolKey(poolId);
+        res.json({ apiKey: key });
 
     } catch (error: any) {
         console.error(error);

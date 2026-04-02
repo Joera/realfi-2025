@@ -62,13 +62,11 @@ export class ServiceContainer {
     this.safe = new PermissionlessSafeService(base, import.meta.env.VITE_PIMLICO_KEY, import.meta.env.VITE_ALCHEMY_KEY, import.meta.env.VITE_ENTRYPOINT_ADDRESS_V07);
     this.account = new PermissionlessSimpleService(base, import.meta.env.VITE_PIMLICO_KEY, import.meta.env.VITE_ALCHEMY_KEY, import.meta.env.VITE_ENTRYPOINT_ADDRESS_V07);
  
-    this.lit = new LitService(import.meta.env.VITE_LIT_NETWORK);
+    this.lit = new LitService({ "environment": "dev"});
     this.ipfs = new IPFSMethods(import.meta.env.VITE_KUBO_ENDPOINT, import.meta.env.VITE_PINATA_JWT, import.meta.env.VITE_PINATA_GATEWAY)
     this.oprf = new OPRFService(import.meta.env.VITE_HUMAN_NETWORK_SIGNER_URL);
 
     await this.waap.login(base)
-  
-    await this.lit.init();
     await this.oprf.init();
 
     this.initialized = true;

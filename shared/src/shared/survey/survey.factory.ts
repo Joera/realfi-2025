@@ -1,5 +1,5 @@
-import { accsForPoolOwner, EncryptedConfig } from '../index.js';
-import { accsForPoolMember } from '../lit/accs.js';
+import { EncryptedConfig, fetchLitApiKey, getDecryptForOwnerAction, getDecryptForRespondentAction } from '../index.js';
+
 
 const extractCid = (result: unknown): string => {
   if (typeof result === 'string') {
@@ -21,19 +21,22 @@ export const fetchSurvey = async (services: any, deployment: any, surveyId: stri
     );  
 }
 
-export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: any, surveyId: string, authContext: any, safeAddress?: string) => {
+export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: any, surveyId: string, backendUrl: string) => {
 
     const [ipfsCid, poolId, createdAt] = await fetchSurvey(services, deployment, surveyId);
 
     const cid = extractCid(ipfsCid)
     const config: EncryptedConfig = JSON.parse(await services.ipfs.fetchFromPinata(cid));
     console.log("CONFIG", config)
-    const accs = accsForPoolOwner(poolId, deployment.address, config.config.safe || "0x");
 
     let d: any;
 
+    let msg = await services.account.signMessage(`I authorize S3ntiment to access encrypted survey data for pool ${poolId}`)
+    const litApiKey = await fetchLitApiKey(backendUrl, services.account.getSignerAddress(), msg, poolId || "")
+    const decryptForOwnerAction = getDecryptForOwnerAction(poolId, deployment.address, services.account.getSignerAddress());
+
     try { 
-        const data = await services.lit.decrypt(config.encryptedForOwner, authContext, accs);
+        const data = await services.lit.decrypt(config.encryptedForOwner, litApiKey, decryptForOwnerAction);
         d = data.convertedData;
     } catch (e: any){
         console.log('Lit decrypt error:', e);
@@ -49,7 +52,7 @@ export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: 
     }
 }
 
-export const fetchAndDecryptSurveyWithRespondent = async (services: any, deployment: any, surveyId: string, authContext: any) => {
+export const fetchAndDecryptSurveyWithRespondent = async (services: any, deployment: any, surveyId: string, litApiKey: string) => {
 
    // should get this from store 
     const [ ipfsCid, poolId, createdAt] = await services.viem.read(
@@ -61,12 +64,14 @@ export const fetchAndDecryptSurveyWithRespondent = async (services: any, deploym
 
     const cid = extractCid(ipfsCid);
     const config: EncryptedConfig = JSON.parse(await services.ipfs.fetchFromPinata(cid));
-    const accs = accsForPoolMember(deployment.address, poolId);
+
+    // get the action 
+    const decryptForRespondentAction = getDecryptForRespondentAction(poolId, deployment.address)
 
     let d: any;
 
     try { 
-        const data = await services.lit.decrypt(config.encryptedForRespondent, authContext, accs);
+        const data = await services.lit.decrypt(config.encryptedForRespondent, litApiKey, JSON.stringify(decryptForRespondentAction));
         d = data.convertedData;
     } catch (e: any){
         console.log('Lit decrypt error:', e);

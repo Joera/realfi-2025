@@ -4,19 +4,17 @@ import { SurveysStore, SurveyEntry, SurveyMap } from './surveys.store.js';
 import { UIState, UserState } from './store.types.js';
 import { Listener } from './observable.js';
 import { Survey } from '@s3ntiment/shared';
-import { CapabilityDelegationStore } from './capabilities.store.js';
 
 class Store {
   private uiStore: UIStore;
   private userStore: UserStore;
   private surveysStore: SurveysStore;
-  private capabilityDelegationStore: CapabilityDelegationStore;
 
   constructor() {
     this.uiStore = new UIStore();
     this.userStore = new UserStore();
     this.surveysStore = new SurveysStore();
-    this.capabilityDelegationStore = new CapabilityDelegationStore();
+
   }
 
     get ui$() { return this.uiStore; }
@@ -52,14 +50,6 @@ class Store {
     clearSurvey(surveyId?: string): void       { this.surveysStore.clear(surveyId); }
     subscribeSurveys(listener: Listener<SurveyMap>) { return this.surveysStore.subscribe(listener); }
 
-
-   // ============ Capabilities ============
-    get capabilityDelegation(): any | null { return this.capabilityDelegationStore.delegation;  }
-    async ensureCapabilityDelegation(backendUrl: string, account: any): Promise<any> {
-        return this.capabilityDelegationStore.ensure(backendUrl, account);
-    }
-    subscribeCapabilityDelegation(listener: Listener<any | null>): () => void { return this.capabilityDelegationStore.subscribe(listener);  }
-    clearCapabilityDelegation(): void { this.capabilityDelegationStore.clear(); }
 
   // ============ Global ============
     clear(): void {

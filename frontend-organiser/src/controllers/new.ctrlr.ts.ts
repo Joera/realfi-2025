@@ -9,7 +9,7 @@ import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveySto
 import { store } from '../state/store.js';
 import { router } from '../router.js';
 
-const BACKENDURL = import.meta.env.VITE_PROD ? import.meta.env.VITE_BACKEND_PROD : import.meta.env.VITE_BACKEND_DEV;
+const BACKENDURL = import.meta.env.VITE_PROD == "true" ? import.meta.env.VITE_BACKEND_PROD : import.meta.env.VITE_BACKEND_DEV;
 
 export class NewSurveyController {
   private reactiveViews: any[] = [];

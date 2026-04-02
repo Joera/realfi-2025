@@ -5,7 +5,6 @@ import { PoolStore } from './pool.store.js';
 import { Listener } from './observable.js';
 import { UIState, DraftMeta, DraftsMap } from './types.js';
 import { Batch, Pool, Survey } from '@s3ntiment/shared';
-import { CapabilityDelegationStore } from './capabilities.store.js';
 import { BatchStore } from './batch.store.js';
 
 class Store {
@@ -14,7 +13,6 @@ class Store {
   private surveysStore: SurveysStore;
   private poolStore: PoolStore;
   private batchStore: BatchStore;
-  private capabilityDelegationStore: CapabilityDelegationStore;
 
   constructor() {
     this.uiStore = new UIStore();
@@ -22,7 +20,6 @@ class Store {
     this.surveysStore = new SurveysStore();
     this.poolStore = new PoolStore();
     this.batchStore = new BatchStore();
-    this.capabilityDelegationStore = new CapabilityDelegationStore();
   }
 
   get observables() {
@@ -167,22 +164,6 @@ class Store {
     this.batchStore.removeCard(batchId, nullifier)
   }
 
-
-  get capabilityDelegation(): any | null {
-    return this.capabilityDelegationStore.delegation;
-  }
-
-  async ensureCapabilityDelegation(backendUrl: string, account: any): Promise<any> {
-    return this.capabilityDelegationStore.ensure(backendUrl, account);
-  }
-
-  subscribeCapabilityDelegation(listener: Listener<any | null>): () => void {
-    return this.capabilityDelegationStore.subscribe(listener);
-  }
-
-  clearCapabilityDelegation(): void {
-    this.capabilityDelegationStore.clear();
-  }
 
   // ============ Global ============
   clear(): void {

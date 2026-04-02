@@ -1,5 +1,5 @@
 import { recoverMessageAddress, Signature } from "viem";
-import { accsForPoolMember, accsForPoolOwner, createSurveyCollectionSchema, EncryptedConfig, isScored, Survey } from "@s3ntiment/shared";
+import { createSurveyCollectionSchema,  encryptAction, EncryptedConfig, getDecryptForOwnerAction, getDecryptForRespondentAction, isScored, Survey } from "@s3ntiment/shared";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 import { calculateScore, stripScoring } from "@s3ntiment/shared";
 
@@ -26,11 +26,25 @@ export class SurveyController {
         const rawSchema = createSurveyCollectionSchema(safeConfig, "standard")
         const collectionId = await this.nildb.createSurveyCollection(surveyId, rawSchema, this.nildb.builderDid.didString);
 
-        const acc1 = accsForPoolOwner(poolId, contract, safeAddress);
+        const pkpId = await this.lit.createPkp();
+        const { group_id: groupId } = await this.lit.createGroup(`s3ntiment-${poolId}`);
+        await this.lit.addPkpToGroup(groupId, pkpId);
+
+        const decryptForOwnerAction = getDecryptForOwnerAction(poolId, contract, safeAddress);
+        const decryptForRespondentAction = getDecryptForRespondentAction(poolId, contract);
+
+        const encryptCid = await this.lit.getActionCid(encryptAction);
+        const decryptOwnerCid = await this.lit.getActionCid(decryptForOwnerAction);
+        const decryptMemberCid = await this.lit.getActionCid(decryptForRespondentAction);
+
+        await this.lit.addActionToGroup(groupId, encryptCid);
+        await this.lit.addActionToGroup(groupId, decryptOwnerCid);
+        await this.lit.addActionToGroup(groupId, decryptMemberCid);
+        await this.lit.initPoolKey(poolId, groupId);
 
         const [ encryptedForOwner, encryptedForRespondent] = await Promise.all([
-            this.lit.encrypt(safeConfigWithScoring, acc1),
-            this.lit.encrypt(safeConfig, accsForPoolMember(contract, poolId))
+            this.lit.encrypt(safeConfigWithScoring, JSON.stringify(decryptForOwnerAction)),
+            this.lit.encrypt(safeConfig, JSON.stringify(decryptForRespondentAction))
         ])
 
         const encryptedScoring = this.nildb.encryptToBuilder({scoring: scoring, groups: surveyConfig.groups});
@@ -59,9 +73,12 @@ export class SurveyController {
         const { safeConfigWithScoring, safeConfig, scoring } = stripScoring(surveyConfig);
         const _isScored = isScored(surveyConfig.groups);
 
+        const decryptForOwnerAction = getDecryptForOwnerAction(poolId, contract, safeAddress);
+        const decryptForRespondentAction = getDecryptForRespondentAction(poolId, contract);
+
         const [ encryptedForOwner, encryptedForRespondent] = await Promise.all([
-            this.lit.encrypt(safeConfigWithScoring, accsForPoolOwner(poolId, contract, safeAddress)),
-            this.lit.encrypt(safeConfig, accsForPoolMember(contract, poolId))
+            this.lit.encrypt(safeConfigWithScoring, decryptForOwnerAction),
+            this.lit.encrypt(safeConfig, decryptForRespondentAction)
         ])
 
         const encryptedScoring = this.nildb.encryptToBuilder({scoring: scoring, groups: surveyConfig.groups});

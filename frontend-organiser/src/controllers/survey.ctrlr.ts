@@ -10,12 +10,12 @@ import '../components/registered-questions-editor.js';
 import { router } from "../router.js";
 import { createBatch, createInvitations } from "../factories/survey.factory.js";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
-import {  fetchAndDecryptSurveyWithOwner, Survey } from "@s3ntiment/shared";
+import {  fetchAndDecryptSurveyWithOwner, fetchLitApiKey, Survey } from "@s3ntiment/shared";
 import { renderIcon } from "@s3ntiment/shared/assets";
 import '@s3ntiment/shared/components';
 import { authenticate } from "../factories/auth.factory.js";
 
-const BACKENDURL = import.meta.env.VITE_PROD ? import.meta.env.VITE_BACKEND_PROD : import.meta.env.VITE_BACKEND_DEV;
+const BACKENDURL = import.meta.env.VITE_PROD  == "true" ? import.meta.env.VITE_BACKEND_PROD : import.meta.env.VITE_BACKEND_DEV;
 
 export class SurveyController {
     private reactiveViews: any[] = [];
@@ -189,16 +189,7 @@ export class SurveyController {
     
     async process() {
 
-        
-
-        
-        const capabilityDelegation = await store.ensureCapabilityDelegation(
-            BACKENDURL,
-            this.services.safe
-        );
-
-        const authContext = await this.services.lit.createAuthContext(this.services.safe.getSigner(), capabilityDelegation, window.location.host);
-        this.survey = await fetchAndDecryptSurveyWithOwner(this.services, surveyStore, this.surveyId, authContext,"")
+        this.survey = await fetchAndDecryptSurveyWithOwner(this.services, surveyStore, this.surveyId, BACKENDURL)
         console.log("Survey: ",this.survey)
 
         await this.services.safe.connectToExistingSafe(this.survey.config?.safe || "") 

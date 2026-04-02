@@ -10,7 +10,8 @@ import { store } from '../state';
 import { createUserDataObject } from '@s3ntiment/shared'
 import { router } from '../router.js';
 
-const BACKENDURL = import.meta.env.VITE_PROD ? import.meta.env.VITE_BACKEND_PROD : import.meta.env.VITE_BACKEND_DEV;
+const BACKENDURL = import.meta.env.VITE_PROD == "true" ? import.meta.env.VITE_BACKEND_PROD : import.meta.env.VITE_BACKEND_DEV;
+
 
 export class SurveyController {
   private reactiveViews: any[] = [];
@@ -56,24 +57,27 @@ export class SurveyController {
   async process() {}
 
   async render() {
-    this.renderLoading();
 
-    const capabilityDelegation = await store.ensureCapabilityDelegation(
-      BACKENDURL,
-      this.services.account
-    );
+    const surveyFromStore = store.getSurveyData(this.surveyId);
 
-    const authContext = await this.services.lit.createAuthContext(this.services.account.getSigner(), capabilityDelegation, window.location.host);
-    const survey = await fetchAndDecryptSurveyWithRespondent(this.services, surveyStore, this.surveyId, authContext)
-    this.config = survey;
-    
-    survey.isScored = isScored(survey.groups)
-    console.log("SURVEY", survey)
-    store.setSurveyData(this.surveyId, survey)
-    store.persistSurveys();
+    if(surveyFromStore && surveyFromStore.pool) { 
 
-    this.renderTemplate();
-    this.setSurveyListener();
+      this.renderLoading();
+
+      const survey = await fetchAndDecryptSurveyWithRespondent(this.services, surveyStore, this.surveyId, BACKENDURL)
+      this.config = survey;
+      
+      survey.isScored = isScored(survey.groups)
+      console.log("SURVEY", survey)
+      store.setSurveyData(this.surveyId, survey)
+      store.persistSurveys();
+
+      this.renderTemplate();
+      this.setSurveyListener();
+    } else {
+      alert("survey and pool not found")
+    }
+
   }
 
   destroy() {
