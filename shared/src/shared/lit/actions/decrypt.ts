@@ -1,4 +1,4 @@
-export const getDecryptForRespondentAction = (poolId: string, contract: string) => `
+export const getSimpleDecrypt = (poolId: string, contract: string) => `
     async function main({ pkpId, ciphertext, userAddress}) {
 
     const provider = new ethers.providers.JsonRpcProvider('https://base-mainnet.g.alchemy.com/v2/NFOkRqUo2swIC9g5tRJ7c');
@@ -10,7 +10,7 @@ export const getDecryptForRespondentAction = (poolId: string, contract: string) 
     );
 
     const isMember = await poolContract.isPoolMember('${poolId}', userAddress);
-    console.log('ISMEMBER', isMember);
+    console.log('ISMEMBER', isMember)
     
     if (!isMember) {
         return { error: 'Not a pool member' };

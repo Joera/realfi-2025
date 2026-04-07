@@ -56,7 +56,6 @@ export class AuthController {
         
         if(cardData) {
 
-        
             const card = new Card(cardData)
 
             this.renderTemplate();

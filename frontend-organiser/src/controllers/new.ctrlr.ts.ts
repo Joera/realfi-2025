@@ -70,7 +70,7 @@ export class NewSurveyController {
 
     const config = {
       safe: safeAddress,
-      chainId: import.meta.env.VITE_L2 == 'base' ? 8543 : 1,
+      chainId: import.meta.env.VITE_L2 == 'base' ? 8453 : 1,
       litNetwork: import.meta.env.VITE_LIT_NETWORK
     }
 
@@ -86,6 +86,8 @@ export class NewSurveyController {
     }
 
     console.log(surveyConfig)
+
+    console.log("BACKENDURL", BACKENDURL)
 
     let res: any = await fetch(`${BACKENDURL}/api/surveys`, {
       method: 'POST',
@@ -122,8 +124,6 @@ export class NewSurveyController {
       }
 
       console.log("BATCHIDS", batchIds)
-
-
 
       const args = [surveyId, poolId, result.cid.toString(), batchIds];
 

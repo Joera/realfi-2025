@@ -4,6 +4,7 @@ export async function fetchLitApiKey(
   signature: string,
   poolId: string
 ): Promise<any> {
+
   const response: any = await fetch(`${backendUrl}/api/lit/usage-key`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -17,6 +18,8 @@ export async function fetchLitApiKey(
     throw new Error(msg ?? 'fetchLitApiKey: unauthorized');
   }
 
-  const { apiKey } = await response.json();
-  return apiKey;
+  const json = await response.json();
+
+  console.log("RES", json)
+  return json.apiKey;
 }

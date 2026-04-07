@@ -72,6 +72,8 @@ export interface EncryptedConfig {
     surveyId: string
     poolId: string,
     nilDid: string, // surveyOwnerDid.didString,
+    pkpId: string,
+    groupId: string,
     encryptedForOwner: EncryptedData
     encryptedForRespondent: EncryptedData
     encryptedScoring: string

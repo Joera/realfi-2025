@@ -42,7 +42,7 @@ export class LitService {
       headers['X-Api-Key'] = apiKey;
     }
 
-    console.log(`[Lit API] ${method} ${this.baseUrl}${endpoint}`, body ? JSON.stringify(body).slice(0, 200) : '');
+    // console.log(`[Lit API] ${method} ${this.baseUrl}${endpoint}`, body ? JSON.stringify(body).slice(0, 200) : '');
 
 
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
@@ -51,10 +51,13 @@ export class LitService {
       body: body ? JSON.stringify(body) : undefined,
     });
 
+ 
+
     const text = await response.text();
     
     // Try to parse as JSON, handle HTML error pages
     let data: any;
+
     try {
       data = JSON.parse(text);
     } catch {
@@ -62,7 +65,9 @@ export class LitService {
     }
 
     if (!response.ok) {
-      throw new Error(data.error ?? data.message ?? `HTTP ${response.status}`);
+      console.log('[Lit API] Error response:', response.status, text);
+      console.log('[Lit API] Error data:', JSON.stringify(data, null, 2));
+      throw new Error(data.error ?? data.message ?? data.detail ?? `HTTP ${response.status}: ${text.slice(0, 500)}`);
     }
 
     return data;
@@ -81,8 +86,6 @@ export class LitService {
   }
 
   async getActionCid(code: string): Promise<string> {
-
-   
 
     const url = `${this.baseUrl}/get_lit_action_ipfs_id`;
 
@@ -104,9 +107,9 @@ export class LitService {
 
     if (!response.ok) {
       throw new Error(data.error ?? data.message ?? `HTTP ${response.status}`);
-    }
+    } 
 
-    return data.ipfs_id;
+    return data;
   }
 
   // ============================================================
@@ -135,6 +138,17 @@ export class LitService {
     };
   }
 
+  async registerAction(actionCid: string, name: string, description?: string) {
+    return this.call<{ success: boolean }>('/add_action', {
+      method: 'POST',
+      body: {
+        action_ipfs_cid: actionCid,
+        name,
+        description: description ?? '',
+      },
+    });
+  }
+
   async addActionToGroup(groupId: number, actionCid: string) {
     return this.call<{ success: boolean }>('/add_action_to_group', {
       method: 'POST',
@@ -153,6 +167,8 @@ export class LitService {
     return this.call<{ usage_api_key: string }>('/add_usage_api_key', {
       method: 'POST',
       body: {
+        name: 'pool-usage-key',           // add this
+        description: 'Auto-generated',     // add this
         execute_in_groups: params.executeInGroups,
         can_create_pkps: false,
         can_create_groups: false,
@@ -169,31 +185,6 @@ export class LitService {
       method: 'POST',
       body: { usage_api_key: usageKey },
     });
-  }
-
-  // ============================================================
-  // Pool keys (in-memory)
-  // ============================================================
-
-  async initPoolKey(poolId: string, groupId: number): Promise<string> {
-    const { usage_api_key } = await this.createUsageKey({
-      executeInGroups: [groupId],
-    });
-    this.poolKeys.set(poolId, usage_api_key);
-    return usage_api_key;
-  }
-
-  getPoolKey(poolId: string): string | undefined {
-    return this.poolKeys.get(poolId);
-  }
-
-  async rotatePoolKey(poolId: string, groupId: number): Promise<string> {
-    const oldKey = this.poolKeys.get(poolId);
-    const newKey = await this.initPoolKey(poolId, groupId);
-    if (oldKey) {
-      await this.removeUsageKey(oldKey);
-    }
-    return newKey;
   }
 
   // ============================================================
@@ -222,48 +213,51 @@ export class LitService {
   // Encrypt / Decrypt
   // ============================================================
 
-  async encrypt(poolId: string, pkpId: string, message: string): Promise<string> {
-    const key = this.poolKeys.get(poolId);
-    if (!key) throw new Error(`No key for pool ${poolId}`);
+  async encrypt(key: string, pkpId: string, message: string): Promise<string> {
 
-    const result = await this.call<{ response: { ciphertext: string } }>(
-      '/lit_action',
-      {
-        method: 'POST',
-        body: {
-          code: encryptAction,
-          js_params: { pkpId, message },
-        },
-        key,
+    if (!message || typeof message !== 'string') {
+      throw new Error(`encrypt: message must be a non-empty string, got: ${typeof message}`);
+    }
+
+    try {
+      const result: any = await this.call<{ response: { ciphertext: string } }>(
+        '/lit_action',
+        {
+          method: 'POST',
+          body: { code: encryptAction, js_params: { pkpId, message } },
+          key,
+        }
+      );
+
+      if (result.has_error) {
+        throw new Error(`Encrypt failed: ${result.logs?.join('\n')}`);
       }
-    );
 
-    return result.response.ciphertext;
+      return result.response.ciphertext;
+
+    } catch(error) {
+      console.log(error)
+
+      return error
+    }
   }
 
-  async decrypt(
-    ciphertext: string,
-    pkpId: string,
-    userAddress: string,
-    action: string,
-    apiKey: string
-  ): Promise<string> {
+  async decrypt(key: string, pkpId: string, ciphertext: string, userAddress: string, action: string): Promise<string> {
+
+
+    console.log("DECRYPT", pkpId, userAddress)
+
+    
+
     const result = await this.call<{ response: { plaintext?: string; error?: string } }>(
       '/lit_action',
       {
         method: 'POST',
-        body: {
-          code: action,
-          js_params: { pkpId, ciphertext, userAddress },
-        },
-        key: apiKey,
+        body: { code: action, js_params: { pkpId, ciphertext, userAddress } },
+        key,
       }
     );
-
-    if (result.response.error) {
-      throw new Error(result.response.error);
-    }
-
+    if (result.response.error) throw new Error(result.response.error);
     return result.response.plaintext!;
   }
 }

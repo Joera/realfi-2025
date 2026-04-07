@@ -4,7 +4,7 @@ import '@s3ntiment/shared/components';
 import '../components/survey-questions.js';
 import { IServices } from '../services.js';
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
-import { fetchAndDecryptSurveyWithRespondent, isScored, Survey } from '@s3ntiment/shared';
+import { fetchAndDecryptSurveyWithRespondent, getDecryptForRespondentAction, isScored, Survey } from '@s3ntiment/shared';
 
 import { store } from '../state';
 import { createUserDataObject } from '@s3ntiment/shared'
@@ -63,6 +63,13 @@ export class SurveyController {
     if(surveyFromStore && surveyFromStore.pool) { 
 
       this.renderLoading();
+
+      const actionCode = getDecryptForRespondentAction(surveyFromStore.pool, surveyStore.address);
+      console.log('Frontend action code:', actionCode);
+
+      // Also get the CID
+      const cid = await this.services.lit.getActionCid(actionCode);
+      console.log('Frontend CID:', cid);
 
       const survey = await fetchAndDecryptSurveyWithRespondent(this.services, surveyStore, this.surveyId, BACKENDURL)
       this.config = survey;

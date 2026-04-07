@@ -6,7 +6,7 @@ import { createPaymentDelegationAuthSig } from '@lit-protocol/auth-helpers';
 import { base } from 'viem/chains';
 
 import { SurveyController } from './survey.ctrlr.js';
-import { ViemService, LitService, IPFSMethods } from "@s3ntiment/shared";
+import { ViemService, LitService, IPFSMethods, LitPoolKeys } from "@s3ntiment/shared";
 import { Account, verifyMessage } from 'viem';
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 import { privateKeyToAccount } from 'viem/accounts';
@@ -32,10 +32,11 @@ const viem = new ViemService(base, ALCHEMY_KEY);
 const nildb = new NilDBBuilderService();
 const lit = new LitService({
   environment: process.env.VITE_LIT_NETWORK == "prod" ? "prod" : "dev",
-  accountKey: process.env.VITE_LIT_NETWORK == "prod" ? process.env.VITE_LIT_API_ACCOUNT_KEY: process.env.VITE_LIT_API_DEV_ACCOUNT_KEY,
+  accountKey: process.env.VITE_LIT_NETWORK == "prod" ? process.env.VITE_LIT_API_ACCOUNT_KEY!: process.env.VITE_LIT_API_DEV_ACCOUNT_KEY!,
 });
+const litPoolKeys = new LitPoolKeys()
 const ipfs = new IPFSMethods(KUBO_ENDPOINT, PINATA_JWT, PINATA_GATEWAY);
-const survey = new SurveyController(nildb, lit, ipfs, viem);
+const survey = new SurveyController(nildb, lit, litPoolKeys, ipfs, viem);
 await nildb.initBuilder();
 
 
@@ -219,6 +220,7 @@ router.post('/surveys/:id/results', async (req: Request, res: Response) => {
 // Body: { userAddr, signature, poolId }
 router.post('/lit/usage-key', async (req: Request, res: Response) => {
     try {
+
         const { userAddr, signature, poolId } = req.body;
 
         const hasValidSignature = await viem.publicClient.verifyMessage({
@@ -232,7 +234,7 @@ router.post('/lit/usage-key', async (req: Request, res: Response) => {
             return;
         }
 
-        const key = lit.getPoolKey(poolId);
+        const key = litPoolKeys.get(poolId);
         res.json({ apiKey: key });
 
     } catch (error: any) {

@@ -1,4 +1,4 @@
-import { EncryptedConfig, fetchLitApiKey, getDecryptForOwnerAction, getDecryptForRespondentAction } from '../index.js';
+import { compactAction, EncryptedConfig, fetchLitApiKey, getDecryptForOwnerAction, getDecryptForRespondentAction } from '../index.js';
 
 
 const extractCid = (result: unknown): string => {
@@ -52,7 +52,10 @@ export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: 
     }
 }
 
-export const fetchAndDecryptSurveyWithRespondent = async (services: any, deployment: any, surveyId: string, litApiKey: string) => {
+
+export const fetchAndDecryptSurveyWithRespondent = async (services: any, deployment: any, surveyId: string, backendUrl: string) => {
+
+  
 
    // should get this from store 
     const [ ipfsCid, poolId, createdAt] = await services.viem.read(
@@ -66,12 +69,26 @@ export const fetchAndDecryptSurveyWithRespondent = async (services: any, deploym
     const config: EncryptedConfig = JSON.parse(await services.ipfs.fetchFromPinata(cid));
 
     // get the action 
-    const decryptForRespondentAction = getDecryptForRespondentAction(poolId, deployment.address)
+
+    const signature = await services.account.signMessage('Request capability to decrypt');
+    console.log("SIG",signature);
+    const litApiKey = await fetchLitApiKey(backendUrl, services.account.getSignerAddress(), signature, poolId);
+    const decryptForRespondentAction = compactAction(getDecryptForRespondentAction(poolId, deployment.address));
+
+    console.log("RAW CONFIG", config)
+    console.log("SIGNER", services.account.getSignerAddress())
+    console.log("ACTION", decryptForRespondentAction)
+    console.log("KEY", litApiKey)
 
     let d: any;
 
     try { 
-        const data = await services.lit.decrypt(config.encryptedForRespondent, litApiKey, JSON.stringify(decryptForRespondentAction));
+   //   async decrypt(key: string, pkpId: string, ciphertext: string, userAddress: string, action: string): Promise<string> {
+   // we should  include useraddress as a signature
+   // how/where do we store pkpId? 
+   // what account do we use? 
+        const data = await services.lit.decrypt(litApiKey, config.pkpId, config.encryptedForRespondent, services.account.getSignerAddress(), decryptForRespondentAction);
+        console.log("DATA", data);
         d = data.convertedData;
     } catch (e: any){
         console.log('Lit decrypt error:', e);

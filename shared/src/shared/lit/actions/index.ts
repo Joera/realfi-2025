@@ -1,3 +1,5 @@
 export * from './decrypt-for-owner.js'
 export * from './decrypt-for-respondent.js'
+export * from './decrypt.js'
 export * from './encrypt.js'
+export * from './helpers.js'
