@@ -6,7 +6,8 @@ import { createPaymentDelegationAuthSig } from '@lit-protocol/auth-helpers';
 import { base } from 'viem/chains';
 
 import { SurveyController } from './survey.ctrlr.js';
-import { ViemService, LitService, IPFSMethods, LitPoolKeys, initStorage } from "@s3ntiment/shared";
+import { ViemService, LitService, IPFSMethods } from "@s3ntiment/shared";
+import {initStorage, LitPoolKeys } from "@s3ntiment/shared/node"
 import { Account, verifyMessage } from 'viem';
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 import { privateKeyToAccount } from 'viem/accounts';
@@ -235,7 +236,7 @@ router.post('/lit/usage-key', async (req: Request, res: Response) => {
             return;
         }
 
-        const key = litPoolKeys.get(poolId);
+        const key = await litPoolKeys.get(poolId);
         res.json({ apiKey: key });
 
     } catch (error: any) {

@@ -1,5 +1,16 @@
 export const getDecryptForRespondentAction = (poolId: string, contract: string) => `
-    async function main({ pkpId, ciphertext, userAddress}) {
+    async function main({ pkpId, ciphertext, userAddress, signature}) {
+
+    const signerAddress = ethers.utils.verifyMessage(
+        'Request capability to decrypt',
+        signature
+    );
+
+    const isValid = signerAddress.toLowerCase() === userAddress.toLowerCase();
+
+    if (!isValid) {
+        return { error: 'INVALID_SIGNATURE' }
+    }
 
     const provider = new ethers.providers.JsonRpcProvider('https://base-mainnet.g.alchemy.com/v2/NFOkRqUo2swIC9g5tRJ7c');
 

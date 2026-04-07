@@ -338,6 +338,9 @@ importers:
       express:
         specifier: ^4.18.2
         version: 4.22.1
+      fs:
+        specifier: 0.0.1-security
+        version: 0.0.1-security
       s3ntiment-contracts:
         specifier: file:../contracts
         version: link:../contracts
@@ -423,6 +426,9 @@ importers:
       d3:
         specifier: ^7.9.0
         version: 7.9.0
+      fs:
+        specifier: 0.0.1-security
+        version: 0.0.1-security
       permissionless:
         specifier: ^0.3.4
         version: 0.3.4(viem@2.46.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.3.6))
@@ -4058,6 +4064,9 @@ packages:
 
   fs.realpath@1.0.0:
     resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
+
+  fs@0.0.1-security:
+    resolution: {integrity: sha512-3XY9e1pP0CVEUCdj5BmfIZxRBTSDycnbqhIOGec9QYtmVH2fbLpj86CFWkrNOkt/Fvty4KZG5lTglL9j/gJ87w==}
 
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
@@ -12297,6 +12306,8 @@ snapshots:
       universalify: 0.1.2
 
   fs.realpath@1.0.0: {}
+
+  fs@0.0.1-security: {}
 
   fsevents@2.3.3:
     optional: true

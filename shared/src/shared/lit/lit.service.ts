@@ -71,6 +71,8 @@ export class LitService {
     }
 
     return data;
+  }  "dependencies": {
+    
   }
 
   // ============================================================
@@ -242,10 +244,10 @@ export class LitService {
     }
   }
 
-  async decrypt(key: string, pkpId: string, ciphertext: string, userAddress: string, action: string): Promise<string> {
+  async decrypt(key: string, pkpId: string, ciphertext: string, userAddress: string, signature: string, action: string): Promise<string> {
 
 
-    console.log("DECRYPT", pkpId, userAddress)
+    console.log("DECRYPT", pkpId, userAddress, ciphertext, key, signature)
 
     
 
@@ -253,11 +255,12 @@ export class LitService {
       '/lit_action',
       {
         method: 'POST',
-        body: { code: action, js_params: { pkpId, ciphertext, userAddress } },
+        body: { code: action, js_params: { pkpId, ciphertext, userAddress, signature } },
         key,
       }
     );
     if (result.response.error) throw new Error(result.response.error);
+
     return result.response.plaintext!;
   }
 }

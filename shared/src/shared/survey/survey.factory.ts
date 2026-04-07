@@ -55,8 +55,6 @@ export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: 
 
 export const fetchAndDecryptSurveyWithRespondent = async (services: any, deployment: any, surveyId: string, backendUrl: string) => {
 
-  
-
    // should get this from store 
     const [ ipfsCid, poolId, createdAt] = await services.viem.read(
       deployment.address as `0x{string}`, 
@@ -68,28 +66,25 @@ export const fetchAndDecryptSurveyWithRespondent = async (services: any, deploym
     const cid = extractCid(ipfsCid);
     const config: EncryptedConfig = JSON.parse(await services.ipfs.fetchFromPinata(cid));
 
-    // get the action 
-
     const signature = await services.account.signMessage('Request capability to decrypt');
-    console.log("SIG",signature);
     const litApiKey = await fetchLitApiKey(backendUrl, services.account.getSignerAddress(), signature, poolId);
     const decryptForRespondentAction = compactAction(getDecryptForRespondentAction(poolId, deployment.address));
 
-    console.log("RAW CONFIG", config)
-    console.log("SIGNER", services.account.getSignerAddress())
+    // console.log("RAW CONFIG", config)
+    // console.log("SIGNER", services.account.getSignerAddress())
     console.log("ACTION", decryptForRespondentAction)
-    console.log("KEY", litApiKey)
+    const _cid = await services.lit.getActionCid(decryptForRespondentAction)
+    console.log("ACTION CID", _cid)
+    // console.log("KEY", litApiKey)
+
 
     let d: any;
 
     try { 
-   //   async decrypt(key: string, pkpId: string, ciphertext: string, userAddress: string, action: string): Promise<string> {
-   // we should  include useraddress as a signature
-   // how/where do we store pkpId? 
-   // what account do we use? 
-        const data = await services.lit.decrypt(litApiKey, config.pkpId, config.encryptedForRespondent, services.account.getSignerAddress(), decryptForRespondentAction);
-        console.log("DATA", data);
-        d = data.convertedData;
+
+        const data = await services.lit.decrypt(litApiKey, config.pkpId, config.encryptedForRespondent, services.account.getSignerAddress(), signature, decryptForRespondentAction);
+        // console.log("DATA", data);
+        d = JSON?.parse(data);
     } catch (e: any){
         console.log('Lit decrypt error:', e);
         console.log('Lit decrypt error message:', e?.message);

@@ -4,7 +4,6 @@
   "main": "dist/index.js",
   "type": "module",
   "types": "dist/index.d.ts",
-
   "exports": {
     ".": {
       "import": "./dist/shared/index.js",
@@ -17,6 +16,10 @@
     "./browser": {
       "import": "./src/browser/index.ts",
       "types": "./src/browser/index.ts"
+    },
+    "./node": {
+      "import": "./src/node/index.ts",
+      "types": "./src/node/index.ts"
     },
     "./assets": {
       "import": "./src/assets/index.ts",
@@ -42,9 +45,10 @@
     "@lit-protocol/networks": "8.4.1",
     "@nillion/nuc": "^2.0.0",
     "@nillion/secretvaults": "^2.0.0",
+    "d3": "^7.9.0",
     "permissionless": "^0.3.4",
-    "viem": "^2.46.2",
-    "d3": "^7.9.0"
+    "fs": "0.0.1-security",
+    "viem": "^2.46.2"
   },
   "devDependencies": {
     "@holonym-foundation/mishtiwasm": "^0.3.2",
@@ -54,10 +58,10 @@
     "@lit-protocol/networks": "8.4.1",
     "@nillion/nuc": "^2.0.0",
     "@nillion/secretvaults": "^2.0.0",
-    "permissionless": "^0.3.4",
-    "viem": "^2.46.2",
+    "@types/d3": "^7.4.3",
     "d3": "^7.9.0",
-    "@types/d3": "^7.4.3"
+    "permissionless": "^0.3.4",
+    "fs": "0.0.1-security",
+    "viem": "^2.46.2"
   }
-
 }

@@ -64,18 +64,11 @@ export class SurveyController {
 
       this.renderLoading();
 
-      const actionCode = getDecryptForRespondentAction(surveyFromStore.pool, surveyStore.address);
-      console.log('Frontend action code:', actionCode);
-
-      // Also get the CID
-      const cid = await this.services.lit.getActionCid(actionCode);
-      console.log('Frontend CID:', cid);
-
       const survey = await fetchAndDecryptSurveyWithRespondent(this.services, surveyStore, this.surveyId, BACKENDURL)
       this.config = survey;
       
       survey.isScored = isScored(survey.groups)
-      console.log("SURVEY", survey)
+      // console.log("SURVEY", survey)
       store.setSurveyData(this.surveyId, survey)
       store.persistSurveys();
 
