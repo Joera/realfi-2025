@@ -1,12 +1,20 @@
+import { getPoolKey, storePoolKey } from "./lit.key-storage.js";
+
 export class LitPoolKeys {
+
   private keys = new Map<string, string>();
 
-  set(poolId: string, key: string): void {
+  async set(poolId: string, key: string): Promise<void> {
     this.keys.set(poolId, key);
+    await storePoolKey(poolId, key);
   }
 
-  get(poolId: string): string | undefined {
-    return this.keys.get(poolId);
+  async get(poolId: string): Promise<string | undefined> {
+    let key = this.keys.get(poolId);
+    if (key == undefined) {
+      key = await getPoolKey(poolId) || undefined
+    }
+    return key
   }
 
   delete(poolId: string): boolean {

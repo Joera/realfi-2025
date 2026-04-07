@@ -4,12 +4,12 @@ import path from 'path'
 const STORAGE_DIR = path.join(process.cwd(), '.data', 'pool-keys')
 
 // Initialize storage directory
-async function initStorage() {
+export async function initStorage() {
   await fs.mkdir(STORAGE_DIR, { recursive: true })
 }
 
 // Store pool key
-async function storePoolKey(poolId: string, pkpPublicKey: string) {
+export async function storePoolKey(poolId: string, pkpPublicKey: string) {
   const filePath = path.join(STORAGE_DIR, `${poolId}.json`)
   const data = {
     poolId,
@@ -20,7 +20,7 @@ async function storePoolKey(poolId: string, pkpPublicKey: string) {
 }
 
 // Retrieve pool key
-async function getPoolKey(poolId: string): Promise<string | null> {
+export async function getPoolKey(poolId: string): Promise<string | null> {
   try {
     const filePath = path.join(STORAGE_DIR, `${poolId}.json`)
     const content = await fs.readFile(filePath, 'utf-8')

@@ -6,7 +6,7 @@ import { createPaymentDelegationAuthSig } from '@lit-protocol/auth-helpers';
 import { base } from 'viem/chains';
 
 import { SurveyController } from './survey.ctrlr.js';
-import { ViemService, LitService, IPFSMethods, LitPoolKeys } from "@s3ntiment/shared";
+import { ViemService, LitService, IPFSMethods, LitPoolKeys, initStorage } from "@s3ntiment/shared";
 import { Account, verifyMessage } from 'viem';
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 import { privateKeyToAccount } from 'viem/accounts';
@@ -34,6 +34,7 @@ const lit = new LitService({
   environment: process.env.VITE_LIT_NETWORK == "prod" ? "prod" : "dev",
   accountKey: process.env.VITE_LIT_NETWORK == "prod" ? process.env.VITE_LIT_API_ACCOUNT_KEY!: process.env.VITE_LIT_API_DEV_ACCOUNT_KEY!,
 });
+await initStorage();
 const litPoolKeys = new LitPoolKeys()
 const ipfs = new IPFSMethods(KUBO_ENDPOINT, PINATA_JWT, PINATA_GATEWAY);
 const survey = new SurveyController(nildb, lit, litPoolKeys, ipfs, viem);
