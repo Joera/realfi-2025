@@ -4,4 +4,5 @@
 **/dist
 **/package-lock.json
 node
+!shared/src/node
 cards
