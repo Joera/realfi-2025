@@ -87,7 +87,7 @@ export class NewSurveyController {
 
     console.log(surveyConfig)
 
-    console.log("BACKENDURL", BACKENDURL)
+    // console.log("BACKENDURL", BACKENDURL)
 
     let res: any = await fetch(`${BACKENDURL}/api/surveys`, {
       method: 'POST',
@@ -129,7 +129,7 @@ export class NewSurveyController {
 
       const res = await this.services.safe.write(surveyStore.address, surveyStore.abi, 'createSurvey', args, { waitForReceipt: true });
       
-      console.log(res);
+      // console.log(res);
       console.log("Survey", survey)
 
       if (res.receipt?.status == "success") {

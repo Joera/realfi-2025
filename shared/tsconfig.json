@@ -13,6 +13,6 @@
     "declarationMap": true,
     "useUnknownInCatchVariables": false
   },
-  "include": ["src/shared/**/*", "src/node/lit.key-storage.ts", "src/node/lit.pool-keys.ts"],
+  "include": ["src/shared/**/*", "src/node/**/*"],
   "exclude": ["node_modules", "dist", "src/browser/**/*", "src/assets/**/*", "src/componenets/**/*"]
 }

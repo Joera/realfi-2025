@@ -17,6 +17,8 @@ export class LitService {
       ? 'https://api.dev.litprotocol.com/core/v1'
       : 'https://api.chipotle.litprotocol.com/core/v1';
     this.accountKey = config.accountKey;
+
+    // console.log("CONFIGURATION", this.baseUrl, this.accountKey)
   }
 
   // ============================================================
@@ -44,6 +46,8 @@ export class LitService {
 
     // console.log(`[Lit API] ${method} ${this.baseUrl}${endpoint}`, body ? JSON.stringify(body).slice(0, 200) : '');
 
+    console.log(`${this.baseUrl}${endpoint}`)
+    console.log("headers", headers)
 
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method,
@@ -71,9 +75,7 @@ export class LitService {
     }
 
     return data;
-  }  "dependencies": {
-    
-  }
+  }  
 
   // ============================================================
   // Public (no auth)
@@ -91,7 +93,7 @@ export class LitService {
 
     const url = `${this.baseUrl}/get_lit_action_ipfs_id`;
 
-    console.log(`[Lit API] ${url}`, code ? JSON.stringify(code).slice(0, 500) : '');
+    // console.log(`[Lit API] ${url}`, code ? JSON.stringify(code).slice(0, 500) : '');
 
     const response = await fetch(url, {
       method: 'POST',
@@ -247,7 +249,7 @@ export class LitService {
   async decrypt(key: string, pkpId: string, ciphertext: string, userAddress: string, signature: string, action: string): Promise<string> {
 
 
-    console.log("DECRYPT", pkpId, userAddress, ciphertext, key, signature)
+    console.log("DECRYPT", { pkpId, userAddress, ciphertext, key, signature})
 
     
 

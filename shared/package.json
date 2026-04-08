@@ -18,8 +18,8 @@
       "types": "./src/browser/index.ts"
     },
     "./node": {
-      "import": "./src/node/index.ts",
-      "types": "./src/node/index.ts"
+      "import": "./dist/node/index.js",
+      "types": "./dist/node/index.d.ts"
     },
     "./assets": {
       "import": "./src/assets/index.ts",

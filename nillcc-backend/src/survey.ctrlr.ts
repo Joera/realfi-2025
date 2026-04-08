@@ -32,22 +32,22 @@ export class SurveyController {
         const { group_id: groupId } = await this.lit.createGroup(`s3ntiment-${poolId}`);
         await this.lit.addPkpToGroup(groupId, pkpId);
 
-        const decryptForOwnerAction = getDecryptForOwnerAction(poolId, contract, safeAddress);
+        const decryptForOwnerAction = compactAction(getDecryptForOwnerAction(poolId, contract, safeAddress));
         const decryptForRespondentAction = compactAction(getDecryptForRespondentAction(poolId, contract));
        // const simpleAction = compactAction(getSimpleDecrypt(poolId, contract));
 
-        console.log(decryptForRespondentAction)
+        // console.log(decryptForOwnerAction)
 
         const encryptCid = await this.lit.getActionCid(encryptAction);
         const decryptOwnerCid = await this.lit.getActionCid(decryptForOwnerAction);
         const decryptMemberCid = await this.lit.getActionCid(decryptForRespondentAction);
         // const simpleDecryptCid = await this.lit.getActionCid(simpleAction);
 
-        console.log("member decrypt cid", decryptMemberCid)
+        // console.log("owner decrypt cid", decryptOwnerCid)
 
         await this.lit.registerAction(encryptCid, 'encrypt');
-        await this.lit.registerAction(decryptOwnerCid, 'decrypt-owner');
-        await this.lit.registerAction(decryptMemberCid, 'decrypt-member');
+        await this.lit.registerAction(decryptOwnerCid, `decrypt-owner-${poolId}`);
+        await this.lit.registerAction(decryptMemberCid, `decrypt-member-${poolId}`);
         //await this.lit.registerAction(simpleDecryptCid, 'simple-decrypt')
 
         await this.lit.addActionToGroup(groupId, encryptCid);

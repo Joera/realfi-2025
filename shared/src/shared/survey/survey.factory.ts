@@ -31,13 +31,20 @@ export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: 
 
     let d: any;
 
-    let msg = await services.account.signMessage(`I authorize S3ntiment to access encrypted survey data for pool ${poolId}`)
-    const litApiKey = await fetchLitApiKey(backendUrl, services.account.getSignerAddress(), msg, poolId || "")
-    const decryptForOwnerAction = getDecryptForOwnerAction(poolId, deployment.address, services.account.getSignerAddress());
+    const userAddress = services.safe.getSignerAddress();
+    const safeAddress = services.safe.getAddress();
+
+    // console.log("SERVICES", services.safe)
+    const signature = await services.safe.signMessage('Request capability to decrypt');
+    const litApiKey = await fetchLitApiKey(backendUrl, userAddress, signature, poolId);
+    const decryptForOwnerAction = compactAction(getDecryptForOwnerAction(poolId, deployment.address, safeAddress));
+    let _cid = await services.lit.getActionCid(decryptForOwnerAction)
+
+    console.log("ACTION", decryptForOwnerAction, _cid)
 
     try { 
-        const data = await services.lit.decrypt(config.encryptedForOwner, litApiKey, decryptForOwnerAction);
-        d = data.convertedData;
+        const data = await services.lit.decrypt(litApiKey, config.pkpId, config.encryptedForOwner, userAddress, signature, decryptForOwnerAction);
+         d = JSON?.parse(data);
     } catch (e: any){
         console.log('Lit decrypt error:', e);
         console.log('Lit decrypt error message:', e?.message);
@@ -72,15 +79,24 @@ export const fetchAndDecryptSurveyWithRespondent = async (services: any, deploym
 
     // console.log("RAW CONFIG", config)
     // console.log("SIGNER", services.account.getSignerAddress())
-    console.log("ACTION", decryptForRespondentAction)
-    const _cid = await services.lit.getActionCid(decryptForRespondentAction)
-    console.log("ACTION CID", _cid)
+    // console.log("ACTION", decryptForRespondentAction)
+    // const _cid = await services.lit.getActionCid(decryptForRespondentAction)
+    // console.log("ACTION CID", _cid)
     // console.log("KEY", litApiKey)
+
+    try {
+      const test = await fetch("https://api.dev.litprotocol.com/core/v1/get_node_chain_config");
+      console.log("Lit API reachable:", test.ok);
+    } catch (e) {
+      console.log("Lit API unreachable:", e.message);
+    }
 
 
     let d: any;
 
     try { 
+
+
 
         const data = await services.lit.decrypt(litApiKey, config.pkpId, config.encryptedForRespondent, services.account.getSignerAddress(), signature, decryptForRespondentAction);
         // console.log("DATA", data);

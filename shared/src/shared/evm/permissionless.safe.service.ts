@@ -20,6 +20,8 @@ export interface IPermissionlessSafeService {
     predictSafeAddress: (salt: string) => Promise<string>;
     isDeployed: (address?: string) => Promise<boolean>;
     addOwner: (address: `0x${string}`) => Promise<boolean>;
+    signMessage: (message: string) => Promise<`0x${string}`>;
+
 }
 
 export class PermissionlessSafeService implements IPermissionlessSafeService {
