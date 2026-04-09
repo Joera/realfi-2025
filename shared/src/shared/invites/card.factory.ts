@@ -93,6 +93,9 @@ export class Card {
             [poolId, this.data.nullifier, this.data.batchId, this.data.signature],
             { waitForReceipt: true, confirmations: 2 }
         );
+        
+        // await waitUntilRegistered(poolId, this.data.nullifier) // poll contract until it returns true
+
     }
 
     get surveyId() { return this.data.surveyId; }

@@ -1,3 +1,4 @@
+import { callWithTimeout, withRetry } from "../helpers/index.js";
 import { encryptAction } from "./actions/encrypt.js";
 
 type LitEnvironment = 'dev' | 'prod';
@@ -25,14 +26,18 @@ export class LitService {
   // Private
   // ============================================================
 
+
+
   private async call<T>(
     endpoint: string,
     options: {
       method?: 'GET' | 'POST';
       body?: Record<string, unknown>;
       key?: string | null;
-    } = {}
+    } = {},
+    signal?: AbortSignal
   ): Promise<T> {
+ 
     const { method = 'GET', body, key } = options;
     const apiKey = key === null ? undefined : (key ?? this.accountKey);
 
@@ -53,9 +58,8 @@ export class LitService {
       method,
       headers,
       body: body ? JSON.stringify(body) : undefined,
+      signal, // <-- add this
     });
-
- 
 
     const text = await response.text();
     
@@ -248,20 +252,27 @@ export class LitService {
 
   async decrypt(key: string, pkpId: string, ciphertext: string, userAddress: string, signature: string, action: string): Promise<string> {
 
-
-    console.log("DECRYPT", { pkpId, userAddress, ciphertext, key, signature})
-
-    
-
-    const result = await this.call<{ response: { plaintext?: string; error?: string } }>(
-      '/lit_action',
-      {
+    const result = await withRetry<{ response: { plaintext?: string; error?: string } }>(
+      (signal) => this.call('/lit_action', {
         method: 'POST',
         body: { code: action, js_params: { pkpId, ciphertext, userAddress, signature } },
         key,
+      }, signal),
+      {
+        retries: 3,
+        timeoutMs: 25_000,
+        onRetry: (attempt, error) =>
+          console.log(`[Lit decrypt] Attempt ${attempt}/3 failed: ${error.message}`),
       }
     );
-    if (result.response.error) throw new Error(result.response.error);
+
+    if (result.response.error) {
+      throw new Error(`Lit decrypt error: ${result.response.error}`);
+    }
+
+    if (!result.response.plaintext) {
+      throw new Error(`Lit decrypt returned no plaintext. Response: ${JSON.stringify(result.response)}`);
+    }
 
     return result.response.plaintext!;
   }

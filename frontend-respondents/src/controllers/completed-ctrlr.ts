@@ -23,6 +23,8 @@ export class CompletedController {
         const app = document.querySelector('#app');
         if (!app) return;
 
+        console.log("ACTIVE", store.activeSurvey)
+
         app.innerHTML = `<div id="completed-content" class="centered"></div>`;
 
         const view = reactive('#completed-content', () => {

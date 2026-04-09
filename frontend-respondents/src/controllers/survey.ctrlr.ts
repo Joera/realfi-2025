@@ -36,6 +36,15 @@ export class SurveyController {
     `;
   }
 
+  private renderWarning(msg: string) {
+    const app = document.querySelector('#app');
+    if (!app) return;
+
+    app.innerHTML = `
+      <div id="survey-content" class="container centered">Decryption failed: <br/> ${msg}</div>
+    `;
+  }
+
   private renderTemplate() {
     const app = document.querySelector('#app');
     if (!app) return;
@@ -64,20 +73,27 @@ export class SurveyController {
 
       this.renderLoading();
 
-      const survey = await fetchAndDecryptSurveyWithRespondent(this.services, surveyStore, this.surveyId, BACKENDURL)
-      this.config = survey;
-      
-      survey.isScored = isScored(survey.groups)
-      // console.log("SURVEY", survey)
-      store.setSurveyData(this.surveyId, survey)
-      store.persistSurveys();
+      try {
+        const survey = await fetchAndDecryptSurveyWithRespondent(
+          this.services, surveyStore, this.surveyId, BACKENDURL
+        );
 
-      this.renderTemplate();
-      this.setSurveyListener();
-    } else {
+        this.config = survey;
+        survey.isScored = isScored(survey.groups);
+        store.setSurveyData(this.surveyId, survey);
+        store.persistSurveys();
+        this.renderTemplate();
+        this.setSurveyListener();
+
+      } catch (e: any) {
+        console.error('Failed to load survey:', e.message);
+        this.renderWarning(e.message); // show the actual reason
+      }
+    }
+        
+    else {
       alert("survey and pool not found")
     }
-
   }
 
   destroy() {

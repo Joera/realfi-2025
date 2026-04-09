@@ -30,6 +30,7 @@ export const typograhyStylestring = `
         font-style: normal;
 
         font-size: 1.8rem;
+        line-height: 1.3;
         color: var(--color-too-dark);
     }
 

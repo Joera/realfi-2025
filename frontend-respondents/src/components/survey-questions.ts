@@ -102,6 +102,7 @@ class SurveyQuestions extends HTMLElement {
 
         .group-title {
           font-size: 1.25rem;
+          line-height: 1.35;
           font-weight: 700;
           border-left: 6px solid black;
           padding-left: .75rem;
