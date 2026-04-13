@@ -84,13 +84,14 @@ export class NewSurveyController {
 
     if (!poolResponse.ok) store.setUI({ newStep: 'error' });
 
-    const { pkpId, groupId }  = await poolResponse.json();
+    const { pkpId, pkpDid, groupId }  = await poolResponse.json();
 
     store.setUI({ newStep: 'creating-survey' });
 
     const config = {
       safe: safeAddress,
       pkpId,
+      pkpDid,
       groupId,
       chainId: import.meta.env.VITE_L2 == 'base' ? 8453 : 1,
       litNetwork: import.meta.env.VITE_LIT_NETWORK

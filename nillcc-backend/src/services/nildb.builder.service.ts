@@ -1,21 +1,21 @@
 import {
-  Builder,
-  Signer,
-  Did,
-  Codec,
-  Command
+    Builder,
+    Signer,
+    Did,
+    Codec,
+    Command
 } from '@nillion/nuc';
 
 import {
-  SecretVaultBuilderClient,
-  NucCmd
+    SecretVaultBuilderClient,
+    NucCmd
 } from '@nillion/secretvaults';
 import { QuestionGroup, tallyResults } from "@s3ntiment/shared";
 import { decrypt, encrypt } from "eciesjs";
 
 const config = {
-  BUILDER_KEY: process.env.VITE_NIL_BUILDER_PRIVATE_KEY || "",
-  NILDB_NODES: (process.env.VITE_NILDB_NODES || "").split(','),
+    BUILDER_KEY: process.env.VITE_NIL_BUILDER_PRIVATE_KEY || "",
+    NILDB_NODES: (process.env.VITE_NILDB_NODES || "").split(','),
 };
 
 export class NilDBBuilderService {
@@ -41,35 +41,43 @@ export class NilDBBuilderService {
         });
 
         console.log('Builder client initialized');
+
+        // const id = "4aff0f99-e6b7-4e56-b643-e3ca879df523"
+        // console.log(await this.getCollectionInfo(id))
+        // console.log(await this.getBuilderProfile())
+
+        await this.testDelegationFormat()
+
+        
     }
 
-    // Helper to create invocations for a specific command
-    private async getInvocations(command: Command): Promise<Record<string, string>> {
-        const invocations: Record<string, string> = {};
-        for (const node of this.builderClient.nodes) {
-            invocations[node.id.didString] = await Builder.invocation()
-                .subject(this.builderDid!)
-                .audience(node.id)
-                .command(command)
-                .expiresIn(30_000)
-                .signAndSerialize(this.builderSigner);
-        }
-        return invocations;
+    async getBuilderProfile() {
+        const profile = await this.builderClient.readProfile();
+        console.log('Full profile:', JSON.stringify(profile, null, 2));
+        return profile;
     }
 
-    async createSurveyCollection(id: string, rawSchema: any, surveyOwnerDid: any) {
+    async getCollectionInfo(collectionId: string) {
         try {
-            const invocations = await this.getInvocations(NucCmd.nil.db.collections.create as Command);
-            const result = await this.builderClient.createCollection(
-                {
-                    _id: id,
-                    name: rawSchema.name,
-                    type: rawSchema.type,
-                    schema: rawSchema.schema,
-                    owner: this.builderDid!.didString
-                },
-                { auth: { invocations } }
-            );
+            const result = await this.builderClient.readCollection(collectionId);
+            console.log('Collection info:', JSON.stringify(result, null, 2));
+            return result;
+        } catch (e: any) {
+            console.log('Error reading collection:', e?.message);
+            return null;
+        }
+    }
+
+    async createSurveyCollection(id: string, rawSchema: any) {
+
+        console.log("raw schema", rawSchema)
+        try {
+            const result = await this.builderClient.createCollection({
+                _id: id,
+                name: rawSchema.name,
+                type: rawSchema.type,
+                schema: rawSchema.schema,
+            });
             console.log("collection created", result);
             return id;
         } catch (e: any) {
@@ -82,28 +90,20 @@ export class NilDBBuilderService {
         console.log("Existing", existingDocIds);
 
         if (existingDocIds && existingDocIds.length > 0) {
-            const deleteInvocations = await this.getInvocations(NucCmd.nil.db.data.delete as Command);
             for (const id of existingDocIds) {
-                const d = await this.builderClient.deleteData(
-                    {
-                        collection: surveyId,
-                        filter: { _id: id },
-                    },
-                    { auth: { invocations: deleteInvocations } }
-                );
+                const d = await this.builderClient.deleteData({
+                    collection: surveyId,
+                    filter: { _id: id },
+                });
                 console.log("deleted", d);
             }
         }
 
         try {
-            const invocations = await this.getInvocations(NucCmd.nil.db.data.create as Command);
-            return await this.builderClient.createStandardData(
-                {
-                    collection: surveyId,
-                    data: [userData]
-                },
-                { auth: { invocations } }
-            );
+            return await this.builderClient.createStandardData({
+                collection: surveyId,
+                data: [userData]
+            });
         } catch (e: any) {
             if (Array.isArray(e)) {
                 e.forEach((err, i) => {
@@ -117,6 +117,40 @@ export class NilDBBuilderService {
         }
     }
 
+    async testDelegationFormat() {
+        // Create a test delegation
+        const delegation = await Builder.delegation()
+            .command(NucCmd.nil.db.data.create as Command)
+            .subject(this.builderDid!)
+            .audience(this.builderDid!) // self for testing
+            .expiresIn(30_000)
+            .signAndSerialize(this.builderSigner);
+
+        console.log('Raw delegation string:', delegation);
+        console.log('Delegation length:', delegation.length);
+        
+        // Try to decode it
+        try {
+            const decoded = Codec._unsafeDecodeBase64Url(delegation);
+            console.log('Decoded delegation:', JSON.stringify(decoded, null, 2));
+        } catch (e) {
+            console.log('Decode error:', e);
+        }
+        
+        // Also try base64 decode manually
+        const parts = delegation.split('.');
+        console.log('Parts count:', parts.length);
+        for (let i = 0; i < parts.length; i++) {
+            try {
+                const decoded = JSON.parse(Buffer.from(parts[i], 'base64url').toString());
+                console.log(`Part ${i}:`, JSON.stringify(decoded, null, 2));
+            } catch (e) {
+                console.log(`Part ${i}: (not JSON)`, parts[i].substring(0, 50));
+            }
+        }
+    }
+
+    // User delegations still need to be created manually
     async getUserWriteDelegation(didString: string, surveyId: string) {
         console.log('builderSigner:', this.builderSigner ? 'present' : 'MISSING');
         console.log('collection', surveyId);
@@ -124,12 +158,11 @@ export class NilDBBuilderService {
         const userDid = Did.parse(didString);
         console.log('issuing delegation to DID:', userDid);
 
-        // SDK 3.0 style delegation
         const delegation = await Builder.delegation()
             .command(NucCmd.nil.db.data.create as Command)
             .subject(this.builderDid!)
             .audience(userDid)
-            .expiresIn(3600_000) // 1 hour in ms
+            .expiresIn(3600_000)
             .signAndSerialize(this.builderSigner);
 
         return delegation;
@@ -151,14 +184,10 @@ export class NilDBBuilderService {
         await new Promise(r => setTimeout(r, 5000));
 
         try {
-            const invocations = await this.getInvocations(NucCmd.nil.db.data.read as Command);
-            const rawResults = await this.builderClient.findData(
-                {
-                    collection: surveyId,
-                    filter: {}
-                },
-                { auth: { invocations } }
-            );
+            const rawResults = await this.builderClient.findData({
+                collection: surveyId,
+                filter: {}
+            });
 
             console.log(rawResults);
 
@@ -175,27 +204,19 @@ export class NilDBBuilderService {
     }
 
     async exists(surveyId: string, signer: string) {
-        const invocations = await this.getInvocations(NucCmd.nil.db.data.read as Command);
-        const rawResults = await this.builderClient.findData(
-            {
-                collection: surveyId,
-                filter: { signer: signer }
-            },
-            { auth: { invocations } }
-        );
+        const rawResults = await this.builderClient.findData({
+            collection: surveyId,
+            filter: { signer: signer }
+        });
 
         return rawResults.data[0] ? rawResults.data.map((r: any) => r._id) : false;
     }
 
     async getResponseById(surveyId: string, docId: string) {
-        const invocations = await this.getInvocations(NucCmd.nil.db.data.read as Command);
-        const rawResults = await this.builderClient.findData(
-            {
-                collection: surveyId,
-                filter: { _id: docId }
-            },
-            { auth: { invocations } }
-        );
+        const rawResults = await this.builderClient.findData({
+            collection: surveyId,
+            filter: { _id: docId }
+        });
 
         return rawResults.data[0];
     }

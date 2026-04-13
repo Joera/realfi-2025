@@ -14,6 +14,10 @@ export class PoolController {
 
     // separate pool and survey ??? 
 
+    ethAddressToDid(address: string): string {
+            return `did:pkh:eip155:1:${address.toLowerCase()}`;
+        }
+
     async create(body: any) {
         const contract = surveyStore.address;
         const { poolId, safeAddress } = body;
@@ -62,7 +66,10 @@ export class PoolController {
         console.log('- groupId:', groupId);
         console.log('- usageKey:', usage_api_key);
 
-        return { pkpId, groupId };
+     
+        const pkpDid = this.ethAddressToDid(pkpId);
+
+        return { pkpId, pkpDid, groupId };
     }
 
     async update(body: any) {

@@ -53,7 +53,7 @@ export class NillDBUserService {
 
         console.log("NILLION USER:", this.user);
         console.log('owner (userDid):', this.userDidString);
-        console.log('grantee (builderDid):', this.builderDid);
+        // console.log('grantee (builderDid):', this.builderDid);
         console.log('signer DID type:', (await this.signer.getDid()).method);
     }
 
@@ -71,15 +71,28 @@ export class NillDBUserService {
         });
     }
 
-    async storeOwned(uuid: string, config: Survey, answers: any, surveyId: string, delegationToken: string) {
-        const userPrivateData = createUserDataObject(uuid, answers, config, "");
+    async storeOwned(uuid: string, survey: Survey, answers: any, surveyId: string, delegationToken: string) {
+   
+        const userPrivateData = createUserDataObject(uuid, answers, survey, "");
+
+        console.log("DID", survey.config!.pkpDid)
+          console.log("=== storeOwned debug ===");
+        console.log("surveyId (collection):", surveyId);
+        console.log("owner (userDid):", this.userDidString);
+        console.log("grantee (pkpDid):", survey.config!.pkpDid);
+        console.log("delegationToken present:", !!delegationToken);
+        console.log("delegationToken:", delegationToken?.substring(0, 100) + "...");
+        console.log("user client nodes:", this.user.nodes?.map((n: any) => n.id?.didString));
+        
+        // Check what baseUrls the user client was initialized with
+        console.log("nilDBNodes config:", this.nilDBNodes);
 
         try { 
             const uploadResults = await this.user.createData(
                 {
                     owner: this.userDidString,
                     acl: {
-                        grantee: this.builderDid,
+                        grantee: survey.config!.pkpDid, // Note: needs .didString
                         read: true,
                         write: false,
                         execute: true,
@@ -91,6 +104,16 @@ export class NillDBUserService {
             );
 
             console.log('success', uploadResults);
+            
+            // Check results like the test does
+            const pairs = Object.entries(uploadResults);
+            for (const [node, result] of pairs) {
+                if ((result as any).data.errors?.length > 0) {
+                    console.error(`Node ${node} errors:`, (result as any).data.errors);
+                }
+            }
+
+            return uploadResults;
 
         } catch (e: any) {
             console.log('error', JSON.stringify(e, null, 2));
@@ -99,14 +122,14 @@ export class NillDBUserService {
             if (Array.isArray(e)) {
                 e.forEach((n, i) => console.log(`node ${i}`, JSON.stringify(n, null, 2)));
             }
+            throw e;
         }
-
-        const references = await this.user.listDataReferences();
-        console.log(references);
     }
 
-    async updateOwned(uuid: string, config: Survey, answers: any, surveyId: string, delegationToken: string, documentId: string) {
-        const userPrivateData = createUserDataObject(uuid, answers, config, "");
+    async updateOwned(uuid: string, survey: Survey, answers: any, surveyId: string, delegationToken: string, documentId: string) {
+        const userPrivateData = createUserDataObject(uuid, answers, survey, "");
+
+      
 
         await this.user.deleteData({
             collection: surveyId,

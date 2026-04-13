@@ -18,8 +18,6 @@ export class SurveyController {
         this.viem = viem;
     }
 
-    // separate pool and survey ??? 
-
     // Authorization is enforced on-chain: for new pools, the caller becomes the owner;
     // for existing pools, the contract reverts if msg.sender != pool.safe.
     async create(body: any) {
@@ -30,8 +28,8 @@ export class SurveyController {
 
         const { safeConfigWithScoring, safeConfig, scoring } = stripScoring(surveyConfig)
         const _isScored = isScored(surveyConfig.groups);
-        const rawSchema = createSurveyCollectionSchema(safeConfig, "standard")
-        const collectionId = await this.nildb.createSurveyCollection(surveyConfig.id, rawSchema, this.nildb.builderDid.didString);
+        const rawSchema = createSurveyCollectionSchema(safeConfig, "owned")
+        const collectionId = await this.nildb.createSurveyCollection(surveyConfig.id, rawSchema, surveyConfig.config.pkpId);
 
         // put this inside lit action
         const [ encryptedForOwner, encryptedForRespondent] = await Promise.all([

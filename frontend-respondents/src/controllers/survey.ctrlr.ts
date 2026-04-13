@@ -4,7 +4,7 @@ import '@s3ntiment/shared/components';
 import '../components/survey-questions.js';
 import { IServices } from '../services.js';
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
-import { fetchAndDecryptSurveyWithRespondent, getDecryptForRespondentAction, isScored, Survey } from '@s3ntiment/shared';
+import { fetchAndDecryptSurveyWithRespondent, fetchNillionDelegation, getDecryptForRespondentAction, isScored, Survey, withRetry } from '@s3ntiment/shared';
 
 import { store } from '../state';
 import { createUserDataObject } from '@s3ntiment/shared'
@@ -113,18 +113,29 @@ export class SurveyController {
       await this.services.nillDB.init(seed);
 
       const docIUd = crypto.randomUUID();
-      const signature = await this.services.account.signMessage(`s3ntiment:submit:${this.surveyId}`);
-      const signerAddress = this.services.account.getSignerAddress();
-      const userData = createUserDataObject(docIUd, event.detail.answers, this.config!, signerAddress);
+      // const signature = await this.services.account.signMessage(`s3ntiment:submit:${this.surveyId}`);
+      // const signerAddress = this.services.account.getSignerAddress();
+     // const userData = createUserDataObject(docIUd, event.detail.answers, this.config!, signerAddress);
 
-      const result = await this.services.nillDB.storeStandard(BACKENDURL, this.surveyId, store.activeSurvey!.pool || '', userData, signature, signerAddress!);
-      console.log(result)
+      // const result = await this.services.nillDB.storeStandard(BACKENDURL, this.surveyId, store.activeSurvey!.pool || '', userData, signature, signerAddress!);
+
+      const signature = await this.services.account.signMessage(`s3ntiment:submit:${this.surveyId}`);
+
+      const delegation = await withRetry(
+            (signal) => fetchNillionDelegation(BACKENDURL, this.config?.config!.pkpDid!, this.config!.id!, signature),
+            {
+              timeoutMs: 5_000,
+              onRetry: (attempt, error) =>
+                console.log(`[fetchLitApiKey] Attempt ${attempt}/3 failed: ${error.message}`),
+            }
+          );
+      const result = await this.services.nillDB.storeOwned(docIUd, this.config!, event.detail.answers, this.surveyId, delegation)
 
       if (result.ok) {
 
         router.navigate(`complete/${this.surveyId}/${docIUd}`)
 
-      } else {
+      } else {  
 
         const r: any = result.json();
 

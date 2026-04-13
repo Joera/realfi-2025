@@ -62,6 +62,7 @@ export interface Config {
     chainId?: number
     litNetwork?: string
     pkpId?: string,
+    pkpDid?: string,
     groupId?: string,
 }
 

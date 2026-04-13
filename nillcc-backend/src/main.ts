@@ -228,6 +228,20 @@ router.post('/surveys/:id/results', async (req: Request, res: Response) => {
     }
 });
 
+router.post('/surveys/:surveyId/delegation', async (req, res) => {
+    const { surveyId } = req.params;
+    const { didString, signature } = req.body;
+
+    // Optional: verify signature to ensure request is from the user
+    
+    console.log('Creating delegation for:', didString, 'surveyId:', surveyId);
+    
+    const delegation = await nildb.getUserWriteDelegation(didString, surveyId);
+    console.log('Delegation created:', delegation);
+    
+    res.json({ delegation });
+});
+
 // --- Lit Protocol ---
 
 // Request payment delegation for Lit decryption
