@@ -9,8 +9,8 @@ overrides:
   viem: 2.46.2
   libsodium-sumo: 0.7.13
   libsodium-wrappers-sumo: 0.7.13
-  '@nillion/nuc': ^2.0.0
-  '@nillion/secretvaults': 2.0.0
+  '@nillion/nuc': ^2.0.1
+  '@nillion/secretvaults': ^3.0.0
 
 importers:
 
@@ -139,7 +139,7 @@ importers:
         specifier: 8.4.1
         version: 8.4.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(valibot@1.2.0(typescript@5.9.3))(viem@2.46.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.3.6))
       '@nillion/nuc':
-        specifier: ^2.0.0
+        specifier: ^2.0.1
         version: 2.0.1(bufferutil@4.1.0)(pino@10.3.1)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@s3ntiment/shared':
         specifier: workspace:*
@@ -236,11 +236,11 @@ importers:
         specifier: 8.4.1
         version: 8.4.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(valibot@1.2.0(typescript@5.9.3))(viem@2.46.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.3.6))
       '@nillion/nuc':
-        specifier: ^2.0.0
+        specifier: ^2.0.1
         version: 2.0.1(bufferutil@4.1.0)(pino@10.3.1)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@nillion/secretvaults':
-        specifier: 2.0.0
-        version: 2.0.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
+        specifier: ^3.0.0
+        version: 3.0.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@s3ntiment/shared':
         specifier: workspace:../shared
         version: link:../shared
@@ -308,15 +308,12 @@ importers:
       '@nillion/nilai-ts':
         specifier: ^0.3.0
         version: 0.3.0(bufferutil@4.1.0)(pino@10.3.1)(typescript@5.9.3)(utf-8-validate@5.0.10)
-      '@nillion/nilauth-client':
-        specifier: ^2.0.0
-        version: 2.0.0(@nillion/nuc@2.0.1(bufferutil@4.1.0)(pino@10.3.1)(typescript@5.9.3)(utf-8-validate@5.0.10))(pino@10.3.1)
       '@nillion/nuc':
-        specifier: ^2.0.0
+        specifier: ^2.0.1
         version: 2.0.1(bufferutil@4.1.0)(pino@10.3.1)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@nillion/secretvaults':
-        specifier: 2.0.0
-        version: 2.0.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
+        specifier: ^3.0.0
+        version: 3.0.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@noble/curves':
         specifier: ^2.0.1
         version: 2.0.1
@@ -361,7 +358,7 @@ importers:
         specifier: ^4.17.21
         version: 4.17.25
       '@types/node':
-        specifier: ^24.10.0
+        specifier: ^24.10.14
         version: 24.10.14
       esbuild:
         specifier: ^0.27.3
@@ -415,14 +412,17 @@ importers:
         specifier: 8.4.1
         version: 8.4.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(valibot@1.2.0(typescript@5.9.3))(viem@2.46.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.3.6))
       '@nillion/nuc':
-        specifier: ^2.0.0
+        specifier: ^2.0.1
         version: 2.0.1(bufferutil@4.1.0)(pino@10.3.1)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@nillion/secretvaults':
-        specifier: 2.0.0
-        version: 2.0.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
+        specifier: ^3.0.0
+        version: 3.0.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@types/d3':
         specifier: ^7.4.3
         version: 7.4.3
+      '@types/node':
+        specifier: ^25.6.0
+        version: 25.6.0
       d3:
         specifier: ^7.9.0
         version: 7.9.0
@@ -1351,21 +1351,14 @@ packages:
   '@nillion/nilai-ts@0.3.0':
     resolution: {integrity: sha512-A9w5UU87rEjeyxdDFegtCyOpuIB2IfTTf5wz2Lx+E9h2Dq7y6XjcCE4b+H9+s9XyBmOcvQrvTfRP0i3Hxqlr2g==}
 
-  '@nillion/nilauth-client@2.0.0':
-    resolution: {integrity: sha512-0E/aCB4vfIHHjS94kOUdjaRlgk/c6OUpAjtAs27WjqsOWlDk1/2ZTlOmUfDMpae8JlAzTsINci7K1QZ3DEBRiw==}
-    engines: {node: '>=24'}
-    peerDependencies:
-      '@nillion/nuc': ^2.0.0
-      pino: ^10.1.0
-
   '@nillion/nuc@2.0.1':
     resolution: {integrity: sha512-iP+GbnIh0v/GKmyk9yEZWiB7GvyBOd1EqcmJtCtRlOJvGf6yARw3I5hMbNLMW74zYWJwLUS/EYK8Igb15lxSOg==}
     engines: {node: '>=24'}
     peerDependencies:
       pino: ^10.1.0
 
-  '@nillion/secretvaults@2.0.0':
-    resolution: {integrity: sha512-6bC7ribSywVEVEV/i5dZ7reeYOdxP34MI4AycU4M2NUi1MWJW5i91wwU/Q38KPJBXxg3twTcj7e+XBOjx+ZqNw==}
+  '@nillion/secretvaults@3.0.0':
+    resolution: {integrity: sha512-uZ1JgEj9xTT/KWqjv5wyMXR4GNDizTUKBXet81TlEJjwj/gGCYQ7rGnhDXa5eYU3+cSVaISuDjcwX0GXgL2i5w==}
     engines: {node: '>=24'}
 
   '@noble/ciphers@1.2.1':
@@ -2670,6 +2663,9 @@ packages:
   '@types/node@25.3.1':
     resolution: {integrity: sha512-hj9YIJimBCipHVfHKRMnvmHg+wfhKc0o4mTtXh9pKBjC8TLJzz0nzGmLi5UJsYAUgSvXFHgb0V2oY10DUFtImw==}
 
+  '@types/node@25.6.0':
+    resolution: {integrity: sha512-+qIYRKdNYJwY3vRCZMdJbPLJAtGjQBudzZzdzwQYkEPQd+PJGixUL5QfvCLDaULoLv+RhT3LDkwEfKaAkgSmNQ==}
+
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
 
@@ -3971,6 +3967,9 @@ packages:
   es-toolkit@1.44.0:
     resolution: {integrity: sha512-6penXeZalaV88MM3cGkFZZfOoLGWshWWfdy0tWw/RlVVyhvMaWSBTOvXNeiW3e5FwdS5ePW0LGEu17zT139ktg==}
 
+  es-toolkit@1.45.1:
+    resolution: {integrity: sha512-/jhoOj/Fx+A+IIyDNOvO3TItGmlMKhtX8ISAHKE90c4b/k1tqaqEZ+uUqfpU8DMnW5cgNJv606zS55jGvza0Xw==}
+
   es6-promise@4.2.8:
     resolution: {integrity: sha512-HJDGx5daxeIvxdBxvG2cb9g4tEvwIk3i8+nhX0yGrYmZUzbkdg8QbDevheDB8gd0//uPj4c1EQua8Q+MViT0/w==}
 
@@ -4697,10 +4696,6 @@ packages:
   kleur@3.0.3:
     resolution: {integrity: sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==}
     engines: {node: '>=6'}
-
-  ky@1.14.3:
-    resolution: {integrity: sha512-9zy9lkjac+TR1c2tG+mkNSVlyOpInnWdSMiue4F+kq8TwJSgv6o8jhLRg8Ho6SnZ9wOYUq/yozts9qQCfk7bIw==}
-    engines: {node: '>=18'}
 
   ldenv@0.3.16:
     resolution: {integrity: sha512-ShaNPPzgUi+iGj9bsQ0TPRm6MuOcPpc1NklL0/IzJsvB0OdHwWoPhmeTVR5z0oC3zzLebrojozo/nt8d2XTZbQ==}
@@ -6185,6 +6180,9 @@ packages:
 
   undici-types@7.18.2:
     resolution: {integrity: sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==}
+
+  undici-types@7.19.2:
+    resolution: {integrity: sha512-qYVnV5OEm2AW8cJMCpdV20CDyaN3g0AjDlOGf1OW4iaDEx8MwdtChUp4zu4H0VP3nDRF/8RKWH+IPp9uW0YGZg==}
 
   undici-types@7.22.0:
     resolution: {integrity: sha512-RKZvifiL60xdsIuC80UY0dq8Z7DbJUV8/l2hOVbyZAxBzEeQU4Z58+4ZzJ6WN2Lidi9KzT5EbiGX+PI/UGYuRw==}
@@ -8521,7 +8519,7 @@ snapshots:
   '@nillion/nilai-ts@0.3.0(bufferutil@4.1.0)(pino@10.3.1)(typescript@5.9.3)(utf-8-validate@5.0.10)':
     dependencies:
       '@nillion/nuc': 2.0.1(bufferutil@4.1.0)(pino@10.3.1)(typescript@5.9.3)(utf-8-validate@5.0.10)
-      '@nillion/secretvaults': 2.0.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
+      '@nillion/secretvaults': 3.0.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@noble/curves': 1.9.7
       '@noble/secp256k1': 2.3.0
       openai: 5.23.2(ws@8.19.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(zod@3.25.76)
@@ -8535,15 +8533,6 @@ snapshots:
       - pino
       - typescript
       - utf-8-validate
-
-  '@nillion/nilauth-client@2.0.0(@nillion/nuc@2.0.1(bufferutil@4.1.0)(pino@10.3.1)(typescript@5.9.3)(utf-8-validate@5.0.10))(pino@10.3.1)':
-    dependencies:
-      '@nillion/nuc': 2.0.1(bufferutil@4.1.0)(pino@10.3.1)(typescript@5.9.3)(utf-8-validate@5.0.10)
-      '@noble/hashes': 2.0.1
-      canonicalize: 2.1.0
-      ky: 1.14.3
-      pino: 10.3.1
-      zod: 4.3.6
 
   '@nillion/nuc@2.0.1(bufferutil@4.1.0)(pino@10.3.1)(typescript@5.9.3)(utf-8-validate@5.0.10)':
     dependencies:
@@ -8560,12 +8549,11 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@nillion/secretvaults@2.0.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)':
+  '@nillion/secretvaults@3.0.0(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)':
     dependencies:
       '@nillion/blindfold': 0.1.0
-      '@nillion/nilauth-client': 2.0.0(@nillion/nuc@2.0.1(bufferutil@4.1.0)(pino@10.3.1)(typescript@5.9.3)(utf-8-validate@5.0.10))(pino@10.3.1)
       '@nillion/nuc': 2.0.1(bufferutil@4.1.0)(pino@10.3.1)(typescript@5.9.3)(utf-8-validate@5.0.10)
-      es-toolkit: 1.44.0
+      es-toolkit: 1.45.1
       pino: 10.3.1
       uuid: 13.0.0
       viem: 2.46.2(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.3.6)
@@ -10392,6 +10380,10 @@ snapshots:
   '@types/node@25.3.1':
     dependencies:
       undici-types: 7.18.2
+
+  '@types/node@25.6.0':
+    dependencies:
+      undici-types: 7.19.2
 
   '@types/normalize-package-data@2.4.4': {}
 
@@ -12340,6 +12332,8 @@ snapshots:
 
   es-toolkit@1.44.0: {}
 
+  es-toolkit@1.45.1: {}
+
   es6-promise@4.2.8:
     optional: true
 
@@ -13299,8 +13293,6 @@ snapshots:
   kind-of@6.0.3: {}
 
   kleur@3.0.3: {}
-
-  ky@1.14.3: {}
 
   ldenv@0.3.16:
     dependencies:
@@ -14946,6 +14938,8 @@ snapshots:
   undici-types@7.16.0: {}
 
   undici-types@7.18.2: {}
+
+  undici-types@7.19.2: {}
 
   undici-types@7.22.0:
     optional: true

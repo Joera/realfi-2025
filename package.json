@@ -11,8 +11,8 @@
       "viem": "2.46.2",
       "libsodium-sumo": "0.7.13",
       "libsodium-wrappers-sumo": "0.7.13",
-      "@nillion/nuc": "^2.0.0",
-      "@nillion/secretvaults": "2.0.0"
+      "@nillion/nuc": "^2.0.1",
+      "@nillion/secretvaults": "^3.0.0"
     }
   }
 }

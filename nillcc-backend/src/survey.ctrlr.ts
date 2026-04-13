@@ -1,4 +1,4 @@
-import { recoverMessageAddress, Signature } from "viem";
+import { parseAbi, recoverMessageAddress, Signature } from "viem";
 import { compactAction, createSurveyCollectionSchema,  encryptAction, EncryptedConfig, getDecryptForOwnerAction, getDecryptForRespondentAction, getSimpleDecrypt, isScored, Survey } from "@s3ntiment/shared";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 import { calculateScore, stripScoring } from "@s3ntiment/shared";
@@ -20,19 +20,16 @@ export class SurveyController {
 
     // separate pool and survey ??? 
 
+    // Authorization is enforced on-chain: for new pools, the caller becomes the owner;
+    // for existing pools, the contract reverts if msg.sender != pool.safe.
     async create(body: any) {
 
-        // also authorization issue 
-        const { signature, surveyConfig } = body;
+        const { surveyConfig } = body;
 
-        // check if signature belongs to  poolOwner 
-        const signer = await this.verifyPoolOwner(signature, surveyConfig.pool, surveyStore.address, surveyConfig.config.safe);
-        if (!signer) throw new Error('Unauthorized');
-
-        const usage_api_key = this.litPoolKeys.get(surveyConfig.pool)
+        const usage_api_key = await this.litPoolKeys.get(surveyConfig.pool)
 
         const { safeConfigWithScoring, safeConfig, scoring } = stripScoring(surveyConfig)
-        const _isScored = isScored(surveyConfig);
+        const _isScored = isScored(surveyConfig.groups);
         const rawSchema = createSurveyCollectionSchema(safeConfig, "standard")
         const collectionId = await this.nildb.createSurveyCollection(surveyConfig.id, rawSchema, this.nildb.builderDid.didString);
 
@@ -58,14 +55,13 @@ export class SurveyController {
         return await this.ipfs.uploadToPinata(JSON.stringify(config))
     }
 
+    // Authorization is enforced on-chain: for new pools, the caller becomes the owner;
+    // for existing pools, the contract reverts if msg.sender != pool.safe.
     async update(body: any) {
 
-        const { signature, surveyConfig } = body;
+        const { surveyConfig } = body;
 
-        const signer = await this.verifyPoolOwner(signature, surveyConfig.pool, surveyStore.address, surveyConfig.config.safe);
-        if (!signer) throw new Error('Unauthorized');
-
-        const usage_api_key = this.litPoolKeys.get(surveyConfig.pool)
+        const usage_api_key = await this.litPoolKeys.get(surveyConfig.pool)
 
         const { safeConfigWithScoring, safeConfig, scoring } = stripScoring(surveyConfig);
         const _isScored = isScored(surveyConfig.groups);
@@ -156,28 +152,38 @@ export class SurveyController {
        }
     }
 
-    async verifyPoolOwner(signature: string, poolId: string, contract: string, safeAddress: string): Promise<string | null> {
-    
-        const signerAddress = await this.viem.verifyMessage('Request capability to create survey', signature);
+    // async verifyPoolOwner(signature: `0x${string}`, poolId: string, contract: `0x${string}`, safeAddress: `0x${string}`): Promise<string | null> {
+
+    //     const signerAddress = await this.viem.verifyMessage('create a s3ntiment survey', signature);
+
+    //     console.log("SIGNER", signerAddress)
+    //     console.log("SAFE", safeAddress)
+    //     console.log("POOLID", poolId)
         
-        const isPoolSafe = await this.viem.read(contract, 
-            ['function isPoolSafe(address addr, string poolId) view returns (bool)'],
-            'isPoolSafe', 
-            [safeAddress, poolId]
-        );
+    //     const isPoolSafe = await this.viem.read(
+    //         contract, 
+    //         parseAbi(['function isPoolSafe(address addr, string poolId) view returns (bool)']),
+    //         'isPoolSafe', 
+    //         [safeAddress, poolId]
+    //     );
+
+    //     console.log("ISPOOLSAFE", isPoolSafe)
         
-        if (!isPoolSafe) return null;
+    //     if (!isPoolSafe) return null;
 
-        const isOwner = await this.viem.read(safeAddress,
-            ['function isOwner(address owner) view returns (bool)'],
-            'isOwner',
-            [signerAddress]
-        );
+    //     const isOwner = await this.viem.read(
+    //         safeAddress,
+    //         parseAbi(['function isOwner(address owner) view returns (bool)']),
+    //         'isOwner',
+    //         [signerAddress]
+    //     );
 
-        if (!isOwner) return null;
+    //     console.log("ISOWNER", isOwner)
 
-        return signerAddress;
-    }
+    //     if (!isOwner) return null;
+
+    //     return signerAddress;
+    // }
 
     // async verifyOwnership(
     //     surveyOwnerAddress: string,

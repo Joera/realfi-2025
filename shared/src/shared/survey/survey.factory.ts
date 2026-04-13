@@ -36,7 +36,6 @@ export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: 
     const litApiKey = await withRetry(
       (signal) => fetchLitApiKey(backendUrl, userAddress, signature, poolId, signal),
       {
-        retries: 3,
         timeoutMs: 5_000,
         onRetry: (attempt, error) =>
           console.log(`[fetchLitApiKey] Attempt ${attempt}/3 failed: ${error.message}`),
@@ -47,7 +46,7 @@ export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: 
     // let _cid = await services.lit.getActionCid(decryptForOwnerAction)
     // console.log(decryptForOwnerAction)
 
-    const data = await services.lit.decrypt(litApiKey, config.pkpId, config.encryptedForOwner, userAddress, signature, decryptForOwnerAction);
+    const data = await services.lit.decrypt(litApiKey, config.config.pkpId, config.encryptedForOwner, userAddress, signature, decryptForOwnerAction);
       d = JSON.parse(data);
 
     return {
@@ -80,7 +79,7 @@ export const fetchAndDecryptSurveyWithRespondent = async (services: any, deploym
     const decryptForRespondentAction = compactAction(getDecryptForRespondentAction(poolId, deployment.address));
 
     let d: any;
-    const data = await services.lit.decrypt(litApiKey, config.pkpId, config.encryptedForRespondent, services.account.getSignerAddress(), signature, decryptForRespondentAction);
+    const data = await services.lit.decrypt(litApiKey, config.config.pkpId, config.encryptedForRespondent, services.account.getSignerAddress(), signature, decryptForRespondentAction);
     d = JSON.parse(data);
   
     return {

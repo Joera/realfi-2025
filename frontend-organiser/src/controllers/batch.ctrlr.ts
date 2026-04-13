@@ -11,11 +11,13 @@ import { createCsvFile, createZipFile } from "../factories/invitation.factory.js
 
 export class BatchController {
     private reactiveViews: any[] = [];
+    private unsubscribes: (() => void)[] = [];
     private services: IServices;
     private poolId: string;
     private batchId: string;
     private pool!: Pool;
     private batch!: Batch;
+    
 
     constructor(services: IServices, poolId: string, batchId: string) {
         this.services = services;
@@ -121,14 +123,16 @@ export class BatchController {
                             return `<div class="card${c.isUsed ? ' used' : ''}">${svg}</div>`
                         }).join('')
                         : `<loading-spinner></loading-spinner>`;
+                    break;
                 case 'ipfs':
                     return this.batch?.cards
                         ? this.batch.cards.map((c: CardData) =>
-                            `<div class="url ${c.isUsed ? 'used' : ''}"><copy-link value="${c.url}" ${c.isUsed ? 'used' : ''}>${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${c.ipfsCid}</copy-link></div>`
+                            `<div class="url ${c.isUsed ? 'used' : ''}"><copy-link value="${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${c.ipfsCid}" ${c.isUsed ? 'used' : ''}></copy-link></div>`
                         ).join('')
                         : `<loading-spinner></loading-spinner>`;
+                    break;
                 case 'urls':
-                    console.log(this.batch?.cards);
+                    // console.log(this.batch?.cards);
                     return this.batch?.cards
                         ? this.batch.cards.map((c: CardData) =>
                             `<div class="url"><copy-link value="${c.url}" ${c.isUsed ? 'used' : ''}></copy-link></div>`
@@ -189,10 +193,7 @@ export class BatchController {
 
     async render() {
 
-        this.process();
-        this.renderTemplate();
-
-        this.reactiveViews.push(
+        this.unsubscribes.push(
             store.subscribeBatches(() => {
                 const updated = store.batches.find(b => b.id === this.batchId);
                 if (updated) {
@@ -201,22 +202,28 @@ export class BatchController {
                 }
             })
         );
+
+        this.process();
+        this.renderTemplate();
     }
 
     destroy() {
         this.reactiveViews.forEach(view => view.destroy());
         this.reactiveViews = [];
+        
+        this.unsubscribes.forEach(unsub => unsub());
+        this.unsubscribes = [];
     }
 
     tabName(e: any) {
 
         const tab = (e.target as HTMLElement).closest('.tab');
-        console.log("TAB", tab)
+
         if (!tab) return;
         return (tab as HTMLElement).dataset.tab as 'qr-codes' | 'ipfs' | 'urls';
     }
 
-     setListeners() {
+    setListeners() {
 
         document.querySelector('#back-btn')?.addEventListener('click', () => {
             router.navigate(`/pool/${this.poolId}`);
@@ -253,4 +260,5 @@ export class BatchController {
 
         });
     }
+
 }

@@ -14,9 +14,8 @@
     "@nillion/blindfold": "^0.1.0",
     "@nillion/client-web": "^0.6.0",
     "@nillion/nilai-ts": "^0.3.0",
-    "@nillion/nilauth-client": "^2.0.0",
     "@nillion/nuc": "^2.0.0",
-    "@nillion/secretvaults": "^2.0.0",
+    "@nillion/secretvaults": "^3.0.0",
     "@noble/curves": "^2.0.1",
     "@noble/hashes": "^2.0.1",
     "@s3ntiment/shared": "file:../shared",
@@ -33,7 +32,7 @@
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
-    "@types/node": "^24.10.0",
+    "@types/node": "^24.10.14",
     "esbuild": "^0.27.3",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"

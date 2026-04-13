@@ -51,6 +51,9 @@ export class NewSurveyController {
 
   private handleSurveySubmit = async (event: any) => {
 
+
+    store.setUI({ newStep: 'creating-pool' });
+
     const survey = event.detail.survey;
     console.log("ready to submit", survey)
 
@@ -79,9 +82,11 @@ export class NewSurveyController {
       })
     });
 
+    if (!poolResponse.ok) store.setUI({ newStep: 'error' });
+
     const { pkpId, groupId }  = await poolResponse.json();
 
-    console.log("POOL CREATED");
+    store.setUI({ newStep: 'creating-survey' });
 
     const config = {
       safe: safeAddress,
@@ -104,7 +109,6 @@ export class NewSurveyController {
 
     console.log(surveyConfig)
 
-    const signature = this.services.safe.signMessage("create a s3ntiment survey");
 
     let surveyResponse: any = await fetch(`${BACKENDURL}/api/surveys`, {
       method: 'POST',
@@ -112,17 +116,18 @@ export class NewSurveyController {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({  
-        signature, 
         surveyConfig
       })
     });
+
+    if (!surveyResponse.ok) store.setUI({ newStep: 'error' });
 
     const { cid }  = await surveyResponse.json();
 
     // run create survey in action 
 
 
-    
+    store.setUI({ newStep: 'creating-invites' });
 
     if (this.services.ipfs.isCID(cid)) {
 
@@ -175,6 +180,7 @@ export class NewSurveyController {
 
       else {
         alert('create survey tx failed ' +  res.txHash)
+        store.setUI({ newStep: 'error' });
       }
     }
   };

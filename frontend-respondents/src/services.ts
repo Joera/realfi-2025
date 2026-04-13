@@ -65,7 +65,7 @@ export class ServiceContainer implements IServices {
     this.lit = new LitService({ "environment": litEnv});
 
     this.ipfs = new IPFSMethods(import.meta.env.VITE_KUBO_ENDPOINT, import.meta.env.VITE_PINATA_JWT, import.meta.env.VITE_PINATA_GATEWAY)
-    this.nillDB = new NillDBUserService(import.meta.env.VITE_NIL_BUILDER_DID, import.meta.env.VITE_NILCHAIN_URL, import.meta.env.VITE_NILAUTH_URL, import.meta.env.VITE_NILDB_NODES);
+    this.nillDB = new NillDBUserService(import.meta.env.VITE_NIL_BUILDER_DID,  import.meta.env.VITE_NILDB_NODES);
     this.oprf = new OPRFService(import.meta.env.VITE_HUMAN_NETWORK_SIGNER_URL);
     
     await this.waap.createWallet(base);

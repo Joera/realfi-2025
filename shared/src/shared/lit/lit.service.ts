@@ -43,7 +43,7 @@ export class LitService {
       'Content-Type': 'application/json',
     };
 
-    console.log("KEY2", apiKey)
+    // console.log("KEY2", apiKey)
 
     if (apiKey) {
       headers['X-Api-Key'] = apiKey;
@@ -217,6 +217,8 @@ export class LitService {
   // ============================================================
 
   async encrypt(key: string, pkpId: string, message: string): Promise<string> {
+
+    console.log({ key, pkpId, message })
 
     if (!message || typeof message !== 'string') {
       throw new Error(`encrypt: message must be a non-empty string, got: ${typeof message}`);
