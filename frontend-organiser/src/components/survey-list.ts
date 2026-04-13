@@ -19,7 +19,6 @@ class SurveyList extends HTMLElement {
     connectedCallback() {
 
         const surveys = store.surveys; // or however you fetch current state
-        console.log("Store surveys", store.surveys)
         this.render(surveys);
 
         this.unsubscribe = store.subscribeSurveys((surveys: any[]) => {

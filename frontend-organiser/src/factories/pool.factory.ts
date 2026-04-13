@@ -5,14 +5,7 @@ import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveySto
 export const getPoolInfo = async (services:IServices, poolId: string) : Promise<Pool> => {
 
     const [safeAddress, createdAt ] = await services.viem.read(surveyStore.address as `0x${string}`, surveyStore.abi,"getPool", [poolId]);
-    console.log(safeAddress)
-
-    // batches ??
-
     const _batches = await services.viem.read(surveyStore.address as `0x${string}`, surveyStore.abi,"getPoolBatches", [poolId]);
-
-    console.log(_batches)
-
     const batches = _batches.map( (b:any ) => b.id)
 
     const abi = [{
@@ -30,7 +23,6 @@ export const getPoolInfo = async (services:IServices, poolId: string) : Promise<
         }];
 
     const owners  = await services.viem.read(safeAddress, abi,"getOwners", []);
-    console.log(owners)
 
     return {
             id: poolId, 

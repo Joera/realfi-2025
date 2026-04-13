@@ -26,8 +26,6 @@ export class LitService {
   // Private
   // ============================================================
 
-
-
   private async call<T>(
     endpoint: string,
     options: {
@@ -45,14 +43,11 @@ export class LitService {
       'Content-Type': 'application/json',
     };
 
+    console.log("KEY2", apiKey)
+
     if (apiKey) {
       headers['X-Api-Key'] = apiKey;
     }
-
-    // console.log(`[Lit API] ${method} ${this.baseUrl}${endpoint}`, body ? JSON.stringify(body).slice(0, 200) : '');
-
-    console.log(`${this.baseUrl}${endpoint}`)
-    console.log("headers", headers)
 
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method,

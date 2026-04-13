@@ -56,17 +56,13 @@ export class OverviewController {
 
         const button = document.getElementById("btn-new");
 
-        console.log(onabort,button)
-
         button?.addEventListener('click', () => {
-            console.log("NEW")
             router.navigate("/new")
         })
 
         document.addEventListener('access-request', async (e) => {
             const event = e as CustomEvent
             const { surveyId } = event.detail;
-            console.log(surveyId);
         })
 
         document.addEventListener('import-pool', async (e) => {
@@ -82,7 +78,6 @@ export class OverviewController {
         document.addEventListener('import-survey', async (e) => {
             const event = e as CustomEvent
             const { surveyId } = event.detail;
-            console.log(surveyId);
         })
         
     }

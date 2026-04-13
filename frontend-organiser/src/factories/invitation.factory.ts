@@ -6,6 +6,7 @@ import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { privateKeyToAccount } from 'viem/accounts';
 import { Batch, CardData } from '@s3ntiment/shared';
+import { IServices } from '../services/services';
 
 const BASEURL = import.meta.env.VITE_PROD == "true" ? import.meta.env.VITE_FRONTEND_PROD : import.meta.env.VITE_FRONTEND_DEV;  
 
@@ -87,5 +88,22 @@ export const createZipFile = async (cards: any[], surveyId: string) => {
   }
   const zipBlob = await zip.generateAsync({type: 'blob'});
   saveAs(zipBlob, `s3ntiment-qr-codes-${surveyId}.zip`);
+}
+
+export const createCsvFile = (values: string[], filename: string) => {
+  const csv = values.map(v => `"${v}"`).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  saveAs(blob, `${filename}.csv`);
+}
+
+export const uploadToPinata = async (services: IServices, cards: CardData[]) => {
+
+  let i = 0;
+  for (let card of cards) {
+      card.ipfsCid = await services.ipfs.uploadToPinata(card.svgString!,`${card.batchId}-${i}`)
+      i++;
+  }
+
+  return cards;
 }
 

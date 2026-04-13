@@ -1,7 +1,7 @@
 import { typograhyStyles, tableStyles, buttonStyles, breakpoints} from '@s3ntiment/shared/assets'
 
 import { store } from '../../state/store.js'
-import type { Batch } from '@s3ntiment/shared'
+import type { Batch, Pool } from '@s3ntiment/shared'
 import { router } from '../../router.js'
 
 class PoolFormBatches extends HTMLElement {
@@ -22,6 +22,8 @@ class PoolFormBatches extends HTMLElement {
 
     connectedCallback() {
         // In draft mode, ensure there's always one batch to fill in
+
+        
         if (this._mode === 'draft' && this._newBatches.length === 0) {
             this._newBatches.push({
                 id: '',
@@ -51,16 +53,7 @@ class PoolFormBatches extends HTMLElement {
             const pool = store.pools.find((p: any) => p.id === newValue)
             if (pool) {
 
-                const directBatches = pool.batches.filter(
-                    (b: Batch | string): b is Batch => typeof b === 'object'
-                );
-                const resolvedBatches = Object.values(store.batches)
-                    // .filter((b: Batch | string): b is string => typeof b === 'string')
-                    // .map(s => store.batches.find(b => b.id === s))
-                    // .filter((b): b is Batch => b !== undefined);
-
-                this._existingBatches = [...directBatches, ...resolvedBatches];
-
+                this._existingBatches = store.batches.filter((b: Batch) => b.pool == pool.id);
 
                 this._newBatches = []
                 this.render()
@@ -283,7 +276,7 @@ class PoolFormBatches extends HTMLElement {
 
                 ${this._existingBatches.map((batch) => `
                     <div class="table-row" data-batch-id="${batch.id}">
-                        <div class="table-cell">${batch.name}"</div>
+                        <div class="table-cell">${batch.name}</div>
                         <div class="table-cell">${poolSurveys.find((s: any) => s.id === batch.survey)?.title || batch.survey || '—'}</div>
                         <div class="table-cell hide">${batch.amount}</div>
                         <div class="table-cell hide-sm">${batch.medium === 'zip-file' ? 'QR Code' : 'CDN Link'}</div>
@@ -323,15 +316,7 @@ class PoolFormBatches extends HTMLElement {
                         ` : ''}
                         <div class="form-group small">
                             <label>Amount</label>
-                            <input type="number" data-field="amount" data-index="${index}" 
-                                   value="${batch.amount}" min="1" placeholder="50" />
-                        </div>
-                        <div class="form-group small">
-                            <label>Medium</label>
-                            <select data-field="medium" data-index="${index}">
-                                <option value="zip-file" ${batch.medium === 'zip-file' ? 'selected' : ''}>ZIP File</option>
-                                <option value="cdn" ${batch.medium === 'cdn' ? 'selected' : ''}>CDN Link</option>
-                            </select>
+                            <input type="number" data-field="amount" data-index="${index}" value="${batch.amount}" min="1" placeholder="20" />
                         </div>
                     </div>
                     ${this._mode === 'existing' ? `
@@ -469,6 +454,13 @@ class PoolFormBatches extends HTMLElement {
         })
         
         return errors
+    }
+
+    refreshBatches() {
+        this._existingBatches = store.batches.filter((b: Batch) => b.pool === this._poolId);
+        this._newBatches = [];
+        this.render();
+        this.attachEventListeners();
     }
 }
 

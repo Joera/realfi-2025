@@ -11,6 +11,7 @@ import {initStorage, LitPoolKeys } from "@s3ntiment/shared/node"
 import { Account, verifyMessage } from 'viem';
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 import { privateKeyToAccount } from 'viem/accounts';
+import { PoolController } from './pool.ctrlr.js';
 
 // ====== APP SETUP ======
 
@@ -38,7 +39,8 @@ const lit = new LitService({
 await initStorage();
 const litPoolKeys = new LitPoolKeys()
 const ipfs = new IPFSMethods(KUBO_ENDPOINT, PINATA_JWT, PINATA_GATEWAY);
-const survey = new SurveyController(nildb, lit, litPoolKeys, ipfs, viem);
+const pool = new PoolController(lit, litPoolKeys)
+const survey = new SurveyController(nildb, lit, ipfs, viem, litPoolKeys);
 await nildb.initBuilder();
 
 
@@ -65,6 +67,16 @@ async function verifySignature(req: Request, res: Response, next: NextFunction) 
 const router = express.Router();
 
 // --- Surveys ---
+
+router.post('/pools', async (req: Request, res: Response) => {
+    try {
+        res.status(201).json(await pool.create(req.body));
+    } catch (error: any) {
+        console.error(error);
+        res.status(500).json({ error: 'CREATE_FAILED', detail: error.message });
+    }
+});
+
 
 // Create a new survey
 // Body: { surveyConfig, safeAddress, idempotencyKey? }

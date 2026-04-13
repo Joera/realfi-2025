@@ -7,8 +7,7 @@ import { router } from "../router.js";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
 import {  Batch, Card, CardData, Pool, Survey } from "@s3ntiment/shared";
 import '@s3ntiment/shared/components';
-
-
+import { createCsvFile, createZipFile } from "../factories/invitation.factory.js";
 
 export class BatchController {
     private reactiveViews: any[] = [];
@@ -19,7 +18,6 @@ export class BatchController {
     private batch!: Batch;
 
     constructor(services: IServices, poolId: string, batchId: string) {
-
         this.services = services;
         this.poolId = poolId;
         this.batchId = batchId;
@@ -31,12 +29,10 @@ export class BatchController {
 
         app.innerHTML = `
             <style>
-
                 .actions-container {
-                    margin-bottom: 1.5rem;
+                    margin: 1.5rem 0;
                 }
-           
-     
+
                 .back-btn {
                     background: none;
                     border: none;
@@ -58,9 +54,18 @@ export class BatchController {
                     text-decoration: underline;
                 }
 
-                .card svg {
+                #batch-container {
+                
+                    flex-direction: row;
+                    flex-wrap: wrap;
+                    gap: 1rem;
+                    margin: 1.5rem;
+                    width: calc(100% - 3rem);
 
-                    width: 100%;/
+                }
+
+                .card svg {
+                    width: 100%;
                     height: auto;
                 }
 
@@ -68,36 +73,106 @@ export class BatchController {
                     opacity: .1
                 }
 
+                .url {
+                    width: 100%;
+                }
+
 
             </style>
 
             <div class="container container-large centered">
-              
+
+                <div class="tabs-container">
+                    <div class="tabs" id="tabs-container"></div>
+                </div>
+
+                <div id="batch-container" class="container container-large centered"></div>
+
                 <div class="actions-container">
                     <button class="btn-primary" id="btn-refresh">Refresh</button>
+                    <button class="btn-primary" id="btn-download">Download</button>
                 </div>
-                <div id="card-container" class="container container-large centered">
-                    ${this.batch.cards!.map( (c: CardData) => 
-                        `<div class="card${c.isUsed ? ' used' : ''}">${c.svgString}</div>` )}
-                </div>
-               
+
             </div>
         `;
 
+        const tabsView = reactive('#tabs-container', () => {
+            const { batchTab } = store.ui;
+            return `
+                <button class="tab ${batchTab === 'qr-codes' ? 'active' : ''}" data-tab="qr-codes">QR</button>
+                <button class="tab ${batchTab === 'ipfs' ? 'active' : ''}" data-tab="ipfs">IPFS</button>
+                <button class="tab ${batchTab === 'urls' ? 'active' : ''}" data-tab="urls">URLs</button>
+            `;
+        });
+
+        if (tabsView) {
+            tabsView.bind('ui');
+            this.reactiveViews.push(tabsView);
+        }
+
+        const view = reactive('#batch-container', () => {
+            const { batchTab } = store.ui;
+
+            switch (batchTab) {
+                case 'qr-codes':
+                    return this.batch?.cards
+                        ? this.batch.cards.map((c: CardData) => {
+                            const svg = c.svgString?.replaceAll("500","280")
+                            return `<div class="card${c.isUsed ? ' used' : ''}">${svg}</div>`
+                        }).join('')
+                        : `<loading-spinner></loading-spinner>`;
+                case 'ipfs':
+                    return this.batch?.cards
+                        ? this.batch.cards.map((c: CardData) =>
+                            `<div class="url ${c.isUsed ? 'used' : ''}"><copy-link value="${c.url}" ${c.isUsed ? 'used' : ''}>${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${c.ipfsCid}</copy-link></div>`
+                        ).join('')
+                        : `<loading-spinner></loading-spinner>`;
+                case 'urls':
+                    console.log(this.batch?.cards);
+                    return this.batch?.cards
+                        ? this.batch.cards.map((c: CardData) =>
+                            `<div class="url"><copy-link value="${c.url}" ${c.isUsed ? 'used' : ''}></copy-link></div>`
+                        ).join('')
+                        : `<loading-spinner></loading-spinner>`;
+                default:
+                    return ``;
+            }
+        });
+
+        if (view) {
+            view.bind('ui');
+            this.reactiveViews.push(view);
+        }
+
         this.setListeners();
+    }
+
+    async process() {
+        store.setUI({ batchTab: 'qr-codes' });
+
+        const p = store.getPool(this.poolId);
+        if (p) this.pool = p;
+        const b = store.getBatch(this.batchId);
+        if (b) {
+            this.batch = b;
+        } else {
+            const bb = p?.batches.filter((b: any) => typeof b == 'object').find((b: any) => b.id == this.batchId);
+            if (typeof bb === 'object' && 'id' in bb) this.batch = bb;
+        }
+
+        this.discardUsedCards();
     }
 
     async discardUsedCards() {
         let changed = false;
         
-        console.log('b4 discard');
-
         for (const c of this.batch.cards!) {
             c.batchId = this.batchId;
             c.isUsed = false;
             const card = new Card(c);
             try {
                 const used = await card.isUsed(this.services, surveyStore);
+                console.log('USED', used)
                 if (used && !c.isUsed) {
                     c.isUsed = true;
                     changed = true;
@@ -110,24 +185,6 @@ export class BatchController {
         if (changed) {
             store.addBatch(this.batch);
         }
-    }
-    
-    
-    async process() {
-
-        const p  = store.getPool(this.poolId);
-        if (p) this.pool = p
-        const b = store.getBatch(this.batchId);
-        if (b)  {
-            this.batch = b
-        } else {
-            const bb = p?.batches.filter((b:any) => typeof b == 'object').find( (b:any) => b.id == this.batchId)
-            if (typeof bb === 'object' && 'id' in bb) this.batch = bb
-        }
-
-        this.discardUsedCards();
-
-        // await this.services.safe.connectToExistingSafe(this.pool.safeAddress || "") 
     }
 
     async render() {
@@ -151,16 +208,49 @@ export class BatchController {
         this.reactiveViews = [];
     }
 
-    setListeners() {
+    tabName(e: any) {
+
+        const tab = (e.target as HTMLElement).closest('.tab');
+        console.log("TAB", tab)
+        if (!tab) return;
+        return (tab as HTMLElement).dataset.tab as 'qr-codes' | 'ipfs' | 'urls';
+    }
+
+     setListeners() {
 
         document.querySelector('#back-btn')?.addEventListener('click', () => {
             router.navigate(`/pool/${this.poolId}`);
         });
 
-        document?.querySelector('#btn-refresh')?.addEventListener('click', () => {
-          
-           this.discardUsedCards();
+        document.querySelector('#tabs-container')?.addEventListener('click', (e) => {
+            const tabName = this.tabName(e)
+            store.setUI({ batchTab: tabName });
         });
 
+        document?.querySelector('#btn-refresh')?.addEventListener('click', () => {
+
+            this.discardUsedCards();
+        });
+
+        document?.querySelector('#btn-download')?.addEventListener('click', async (e) => {
+            
+            const { batchTab } = store.ui;
+
+            switch (batchTab) {
+
+                case 'qr-codes' : 
+                    await createZipFile(this.batch.cards || [], this.batch.id)
+                break;
+
+                case 'ipfs' : 
+                    await createCsvFile(this.batch.cards?.map( (c: CardData) => import.meta.env.VITE_PINATA_GATEWAY + '/ipfs/' + c.ipfsCid!) || [], this.batch.id)
+                break;
+
+                case 'urls' :  
+                    await createCsvFile(this.batch.cards?.map( (c: CardData) => c.url!) || [], this.batch.id)
+                break;
+            }
+
+        });
     }
 }

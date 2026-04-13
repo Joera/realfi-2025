@@ -5,6 +5,7 @@ const DEFAULT_UI_STATE: UIState = {
   landingStep: 'welcome',
   newStep: 'intro',
   resultTab: 'results',
+  batchTab: 'qr-codes'
 };
 
 export class UIStore {

@@ -35,11 +35,12 @@ export const footerStylesString = `
             font-size: 2.8rem;
             margin: 0;
                 > span {
-                    font-size 2.8rem;
+                    font-size: 2.8rem;
                 }
         }
 
         nav {
+        
             width: 100%;
 
             ul {

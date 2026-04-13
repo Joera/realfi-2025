@@ -3,7 +3,7 @@
 
 import { Batch, Survey } from '@s3ntiment/shared';
 import '../components/draft-survey-editor.js';
-import { createBatch, createInvitations } from '../factories/survey.factory.js';
+import { createBatch } from '../factories/survey.factory.js';
 import { IServices } from '../services/services.js';
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
 import { store } from '../state/store.js';
@@ -68,8 +68,25 @@ export class NewSurveyController {
 
     console.log("safeAddress", safeAddress)
 
+    let poolResponse: any = await fetch(`${BACKENDURL}/api/pools`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({    
+        poolId,
+        safeAddress
+      })
+    });
+
+    const { pkpId, groupId }  = await poolResponse.json();
+
+    console.log("POOL CREATED");
+
     const config = {
       safe: safeAddress,
+      pkpId,
+      groupId,
       chainId: import.meta.env.VITE_L2 == 'base' ? 8453 : 1,
       litNetwork: import.meta.env.VITE_LIT_NETWORK
     }
@@ -81,32 +98,33 @@ export class NewSurveyController {
       introduction: survey.introduction,
       groups: survey.groups,
       batches: survey.batches,
-      config,
+      config
       // createdAt: BigInt(Math.floor(Date.now() / 1000))
     }
 
     console.log(surveyConfig)
 
-    // console.log("BACKENDURL", BACKENDURL)
+    const signature = this.services.safe.signMessage("create a s3ntiment survey");
 
-    let res: any = await fetch(`${BACKENDURL}/api/surveys`, {
+    let surveyResponse: any = await fetch(`${BACKENDURL}/api/surveys`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({   
-        surveyId,  
-        poolId,
-        surveyConfig,
-        safeAddress
+      body: JSON.stringify({  
+        signature, 
+        surveyConfig
       })
     });
 
-    const result = await res.json();
+    const { cid }  = await surveyResponse.json();
 
-    console.log(result);
+    // run create survey in action 
 
-    if (this.services.ipfs.isCID(result.cid)) {
+
+    
+
+    if (this.services.ipfs.isCID(cid)) {
 
       let batchIds = [];
 
@@ -115,36 +133,28 @@ export class NewSurveyController {
           survey.batches.map((batch: Batch) => createBatch(this.services, batch, poolId, surveyId))
         );
         
-        for (const batch of survey.batches) {
-          console.log("B", batch)
-          console.log(JSON.stringify(batch.cards.map((c: any) => c.url)));
-        }
-
         batchIds = survey.batches.map((b: Batch) => b.id);
       }
 
-      console.log("BATCHIDS", batchIds)
-
-      const args = [surveyId, poolId, result.cid.toString(), batchIds];
-
+      const args = [surveyId, poolId, cid.toString(), batchIds];
       const res = await this.services.safe.write(surveyStore.address, surveyStore.abi, 'createSurvey', args, { waitForReceipt: true });
       
       // console.log(res);
-      console.log("Survey", survey)
+      console.log("Survey created", survey)
 
       if (res.receipt?.status == "success") {
 
-        if (isNewPool) {
-          survey.batches = await Promise.all(
-            survey.batches.map((batch: Batch) => createInvitations(batch))
-          );
+        // if (isNewPool) {
+          // survey.batches = await Promise.all(
+          //   survey.batches.map((batch: Batch) => createInvitations(batch))
+          // );
 
-          surveyConfig.batches = survey.batches;
-          
-          for (const batch of survey.batches) {
-            store.addBatch(batch);
-          }
+        surveyConfig.batches = survey.batches;
+        
+        for (const batch of survey.batches) {
+          store.addBatch(batch);
         }
+        // }
 
         store.addSurvey(surveyConfig);
 
@@ -158,7 +168,9 @@ export class NewSurveyController {
             });
         }
 
-        router.navigate("/surveys")
+        console.log("ready")
+
+        router.navigate(`/batch/${survey.batches[0].pool}/${survey.batches[0].id}`)
       }
 
       else {

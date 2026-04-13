@@ -1,0 +1,26 @@
+{
+  "name": "website",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "styles": "tsx --require ./shim.ts build-css.ts",
+    "scss": "sass scss:assets/styles",
+    "scss:watch": "sass --watch scss:assets/styles",
+    "serve": "serve .",
+    "dev": "concurrently \"pnpm run scss:watch\" \"pnpm run serve\""
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@s3ntiment/shared": "workspace:*",
+    "fs": "0.0.1-security",
+    "serve": "^14.2.6"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "sass": "^1.99.0",
+    "tsx": "^4.21.0"
+  }
+}

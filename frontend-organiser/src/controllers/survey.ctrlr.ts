@@ -4,16 +4,13 @@ import { store } from "../state/store.js";
 import { reactive } from "../utils/reactive.js";
 import '../components/survey-detail-responses.js';
 import '../components/pool-detail-access.js';
-// import '../components/survey-forms/survey-form-questions.js';
 import '../components/survey-forms/pool-form-batches.js';
 import '../components/registered-questions-editor.js';
 import { router } from "../router.js";
-import { createBatch, createInvitations } from "../factories/survey.factory.js";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
 import {  fetchAndDecryptSurveyWithOwner, fetchLitApiKey, Survey } from "@s3ntiment/shared";
 import { renderIcon } from "@s3ntiment/shared/assets";
 import '@s3ntiment/shared/components';
-import { authenticate } from "../factories/auth.factory.js";
 
 const BACKENDURL = import.meta.env.VITE_PROD  == "true" ? import.meta.env.VITE_BACKEND_PROD : import.meta.env.VITE_BACKEND_DEV;
 
@@ -22,6 +19,7 @@ export class SurveyController {
     private services: IServices;
     private surveyId: string;
     private survey!: Survey;
+    private cancelled = false;
 
     constructor(services: IServices, surveyId: string) {
 
@@ -133,7 +131,6 @@ export class SurveyController {
 
         // Reactive survey title
         const titleView = reactive('#survey-title', () => {
-            console.log("should update", this.survey)
             return this.survey?.title || '...';
         });
 
@@ -189,36 +186,14 @@ export class SurveyController {
     
     async process() {
 
-        this.survey = await fetchAndDecryptSurveyWithOwner(this.services, surveyStore, this.surveyId, BACKENDURL)
-        console.log("Survey: ",this.survey)
-
+        // we need safeAddress to decrypt
         await this.services.safe.connectToExistingSafe(this.survey.config?.safe || "") 
+        if (this.cancelled) return;
+        // overwrite with decrypted content 
+        this.survey = await fetchAndDecryptSurveyWithOwner(this.services, surveyStore, this.surveyId, BACKENDURL)
+        if (this.cancelled) return;
 
-        // switch spinner msg
-
-        await this.resreshResponses()
-
-
-        // const nillDid = await this.services.nillion.getDid();
-
-        // const message = `Request delegation for ${nillDid.didString}`;
-        // const signature = await this.services.viem.signMessage(message);
-
-        // let nillDelegation: any  = await fetch(`${import.meta.env.VITE_BACKEND}/api/surveys/${this.surveyId}/delegation`, { // or directly get results 
-        //   method: 'POST',
-        //   headers: {
-        //       'Content-Type': 'application/json', 
-        //   },
-        //   body: JSON.stringify({ 
-        //       surveyId: this.surveyId,
-        //       nillDid,
-        //       signature,     
-        //       message  
-        //   })
-        // });
-
-        
-        
+        await this.refreshResponses(); 
     }
 
     async render() {
@@ -234,11 +209,12 @@ export class SurveyController {
     }
 
     destroy() {
+        this.cancelled = true;
         this.reactiveViews.forEach(view => view.destroy());
         this.reactiveViews = [];
     }
 
-    async resreshResponses () {
+    async refreshResponses () {
 
         const response = await fetch(`${BACKENDURL}/api/surveys/${this.surveyId}/results`, {
             method: 'POST',
@@ -254,6 +230,8 @@ export class SurveyController {
         const talliedResults = await response.json();
 
         this.survey.results = talliedResults.results;
+
+        if (this.cancelled) return;  
 
         console.log("RESULTS", this.survey.results)
         store.addSurvey(this.survey);
@@ -322,7 +300,7 @@ export class SurveyController {
 
         document.addEventListener('refresh-responses', async (e: Event) => {
 
-            await this.resreshResponses()
+            await this.refreshResponses()
         });
 
         document.addEventListener('survey-save', async (e: Event) => {
@@ -375,7 +353,6 @@ export class SurveyController {
 
                     console.log("IPFS upload failed", result.cid)
                 }
-
             }
 
             console.log('save groups', surveyId, groups)

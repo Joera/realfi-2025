@@ -12,73 +12,42 @@ export class SurveyController {
 
     constructor(nildb: any, lit: any, litPoolKeys: any, ipfs: any, viem: any) {
         this.nildb = nildb;
-        this.lit = lit; 
+        this.lit = lit;
         this.litPoolKeys = litPoolKeys;
         this.ipfs = ipfs;
         this.viem = viem;
     }
 
+    // separate pool and survey ??? 
+
     async create(body: any) {
 
-        const contract = surveyStore.address;
-        const { surveyId, poolId, surveyConfig, safeAddress } = body;
+        // also authorization issue 
+        const { signature, surveyConfig } = body;
+
+        // check if signature belongs to  poolOwner 
+        const signer = await this.verifyPoolOwner(signature, surveyConfig.pool, surveyStore.address, surveyConfig.config.safe);
+        if (!signer) throw new Error('Unauthorized');
+
+        const usage_api_key = this.litPoolKeys.get(surveyConfig.pool)
+
         const { safeConfigWithScoring, safeConfig, scoring } = stripScoring(surveyConfig)
-        const _isScored = isScored(surveyConfig.groups);
-
+        const _isScored = isScored(surveyConfig);
         const rawSchema = createSurveyCollectionSchema(safeConfig, "standard")
-        const collectionId = await this.nildb.createSurveyCollection(surveyId, rawSchema, this.nildb.builderDid.didString);
+        const collectionId = await this.nildb.createSurveyCollection(surveyConfig.id, rawSchema, this.nildb.builderDid.didString);
 
-        const pkpId = await this.lit.createPkp();
-        const { group_id: groupId } = await this.lit.createGroup(`s3ntiment-${poolId}`);
-        await this.lit.addPkpToGroup(groupId, pkpId);
-
-        const decryptForOwnerAction = compactAction(getDecryptForOwnerAction(poolId, contract, safeAddress));
-        const decryptForRespondentAction = compactAction(getDecryptForRespondentAction(poolId, contract));
-       // const simpleAction = compactAction(getSimpleDecrypt(poolId, contract));
-
-        // console.log(decryptForOwnerAction)
-
-        const encryptCid = await this.lit.getActionCid(encryptAction);
-        const decryptOwnerCid = await this.lit.getActionCid(decryptForOwnerAction);
-        const decryptMemberCid = await this.lit.getActionCid(decryptForRespondentAction);
-        // const simpleDecryptCid = await this.lit.getActionCid(simpleAction);
-
-        // console.log("owner decrypt cid", decryptOwnerCid)
-
-        await this.lit.registerAction(encryptCid, 'encrypt');
-        await this.lit.registerAction(decryptOwnerCid, `decrypt-owner-${poolId}`);
-        await this.lit.registerAction(decryptMemberCid, `decrypt-member-${poolId}`);
-        //await this.lit.registerAction(simpleDecryptCid, 'simple-decrypt')
-
-        await this.lit.addActionToGroup(groupId, encryptCid);
-        await this.lit.addActionToGroup(groupId, decryptOwnerCid);
-        await this.lit.addActionToGroup(groupId, decryptMemberCid);
-        // await this.lit.addActionToGroup(groupId, simpleDecryptCid);
-        const { usage_api_key } = await this.lit.createUsageKey({ executeInGroups: [groupId] });
-
-        // 
-        this.litPoolKeys.set(poolId, usage_api_key);
-
+        // put this inside lit action
         const [ encryptedForOwner, encryptedForRespondent] = await Promise.all([
-            this.lit.encrypt(usage_api_key, pkpId, JSON.stringify(safeConfigWithScoring)),
-            this.lit.encrypt(usage_api_key, pkpId, JSON.stringify(safeConfig))
+            this.lit.encrypt(usage_api_key, surveyConfig.config.pkpId, JSON.stringify(safeConfigWithScoring)),
+            this.lit.encrypt(usage_api_key, surveyConfig.config.pkpId, JSON.stringify(safeConfig))
         ])
-
-        // After pool creation, verify setup
-        console.log('Pool setup verification:');
-        console.log('- poolId:', poolId);
-        console.log('- pkpId:', pkpId);
-        console.log('- groupId:', groupId);
-        console.log('- usageKey:', usage_api_key);
 
         const encryptedScoring = this.nildb.encryptToBuilder({scoring: scoring, groups: surveyConfig.groups});
 
         const config: EncryptedConfig = {
             surveyId: collectionId,
-            poolId: poolId,
+            poolId: surveyConfig.pool,
             nilDid: this.nildb.builderDid.didString,
-            pkpId,
-            groupId,
             encryptedForOwner,
             encryptedForRespondent,
             encryptedScoring,
@@ -91,30 +60,27 @@ export class SurveyController {
 
     async update(body: any) {
 
-        const contract = surveyStore.address;
-        const { surveyId, poolId, pkpId, groupId, surveyConfig, safeAddress } = body;
+        const { signature, surveyConfig } = body;
 
-        console.log(surveyConfig)
+        const signer = await this.verifyPoolOwner(signature, surveyConfig.pool, surveyStore.address, surveyConfig.config.safe);
+        if (!signer) throw new Error('Unauthorized');
+
+        const usage_api_key = this.litPoolKeys.get(surveyConfig.pool)
 
         const { safeConfigWithScoring, safeConfig, scoring } = stripScoring(surveyConfig);
         const _isScored = isScored(surveyConfig.groups);
 
-        const decryptForOwnerAction = getDecryptForOwnerAction(poolId, contract, safeAddress);
-        const decryptForRespondentAction = getDecryptForRespondentAction(poolId, contract);
-
         const [ encryptedForOwner, encryptedForRespondent] = await Promise.all([
-            this.lit.encrypt(safeConfigWithScoring, decryptForOwnerAction),
-            this.lit.encrypt(safeConfig, decryptForRespondentAction)
+            this.lit.encrypt(usage_api_key, surveyConfig.config.pkpId, JSON.stringify(safeConfigWithScoring)),
+            this.lit.encrypt(usage_api_key, surveyConfig.config.pkpId, JSON.stringify(safeConfig))
         ])
 
         const encryptedScoring = this.nildb.encryptToBuilder({scoring: scoring, groups: surveyConfig.groups});
 
         const config: EncryptedConfig = {
-            surveyId,
-            poolId: poolId,
+            surveyId: surveyConfig.id,
+            poolId: surveyConfig.pool,
             nilDid: this.nildb.builderDid.didString,
-            pkpId,
-            groupId,
             encryptedForOwner,
             encryptedForRespondent,
             encryptedScoring,
@@ -188,72 +154,46 @@ export class SurveyController {
         return false;
 
        }
-
-       
     }
 
-    async requestDelegation(body: any) {
-
-        const { 
-            did,
-            signature,
-            surveyId
-        } = body;
-
-    }
-
-    async verifyOwnership(
-        surveyOwnerAddress: string,
-        requestorDid: string,
-        message: string,
-        signature: Signature
-    ): Promise<boolean> {
-        // Verify signature matches survey owner
-        const recoveredAddress = await recoverMessageAddress({ message, signature });
+    async verifyPoolOwner(signature: string, poolId: string, contract: string, safeAddress: string): Promise<string | null> {
+    
+        const signerAddress = await this.viem.verifyMessage('Request capability to create survey', signature);
         
-        if (recoveredAddress.toLowerCase() !== surveyOwnerAddress.toLowerCase()) {
-            return false;
-        }
+        const isPoolSafe = await this.viem.read(contract, 
+            ['function isPoolSafe(address addr, string poolId) view returns (bool)'],
+            'isPoolSafe', 
+            [safeAddress, poolId]
+        );
+        
+        if (!isPoolSafe) return null;
 
-        // Verify the DID in message matches requestor
-        const expectedMessage = `Request delegation for ${requestorDid}`;
-        return message === expectedMessage;
+        const isOwner = await this.viem.read(safeAddress,
+            ['function isOwner(address owner) view returns (bool)'],
+            'isOwner',
+            [signerAddress]
+        );
+
+        if (!isOwner) return null;
+
+        return signerAddress;
     }
 
-    // Helper: Verify Safe signer
-    // async verifySafeSigner(
-    //     safeAddress: string,
+    // async verifyOwnership(
     //     surveyOwnerAddress: string,
     //     requestorDid: string,
     //     message: string,
-    //     signature:  Signature
+    //     signature: Signature
     // ): Promise<boolean> {
-    //     // Verify Safe address matches survey owner
-    //     if (safeAddress.toLowerCase() !== surveyOwnerAddress.toLowerCase()) {
+    //     // Verify signature matches survey owner
+    //     const recoveredAddress = await recoverMessageAddress({ message, signature });
+        
+    //     if (recoveredAddress.toLowerCase() !== surveyOwnerAddress.toLowerCase()) {
     //         return false;
     //     }
 
-    //     // Recover signer from signature
-    //     // const signerAddress = await recoverMessageAddress({ message, signature });
-        
-    //     // // Check if signer is owner of the Safe
-    //     // const safe = await Safe.init({
-    //     //     provider: ethProvider,
-    //     //     safeAddress: safeAddress,
-    //     // });
-
-    //     const owners = await safe.getOwners();
-    //     const isSigner = owners.some(
-    //         (owner: any) => owner.toLowerCase() === signerAddress.toLowerCase()
-    //     );
-
-    //     // Verify message format
+    //     // Verify the DID in message matches requestor
     //     const expectedMessage = `Request delegation for ${requestorDid}`;
-        
-    //     return isSigner && message === expectedMessage;
+    //     return message === expectedMessage;
     // }
-
-    
-
-
 }

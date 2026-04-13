@@ -34,7 +34,7 @@ export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: 
     const safeAddress = services.safe.getAddress();
     const signature = await services.safe.signMessage('Request capability to decrypt');
     const litApiKey = await withRetry(
-      (signal) => fetchLitApiKey(backendUrl, services.account.getSignerAddress(), signature, poolId, signal),
+      (signal) => fetchLitApiKey(backendUrl, userAddress, signature, poolId, signal),
       {
         retries: 3,
         timeoutMs: 5_000,
@@ -45,6 +45,7 @@ export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: 
 
     const decryptForOwnerAction = compactAction(getDecryptForOwnerAction(poolId, deployment.address, safeAddress));
     // let _cid = await services.lit.getActionCid(decryptForOwnerAction)
+    // console.log(decryptForOwnerAction)
 
     const data = await services.lit.decrypt(litApiKey, config.pkpId, config.encryptedForOwner, userAddress, signature, decryptForOwnerAction);
       d = JSON.parse(data);

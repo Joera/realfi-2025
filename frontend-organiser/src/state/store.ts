@@ -109,7 +109,7 @@ class Store {
 
   // ============= Pools ============
 
-   get pools(): Pool[] {
+  get pools(): Pool[] {
     return this.poolStore.all;
   }
 
@@ -148,8 +148,8 @@ class Store {
     this.batchStore.set(pools);
   }
 
-  addBatch(pool: Batch): void {
-    this.batchStore.add(pool);
+  addBatch(batch: Batch): void {
+    this.batchStore.add(batch);
   }
 
   getBatch(id: string): Batch | undefined {

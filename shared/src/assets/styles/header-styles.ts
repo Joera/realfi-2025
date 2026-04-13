@@ -9,7 +9,6 @@ export const headerStylesString = `
         justify-content: center;
         align-items: center;
         height: 9rem;
-        // margin-bottom: 3rem;
 
         .container {
 
