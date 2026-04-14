@@ -158,7 +158,7 @@ export class NilDBBuilderService {
             .command(`/nil/db/${collectionId}/data/create` as Command)
             .subject(this.builderDid!)
             .audience(pkpDidParsed)
-            .expiresIn(1 * 365 * 24 * 60 * 60 * 1000) // 1000 years
+            .expiresIn(1 * 28 * 24 * 60 * 60 * 1000) // 1000 years
             .signAndSerialize(this.builderSigner);
 
         console.log('Delegation to PKP created:', delegation.substring(0, 50) + '...');
