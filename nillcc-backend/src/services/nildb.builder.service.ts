@@ -46,7 +46,7 @@ export class NilDBBuilderService {
         // console.log(await this.getCollectionInfo(id))
         // console.log(await this.getBuilderProfile())
 
-        await this.testDelegationFormat()
+        // await this.testDelegationFormat()
 
         
     }
@@ -148,6 +148,22 @@ export class NilDBBuilderService {
                 console.log(`Part ${i}: (not JSON)`, parts[i].substring(0, 50));
             }
         }
+    }
+
+    async delegateCollectionToPkp(collectionId: string, pkpDid: string) {
+        const pkpDidParsed = Did.parse(pkpDid);
+        
+        // Builder delegates create permission to PKP
+        const delegation = await Builder.delegation()
+            .command(`/nil/db/${collectionId}/data/create` as Command)
+            .subject(this.builderDid!)
+            .audience(pkpDidParsed)
+            .expiresIn(1 * 365 * 24 * 60 * 60 * 1000) // 1000 years
+            .signAndSerialize(this.builderSigner);
+
+        console.log('Delegation to PKP created:', delegation.substring(0, 50) + '...');
+        
+        return delegation;
     }
 
     // User delegations still need to be created manually

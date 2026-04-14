@@ -10,6 +10,7 @@ import {
 import { Survey, SurveyAnswer } from '../survey/types.js';
 import { createUserDataObject } from '../survey/index.js';
 import { Signature } from 'viem';
+import { StringifyOptions } from 'node:querystring';
 
 const randomUUID = () => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -30,7 +31,6 @@ export class NillDBUserService {
     user: any;
     builderDid: any;
  
-    // Removed nilChainUrl and nilAuthUrl - no longer needed in SDK 3.0
     constructor(builderDid: any, nilDBNodes: string) { 
         this.builderDid = builderDid;
         this.nilDBNodes = nilDBNodes;
@@ -74,46 +74,57 @@ export class NillDBUserService {
     async storeOwned(uuid: string, survey: Survey, answers: any, surveyId: string, delegationToken: string) {
    
         const userPrivateData = createUserDataObject(uuid, answers, survey, "");
+        return await this.createData(survey, userPrivateData, delegationToken) 
+    }
+
+     async updateOwned(uuid: string, survey: Survey, answers: any, surveyId: string, delegationToken: string, documentId: string) {
+        
+        const userPrivateData = createUserDataObject(uuid, answers, survey, "");
+        
+        await this.user.deleteData({
+            collection: surveyId,
+            data: [userPrivateData],
+            document: documentId
+        });
+
+        return await this.createData(survey, userPrivateData, delegationToken) 
+    } 
+        
+
+    async createData(survey: Survey, userPrivateData: any, delegationToken: string) {
 
         console.log("DID", survey.config!.pkpDid)
-          console.log("=== storeOwned debug ===");
-        console.log("surveyId (collection):", surveyId);
+        console.log("=== storeOwned debug ===");
+        console.log("surveyId (collection):", survey.id);
         console.log("owner (userDid):", this.userDidString);
         console.log("grantee (pkpDid):", survey.config!.pkpDid);
         console.log("delegationToken present:", !!delegationToken);
         console.log("delegationToken:", delegationToken?.substring(0, 100) + "...");
         console.log("user client nodes:", this.user.nodes?.map((n: any) => n.id?.didString));
-        
-        // Check what baseUrls the user client was initialized with
-        console.log("nilDBNodes config:", this.nilDBNodes);
 
         try { 
+
             const uploadResults = await this.user.createData(
                 {
                     owner: this.userDidString,
                     acl: {
-                        grantee: survey.config!.pkpDid, // Note: needs .didString
+                        grantee: survey.config!.pkpDid, 
                         read: true,
                         write: false,
                         execute: true,
                     },
-                    collection: surveyId,
+                    collection: survey.id,
                     data: [userPrivateData],
                 },
                 { auth: { delegation: delegationToken } }
             );
 
             console.log('success', uploadResults);
-            
-            // Check results like the test does
-            const pairs = Object.entries(uploadResults);
-            for (const [node, result] of pairs) {
-                if ((result as any).data.errors?.length > 0) {
-                    console.error(`Node ${node} errors:`, (result as any).data.errors);
-                }
-            }
 
-            return uploadResults;
+            return { 
+                ok: true,  
+                response: uploadResults
+            }
 
         } catch (e: any) {
             console.log('error', JSON.stringify(e, null, 2));
@@ -126,34 +137,7 @@ export class NillDBUserService {
         }
     }
 
-    async updateOwned(uuid: string, survey: Survey, answers: any, surveyId: string, delegationToken: string, documentId: string) {
-        const userPrivateData = createUserDataObject(uuid, answers, survey, "");
-
-      
-
-        await this.user.deleteData({
-            collection: surveyId,
-            data: [userPrivateData],
-            document: documentId
-        });
-
-        const uploadResults = await this.user.createData(
-            {
-                owner: this.userDidString,
-                acl: {
-                    grantee: this.builderDid,
-                    read: true,
-                    write: false,
-                    execute: true,
-                },
-                collection: surveyId,
-                data: [userPrivateData],
-            },
-            { auth: { delegation: delegationToken } }
-        );
-
-        console.log("updated", uploadResults);
-    } 
+ 
 
     async getUserDelegationToken(signature: string, surveyId: string, backendUrl: string) {
         console.log('requesting delegation for DID:', this.userDidString);

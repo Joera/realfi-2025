@@ -4,7 +4,7 @@ import '@s3ntiment/shared/components';
 import '../components/survey-questions.js';
 import { IServices } from '../services.js';
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
-import { fetchAndDecryptSurveyWithRespondent, fetchNillionDelegation, getDecryptForRespondentAction, isScored, Survey, withRetry } from '@s3ntiment/shared';
+import { fetchAndDecryptSurveyWithRespondent, fetchNillionDelegation, getDecryptForRespondentAction, getDelegationAction, isScored, Survey, withRetry } from '@s3ntiment/shared';
 
 import { store } from '../state';
 import { createUserDataObject } from '@s3ntiment/shared'
@@ -112,24 +112,28 @@ export class SurveyController {
       const seed = await this.services.account.createNillDBSeed();
       await this.services.nillDB.init(seed);
 
+      // new / update? 
       const docIUd = crypto.randomUUID();
-      // const signature = await this.services.account.signMessage(`s3ntiment:submit:${this.surveyId}`);
-      // const signerAddress = this.services.account.getSignerAddress();
-     // const userData = createUserDataObject(docIUd, event.detail.answers, this.config!, signerAddress);
 
-      // const result = await this.services.nillDB.storeStandard(BACKENDURL, this.surveyId, store.activeSurvey!.pool || '', userData, signature, signerAddress!);
-
+      // replace with pool issued lit action 
       const signature = await this.services.account.signMessage(`s3ntiment:submit:${this.surveyId}`);
 
-      const delegation = await withRetry(
-            (signal) => fetchNillionDelegation(BACKENDURL, this.config?.config!.pkpDid!, this.config!.id!, signature),
-            {
-              timeoutMs: 5_000,
-              onRetry: (attempt, error) =>
-                console.log(`[fetchLitApiKey] Attempt ${attempt}/3 failed: ${error.message}`),
-            }
-          );
-      const result = await this.services.nillDB.storeOwned(docIUd, this.config!, event.detail.answers, this.surveyId, delegation)
+      const params = { 
+        pkpId: this.config?.config?.pkpId,
+        pkpDid: this.config?.config?.pkpDid,
+        userDid: this.services.nillDB.userDidString,
+        builderDelegation: this.config?.config?.delegation
+      }
+
+      const userDelegationResult: any = await this.services.lit.executeAction(this.config?.pool!, getDelegationAction, params)
+      const userDelegation = userDelegationResult.response.delegation;
+
+      console.log(userDelegation)
+
+      const result = await this.services.nillDB.storeOwned(docIUd, this.config!, event.detail.answers, this.surveyId, userDelegation)
+
+
+      console.log(result)
 
       if (result.ok) {
 
@@ -137,14 +141,14 @@ export class SurveyController {
 
       } else {  
 
-        const r: any = result.json();
+        // let r = result;
 
-        if (r.error == "UNAUTHORISED") {
-          console.log("isValidSignature", r.isValidSignature)
-          console.log("isRespondent", r.isRespondent)
-        } else {
-          console.log("other error - network?")
-        }
+        // if (r.error == "UNAUTHORISED") {
+        //   console.log("isValidSignature", r.isValidSignature)
+        //   console.log("isRespondent", r.isRespondent)
+        // } else {
+        //   console.log("other error - network?")
+        // }
 
       }
 

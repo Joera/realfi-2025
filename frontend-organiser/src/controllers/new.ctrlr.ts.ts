@@ -84,7 +84,7 @@ export class NewSurveyController {
 
     if (!poolResponse.ok) store.setUI({ newStep: 'error' });
 
-    const { pkpId, pkpDid, groupId }  = await poolResponse.json();
+    const { pkpId, pkpDid, groupId, delegation }  = await poolResponse.json();
 
     store.setUI({ newStep: 'creating-survey' });
 
@@ -93,9 +93,12 @@ export class NewSurveyController {
       pkpId,
       pkpDid,
       groupId,
+      delegation,
       chainId: import.meta.env.VITE_L2 == 'base' ? 8453 : 1,
       litNetwork: import.meta.env.VITE_LIT_NETWORK
     }
+
+    console.log("CONFIG", config)
 
     const surveyConfig: Survey =  {
       id: surveyId,

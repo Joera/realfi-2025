@@ -31,6 +31,8 @@ export class SurveyController {
         const rawSchema = createSurveyCollectionSchema(safeConfig, "owned")
         const collectionId = await this.nildb.createSurveyCollection(surveyConfig.id, rawSchema, surveyConfig.config.pkpId);
 
+        surveyConfig.config.delegation = await this.nildb.delegateCollectionToPkp(collectionId, surveyConfig.config.pkpDid);
+
         // put this inside lit action
         const [ encryptedForOwner, encryptedForRespondent] = await Promise.all([
             this.lit.encrypt(usage_api_key, surveyConfig.config.pkpId, JSON.stringify(safeConfigWithScoring)),

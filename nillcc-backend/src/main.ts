@@ -39,7 +39,7 @@ const lit = new LitService({
 await initStorage();
 const litPoolKeys = new LitPoolKeys()
 const ipfs = new IPFSMethods(KUBO_ENDPOINT, PINATA_JWT, PINATA_GATEWAY);
-const pool = new PoolController(lit, litPoolKeys)
+const pool = new PoolController(lit, litPoolKeys, nildb)
 const survey = new SurveyController(nildb, lit, litPoolKeys, ipfs, viem);
 await nildb.initBuilder();
 

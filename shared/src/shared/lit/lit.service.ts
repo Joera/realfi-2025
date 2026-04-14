@@ -1,3 +1,4 @@
+import { keccak256, toBytes } from "viem";
 import { callWithTimeout, withRetry } from "../helpers/index.js";
 import { encryptAction } from "./actions/encrypt.js";
 
@@ -120,36 +121,63 @@ export class LitService {
   // ============================================================
 
   async createPkp() {
-    const { wallet_address } = await this.call<{ wallet_address: string }>('/create_wallet');
-    return wallet_address;
+    const pkp = await this.call<{ wallet_address: string }>('/create_wallet');
+    console.log("PKP", pkp)
+    return pkp.wallet_address;
   }
 
-  async createGroup(name: string, description?: string) {
-    const result = await this.call<{ group_id: number | string; success: boolean }>('/add_group', {
-      method: 'POST',
-      body: {
+  async listPKPInGroup(groupId: number) {
+    const pkps = await this.call<any>(`/list_wallets_in_group?group_id=${groupId}&page_number=0&page_size=100`);
+    console.log("Wallets", pkps);
+    return pkps;
+  }
+
+  async listAllPKPs() {
+    const pkps = await this.call<any>(`/list_wallets?page_number=0&page_size=100`);
+    console.log("All Wallets:", JSON.stringify(pkps, null, 2));
+    return pkps;
+  }
+
+
+  async createGroup(name: string, description?: string, pkpIds?: string[], cidHashes?: string[]) {
+    // Log what we're sending
+    console.log('createGroup body:', {
         group_name: name,
         group_description: description ?? '',
-        pkp_ids_permitted: [],
-        cid_hashes_permitted: [],
-      },
+        pkp_ids_permitted: pkpIds ?? [],
+        cid_hashes_permitted: cidHashes ?? [],
+    });
+    
+    const result = await this.call<{ group_id: number | string; success: boolean }>('/add_group', {
+        method: 'POST',
+        body: {
+            group_name: name,
+            group_description: description ?? '',
+            pkp_ids_permitted: pkpIds ?? [],
+            cid_hashes_permitted: cidHashes ?? [],
+        },
     });
     
     return {
-      ...result,
-      group_id: Number(result.group_id),  // ensure it's a number
+        ...result,
+        group_id: Number(result.group_id),
     };
   }
 
-  async registerAction(actionCid: string, name: string, description?: string) {
-    return this.call<{ success: boolean }>('/add_action', {
-      method: 'POST',
-      body: {
-        action_ipfs_cid: actionCid,
-        name,
-        description: description ?? '',
-      },
+  async registerAction(cid: string, name: string): Promise<{ success: boolean; hashedCid: string }> {
+    const result = await this.call<{ success: boolean }>('/add_action', {
+        method: 'POST',
+        body: {
+            action_ipfs_cid: cid,
+            name,
+            description: name,
+        },
     });
+    
+    // Compute the hashed CID
+    const hashedCid = keccak256(toBytes(cid));
+    
+    return { ...result, hashedCid };
   }
 
   async addActionToGroup(groupId: number, actionCid: string) {
@@ -197,9 +225,11 @@ export class LitService {
   async executeAction(
     poolId: string,
     code: string,
-    jsParams: Record<string, unknown> = {}
+    jsParams: Record<string, unknown> = {},
+    key: string | undefined = undefined
   ) {
-    const key = this.poolKeys.get(poolId);
+
+    if (key == undefined) key = this.poolKeys.get(poolId);
     if (!key) throw new Error(`No key for pool ${poolId}`);
 
     return this.call<{ response: unknown; logs: string[]; has_error: boolean }>(

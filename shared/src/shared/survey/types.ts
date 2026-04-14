@@ -64,6 +64,7 @@ export interface Config {
     pkpId?: string,
     pkpDid?: string,
     groupId?: string,
+    delegation?: string
 }
 
 export interface EncryptedData {
