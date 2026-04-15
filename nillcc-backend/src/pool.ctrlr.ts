@@ -1,5 +1,7 @@
-import { compactAction, encryptAction, getDecryptForOwnerAction, getDecryptForRespondentAction, getPkpPublicKeyAction, publicKeyToDidKey  } from "@s3ntiment/shared";
+import { compactAction, createNillionInvocationAction, encryptAction, getDecryptForOwnerAction, getDecryptForRespondentAction, getPkpPublicKeyAction, publicKeyToDidKey  } from "@s3ntiment/shared";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
+import { NillionPkpClient } from "./services/nildb.pkp.service.js";
+import { NucCmd } from "@nillion/secretvaults";
 
 export class PoolController {
 
@@ -25,20 +27,22 @@ export class PoolController {
         const decryptForOwnerAction = compactAction(getDecryptForOwnerAction(poolId, contract, safeAddress));
         const decryptForRespondentAction = compactAction(getDecryptForRespondentAction(poolId, contract));
 
-        const [pkpAddress, encryptCid, decryptOwnerCid, decryptMemberCid, getPubKeyCid] = await Promise.all([
+        const [pkpAddress, encryptCid, decryptOwnerCid, decryptMemberCid, getPubKeyCid, getInvocationCid] = await Promise.all([
             this.lit.createPkp(),
             this.lit.getActionCid(encryptAction),
             this.lit.getActionCid(decryptForOwnerAction),
             this.lit.getActionCid(decryptForRespondentAction),
-            this.lit.getActionCid(getPkpPublicKeyAction)
+            this.lit.getActionCid(getPkpPublicKeyAction),
+            this.lit.getActionCid(createNillionInvocationAction)
         ]);
 
         // Step 2: Register all actions in parallel (this returns hashed CIDs)
-        const [encryptResult, decryptOwnerResult, decryptMemberResult, getPubKeyResult] = await Promise.all([
+        const [encryptResult, decryptOwnerResult, decryptMemberResult, getPubKeyResult, getInvocationResult] = await Promise.all([
             this.lit.registerAction(encryptCid, 'encrypt'),
             this.lit.registerAction(decryptOwnerCid, `decrypt-owner-${poolId}`),
             this.lit.registerAction(decryptMemberCid, `decrypt-member-${poolId}`),
-            this.lit.registerAction(getPubKeyCid, `get-public-key`)
+            this.lit.registerAction(getPubKeyCid, `get-public-key`),
+            this.lit.registerAction(getInvocationCid, 'get-invocation')
         ]);
 
 
@@ -48,7 +52,7 @@ export class PoolController {
             `s3ntiment-${poolId}`,
             '',
             [pkpAddress],  // pkp_ids_permitted - try with address first
-            [encryptResult.hashedCid, decryptOwnerResult.hashedCid, decryptMemberResult.hashedCid, getPubKeyResult.hashedCid]  // cid_hashes_permitted
+            [encryptResult.hashedCid, decryptOwnerResult.hashedCid, decryptMemberResult.hashedCid, getPubKeyResult.hashedCid, getInvocationResult.hashedCid]  // cid_hashes_permitted
         );
 
         // Step 5: Create usage key
@@ -59,14 +63,18 @@ export class PoolController {
         const { publicKey } = result.response;
         const pkpDid = publicKeyToDidKey(publicKey);
 
-     
+        // const info = await this.nillDB.getNodeInfo();
+        // console.log(info);
+        const nillPkp = new NillionPkpClient(this.lit)
+        const builderRegistrationResult = await nillPkp.registerAsBuilder(pkpAddress, pkpDid, usage_api_key, `builder-${poolId}`);
+        console.log(builderRegistrationResult)
+
 
         console.log('Pool setup verification:');
         console.log('- poolId:', poolId);
         console.log('- pkpAddress:', pkpAddress);
         console.log('- pkpDid:', pkpDid);
         console.log('- groupId:', groupId);
-
 
         return { pkpId: pkpAddress, pkpDid, groupId };
     }
@@ -80,4 +88,6 @@ export class PoolController {
 
         // potentially add actions? // rotate usage key? 
     }
+
+    
 }

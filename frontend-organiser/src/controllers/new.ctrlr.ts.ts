@@ -98,8 +98,6 @@ export class NewSurveyController {
       litNetwork: import.meta.env.VITE_LIT_NETWORK
     }
 
-    console.log("CONFIG", config)
-
     const surveyConfig: Survey =  {
       id: surveyId,
       title: survey.title,
@@ -112,7 +110,6 @@ export class NewSurveyController {
     }
 
     console.log(surveyConfig)
-
 
     let surveyResponse: any = await fetch(`${BACKENDURL}/api/surveys`, {
       method: 'POST',
@@ -127,6 +124,7 @@ export class NewSurveyController {
     if (!surveyResponse.ok) store.setUI({ newStep: 'error' });
 
     const { cid }  = await surveyResponse.json();
+
 
     // run create survey in action 
 

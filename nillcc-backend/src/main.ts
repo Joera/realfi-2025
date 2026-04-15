@@ -2,15 +2,13 @@ import './env.js';  // must be first
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { NilDBBuilderService } from './services/nildb.builder.service.js';
-import { createPaymentDelegationAuthSig } from '@lit-protocol/auth-helpers';
 import { base } from 'viem/chains';
 
 import { SurveyController } from './survey.ctrlr.js';
 import { ViemService, LitService, IPFSMethods } from "@s3ntiment/shared";
 import {initStorage, LitPoolKeys } from "@s3ntiment/shared/node"
-import { Account, verifyMessage } from 'viem';
+import { verifyMessage } from 'viem';
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
-import { privateKeyToAccount } from 'viem/accounts';
 import { PoolController } from './pool.ctrlr.js';
 
 // ====== APP SETUP ======

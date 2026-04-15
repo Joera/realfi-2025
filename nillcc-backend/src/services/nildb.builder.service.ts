@@ -13,6 +13,7 @@ import {
 import { QuestionGroup, tallyResults } from "@s3ntiment/shared";
 import { decrypt, encrypt } from "eciesjs";
 
+
 const config = {
     BUILDER_KEY: process.env.VITE_NIL_BUILDER_PRIVATE_KEY || "",
     NILDB_NODES: (process.env.VITE_NILDB_NODES || "").split(','),
@@ -41,12 +42,6 @@ export class NilDBBuilderService {
         });
 
         console.log('Builder client initialized');
-
-        // const id = "4aff0f99-e6b7-4e56-b643-e3ca879df523"
-        // console.log(await this.getCollectionInfo(id))
-        // console.log(await this.getBuilderProfile())
-
-        // await this.testDelegationFormat()
 
         
     }
@@ -249,5 +244,13 @@ export class NilDBBuilderService {
         const encrypted = new Uint8Array(Buffer.from(encryptedBase64, 'base64'));
         const decrypted = decrypt(this.builderKey, encrypted);
         return JSON.parse(Buffer.from(decrypted).toString());
+    }
+
+    async getNodeInfo() {
+        console.log('Builder client nodes:', this.builderClient.nodes);
+        // or
+        for (const node of this.builderClient.nodes) {
+            console.log('Node:', node.id?.didString, node.baseUrl);
+        }
     }
 }

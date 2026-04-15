@@ -1,7 +1,7 @@
-import { parseAbi, recoverMessageAddress, Signature } from "viem";
-import { compactAction, createSurveyCollectionSchema,  encryptAction, EncryptedConfig, getDecryptForOwnerAction, getDecryptForRespondentAction, getSimpleDecrypt, isScored, Survey } from "@s3ntiment/shared";
+import { createSurveyCollectionSchema, EncryptedConfig, isScored } from "@s3ntiment/shared";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 import { calculateScore, stripScoring } from "@s3ntiment/shared";
+import { NillionPkpClient } from "./services/nildb.pkp.service.js";
 
 export class SurveyController {
     private nildb: any;
@@ -29,11 +29,10 @@ export class SurveyController {
         const { safeConfigWithScoring, safeConfig, scoring } = stripScoring(surveyConfig)
         const _isScored = isScored(surveyConfig.groups);
         const rawSchema = createSurveyCollectionSchema(safeConfig, "owned")
-        const collectionId = await this.nildb.createSurveyCollection(surveyConfig.id, rawSchema, surveyConfig.config.pkpId);
 
-        surveyConfig.config.delegation = await this.nildb.delegateCollectionToPkp(collectionId, surveyConfig.config.pkpDid);
+        const nillPkp = new NillionPkpClient(this.lit)
+        await nillPkp.createCollection(surveyConfig.config.pkpId, surveyConfig.config.pkpDid, usage_api_key, rawSchema)
 
-        // put this inside lit action
         const [ encryptedForOwner, encryptedForRespondent] = await Promise.all([
             this.lit.encrypt(usage_api_key, surveyConfig.config.pkpId, JSON.stringify(safeConfigWithScoring)),
             this.lit.encrypt(usage_api_key, surveyConfig.config.pkpId, JSON.stringify(safeConfig))
@@ -42,7 +41,7 @@ export class SurveyController {
         const encryptedScoring = this.nildb.encryptToBuilder({scoring: scoring, groups: surveyConfig.groups});
 
         const config: EncryptedConfig = {
-            surveyId: collectionId,
+            surveyId: surveyConfig.id,
             poolId: surveyConfig.pool,
             nilDid: this.nildb.builderDid.didString,
             encryptedForOwner,
