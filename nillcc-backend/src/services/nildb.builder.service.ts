@@ -42,8 +42,6 @@ export class NilDBBuilderService {
         });
 
         console.log('Builder client initialized');
-
-        
     }
 
     async getBuilderProfile() {

@@ -23,6 +23,7 @@ export class SurveyController {
     async create(body: any) {
 
         const { surveyConfig } = body;
+        const { pkpId, pkpDid } = surveyConfig.config;
 
         const usage_api_key = await this.litPoolKeys.get(surveyConfig.pool)
 
@@ -30,12 +31,20 @@ export class SurveyController {
         const _isScored = isScored(surveyConfig.groups);
         const rawSchema = createSurveyCollectionSchema(safeConfig, "owned")
 
+        console.log(rawSchema)
         const nillPkp = new NillionPkpClient(this.lit)
-        await nillPkp.createCollection(surveyConfig.config.pkpId, surveyConfig.config.pkpDid, usage_api_key, rawSchema)
+        const collectionResponse = await nillPkp.createCollection(pkpId, pkpDid, usage_api_key, rawSchema);
+
+        console.log("collectionResponse", collectionResponse);
+
+        await nillPkp.getCollection(pkpId, pkpDid, usage_api_key, surveyConfig.id) 
+
+        const collections = await nillPkp.listCollections(pkpId, pkpDid, usage_api_key);
+        console.log('Existing collections:', collections);
 
         const [ encryptedForOwner, encryptedForRespondent] = await Promise.all([
-            this.lit.encrypt(usage_api_key, surveyConfig.config.pkpId, JSON.stringify(safeConfigWithScoring)),
-            this.lit.encrypt(usage_api_key, surveyConfig.config.pkpId, JSON.stringify(safeConfig))
+            this.lit.encrypt(usage_api_key, pkpId, JSON.stringify(safeConfigWithScoring)),
+            this.lit.encrypt(usage_api_key, pkpId, JSON.stringify(safeConfig))
         ])
 
         const encryptedScoring = this.nildb.encryptToBuilder({scoring: scoring, groups: surveyConfig.groups});

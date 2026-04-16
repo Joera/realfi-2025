@@ -115,10 +115,6 @@ export class SurveyController {
       // replace with pool issued lit action 
       const signature = await this.services.account.signMessage(`s3ntiment:submit:${this.surveyId}`);
 
-      const url = `${BACKENDURL}/api/surveys/${this.surveyId}/delegation`;
-
-      console.log(url)
-
       const args = {
         userDid: this.services.nillDB.userDidString, 
         signature, 
@@ -127,7 +123,7 @@ export class SurveyController {
         pkpDid: this.config?.config?.pkpDid 
       }
 
-      const { delegations } = await fetch(url, {
+      const { delegation } = await fetch(`${BACKENDURL}/api/surveys/${this.surveyId}/delegation`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json'
@@ -135,21 +131,15 @@ export class SurveyController {
           body: JSON.stringify(args)
       }).then(r => r.json());
 
-      console.log(delegations)
-   
-      const delegation = Object.values(delegations)[0] as string;
-
-      console.log("delegation", delegation)
-
       const result = await this.services.nillDB.storeOwned(docIUd, this.config!, event.detail.answers, this.surveyId, delegation)
 
       console.log(result)
 
-      if (result.ok) {
+      // if (result.ok) {
 
-        router.navigate(`complete/${this.surveyId}/${docIUd}`)
+      //   router.navigate(`complete/${this.surveyId}/${docIUd}`)
 
-      } 
+      // } 
 
       // FLOW AS DESIGNED FOR OWNED COLLECTIONS
       // const delegationToken = await this.services.nillDB.getUserDelegationToken("", this.surveyId, BACKENDURL);

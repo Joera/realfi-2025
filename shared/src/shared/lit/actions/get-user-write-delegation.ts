@@ -1,5 +1,28 @@
 export const getUserWriteDelegationAction = `
-async function main({ pkpId, pkpDid, userDid, nodeDid, collectionId }) {
+/**
+ * PKP-signed delegation token for user data writes.
+ * 
+ * NUC Token Flow:
+ * 1. PKP (builder) creates ONE delegation token → User
+ * 2. User's SDK receives delegation and builds per-node invocations internally
+ * 3. SDK signs invocations with user's signer
+ * 
+ * Delegation vs Invocation:
+ * - Delegation has 'pol' (policy array) - grants permission
+ * - Invocation has 'args' (arguments object) - executes action
+ * 
+ * Token fields:
+ * - iss: PKP DID (who signs/issues the delegation)
+ * - sub: PKP DID (whose authority is being delegated - same as iss for root)
+ * - aud: User DID (who receives the delegation)
+ * - cmd: '/nil/db/data/create' (what action is authorized)
+ * - pol: [] (empty = no restrictions, or [['==', '.collection', id]] to restrict)
+ * 
+ * The collection is NOT in the token - it's passed in the HTTP request body.
+ * The SDK handles building node-specific invocations from this single delegation.
+ */
+async function main({ pkpId, pkpDid, userDid, collectionId }) {
+
     const privateKey = await Lit.Actions.getPrivateKey({ pkpId });
     const wallet = new ethers.Wallet(privateKey);
     
@@ -10,16 +33,14 @@ async function main({ pkpId, pkpDid, userDid, nodeDid, collectionId }) {
     };
     
     const payload = {
-        iss: pkpDid,
-        aud: nodeDid,       
-        sub: userDid,         
-        cmd: '/nil/db/data/create',
-        args: {
-            collection: collectionId  
-        },
+        iss: pkpDid,           // PKP signs
+        sub: pkpDid,           // PKP is the granter (CHANGED)
+        aud: userDid,          // User receives delegation (CHANGED)
+        cmd: '/nil/db/data/create',  // Correct command (CHANGED)
+        pol: [],
         exp: Math.floor(Date.now() / 1000) + 3600,
         nonce: Array.from({length: 32}, () => Math.floor(Math.random() * 16).toString(16)).join(''),
-        prf: [] 
+        prf: []
     };
     
     const b64url = (obj) => {

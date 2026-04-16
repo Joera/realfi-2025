@@ -50,6 +50,7 @@ export class NillDBUserService {
                 operation: 'store',
             },
         });
+
     }
 
     async storeStandard(backendUrl: string, surveyId: string, poolId: string, userData: any, signature: Signature | `0x${string}`, signer: string) {
@@ -66,13 +67,17 @@ export class NillDBUserService {
         });
     }
 
-    async storeOwned(uuid: string, survey: Survey, answers: any, surveyId: string, delegationToken: string) {
+    async storeOwned(uuid: string, survey: Survey, answers: any, surveyId: string, delegation: string) {
+    
    
         const userPrivateData = createUserDataObject(uuid, answers, survey, "");
-        return await this.createData(survey, userPrivateData, delegationToken) 
+
+        console.log("userPrivateData", userPrivateData)
+
+        return await this.createData(survey, userPrivateData, delegation) 
     }
 
-     async updateOwned(uuid: string, survey: Survey, answers: any, surveyId: string, delegationToken: string, documentId: string) {
+     async updateOwned(uuid: string, survey: Survey, answers: any, surveyId: string, delegation:string, documentId: string) {
         
         const userPrivateData = createUserDataObject(uuid, answers, survey, "");
         
@@ -82,23 +87,45 @@ export class NillDBUserService {
             document: documentId
         });
 
-        return await this.createData(survey, userPrivateData, delegationToken) 
+        return await this.createData(survey, userPrivateData, delegation) 
     } 
         
 
-    async createData(survey: Survey, userPrivateData: any, delegationToken: string) {
+    async createData(survey: Survey, userPrivateData: any, delegation: string) {
 
-        console.log("DID", survey.config!.pkpDid)
+        const decodeNucToken = (token: string) => {
+            const [headerB64, payloadB64, sigB64] = token.split('.');
+            
+            const decode = (b64: string) => {
+                const padded = b64 + '='.repeat((4 - b64.length % 4) % 4);
+                const binary = atob(padded.replace(/-/g, '+').replace(/_/g, '/'));
+                return JSON.parse(binary);
+            };
+            
+            return {
+                header: decode(headerB64),
+                payload: decode(payloadB64),
+            };
+        };
+
         console.log("=== storeOwned debug ===");
         console.log("surveyId (collection):", survey.id);
         console.log("owner (userDid):", this.userDidString);
         console.log("grantee (pkpDid):", survey.config!.pkpDid);
-        console.log("delegationToken present:", !!delegationToken);
-        console.log("delegationToken:", delegationToken?.substring(0, 100) + "...");
         console.log("user client nodes:", this.user.nodes?.map((n: any) => n.id?.didString));
 
-        try { 
+        console.log('=== Delegation Token ===');
+        const decoded = decodeNucToken(delegation);
+        console.log('iss:', decoded.payload.iss);
+        console.log('sub:', decoded.payload.sub);
+        console.log('aud:', decoded.payload.aud);
+        console.log('cmd:', decoded.payload.cmd);
+        console.log('args:', decoded.payload.args);
 
+
+
+        try { 
+            // PKP-signed tokens grant users write permission. The SDK expects them as invocations (ready-to-use) rather than delegation (requires user to co-sign).
             const uploadResults = await this.user.createData(
                 {
                     owner: this.userDidString,
@@ -111,7 +138,7 @@ export class NillDBUserService {
                     collection: survey.id,
                     data: [userPrivateData],
                 },
-                { auth: { delegation: delegationToken } }
+                { auth: { delegation } }
             );
 
             console.log('success', uploadResults);
@@ -191,5 +218,45 @@ export class NillDBUserService {
             console.error('Error fetching user survey answers:', error);
             return null;
         }
+    }
+
+    async testDirectWrite(survey: Survey, data: any, invocations: Record<string, string>) {
+        const nodes = [
+            { url: 'https://nildb-stg-n1.nillion.network', did: 'did:key:zQ3shcivRHjnU2ASFFTFC3Y1uoLAqEhTTqMKHGUundhcywNy7' },
+        ];
+
+        const node = nodes[0];
+        const token = invocations[node.did];
+        
+        const body = {
+            owner: this.userDidString,
+            collection: survey.id,
+            data: [data],
+            acl: {
+                grantee: survey.config!.pkpDid,
+                read: true,
+                write: false,
+                execute: true
+            }
+        };
+
+        console.log('Direct POST to:', `${node.url}/v1/data/owned`);
+        console.log('Token:', token);
+        console.log('Body:', JSON.stringify(body, null, 2));
+        
+        const response = await fetch(`${node.url}/v1/data/owned`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(body)
+        });
+
+        const text = await response.text();
+        console.log('Response:', response.status, response.statusText);
+        console.log('Response body:', text);
+        
+        return { status: response.status, body: text };
     }
 }

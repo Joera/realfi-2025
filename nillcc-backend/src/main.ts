@@ -243,14 +243,16 @@ router.post('/surveys/:id/results', async (req: Request, res: Response) => {
 
 router.post('/surveys/:surveyId/delegation', async (req, res) => {
 
+    console.log("B",req.body)
+
     const { surveyId } = req.params;
-    const { didString, signature, poolId, pkpId, pkpDid} = req.body;
+    const { userDid, signature, poolId, pkpId, pkpDid} = req.body;
 
-    console.log({ didString, signature, poolId, pkpId, pkpDid})
+    console.log({ userDid, signature, poolId, pkpId, pkpDid})
 
-    const { delegations } = await survey.getUserDelegation(poolId, surveyId, didString, pkpId, pkpDid)
+    const { delegation } = await survey.getUserDelegation(poolId, surveyId, userDid, pkpId, pkpDid)
     
-    res.json({ delegations });
+    res.json({ delegation });
 });
 
 // --- Lit Protocol ---
