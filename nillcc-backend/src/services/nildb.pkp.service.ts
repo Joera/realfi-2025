@@ -1,4 +1,4 @@
-import { createNillionInvocationAction } from "@s3ntiment/shared";
+import { createNillionInvocationAction, getUserWriteDelegationAction,  } from "@s3ntiment/shared";
 
 // Backend service that uses PKP-signed invocations
 export class NillionPkpClient {
@@ -81,6 +81,32 @@ export class NillionPkpClient {
         }
         
         return results;
+    }
+
+    async getUserWriteDelegation(surveyId: string, userDid: string, poolId: string, usageKey: string, pkpId: string, pkpDid: string) {
+
+        const delegations: Record<string, string> = {};
+        
+        for (const node of this.nodes) {
+            const params = {
+                pkpId: pkpId,
+                pkpDid: pkpDid,
+                userDid: userDid,
+                nodeDid: node.did,
+                collectionId: surveyId
+            };
+            
+            const result = await this.lit.executeAction(
+                poolId,
+                getUserWriteDelegationAction,
+                params,
+                usageKey
+            );
+            
+            delegations[node.did] = result.response.delegation;
+        }
+        
+        return { delegations };
     }
 
     async testNodeEndpoints() {

@@ -50,11 +50,6 @@ export class NillDBUserService {
                 operation: 'store',
             },
         });
-
-        console.log("NILLION USER:", this.user);
-        console.log('owner (userDid):', this.userDidString);
-        // console.log('grantee (builderDid):', this.builderDid);
-        console.log('signer DID type:', (await this.signer.getDid()).method);
     }
 
     async storeStandard(backendUrl: string, surveyId: string, poolId: string, userData: any, signature: Signature | `0x${string}`, signer: string) {

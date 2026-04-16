@@ -162,22 +162,22 @@ export class NilDBBuilderService {
     }
 
     // User delegations still need to be created manually
-    async getUserWriteDelegation(didString: string, surveyId: string) {
-        console.log('builderSigner:', this.builderSigner ? 'present' : 'MISSING');
-        console.log('collection', surveyId);
+    // async getUserWriteDelegation(didString: string, surveyId: string) {
+    //     console.log('builderSigner:', this.builderSigner ? 'present' : 'MISSING');
+    //     console.log('collection', surveyId);
 
-        const userDid = Did.parse(didString);
-        console.log('issuing delegation to DID:', userDid);
+    //     const userDid = Did.parse(didString);
+    //     console.log('issuing delegation to DID:', userDid);
 
-        const delegation = await Builder.delegation()
-            .command(NucCmd.nil.db.data.create as Command)
-            .subject(this.builderDid!)
-            .audience(userDid)
-            .expiresIn(3600_000)
-            .signAndSerialize(this.builderSigner);
+    //     const delegation = await Builder.delegation()
+    //         .command(NucCmd.nil.db.data.create as Command)
+    //         .subject(this.builderDid!)
+    //         .audience(userDid)
+    //         .expiresIn(3600_000)
+    //         .signAndSerialize(this.builderSigner);
 
-        return delegation;
-    }
+    //     return delegation;
+    // }
 
     async getOwnerReadDelegation(surveyOwnerDid: Did, surveyId: string) {
         return await Builder.delegation()

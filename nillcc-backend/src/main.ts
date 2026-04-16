@@ -125,16 +125,31 @@ router.put('/surveys/:id', async (req: Request, res: Response) => {
 
 // Request nilDB write delegation for a participant
 // Body: { didString, signature, signer }
-router.post('/surveys/:id/delegation', async (req: Request, res: Response) => {
-    try {
-        const { didString, surveyId } = req.body;
-        const delegation = await nildb.getUserWriteDelegation(didString, req.params.id);
-        res.json({ delegation });
-    } catch (error: any) {
-        console.error(error);
-        res.status(500).json({ error: 'DELEGATION_FAILED', detail: error.message });
-    }
-});
+// router.post('/surveys/:id/delegation', async (req: Request, res: Response) => {
+//     try {
+//         const { didString, surveyId } = req.body;
+//         const delegation = await nildb.getUserWriteDelegation(didString, req.params.id);
+//         res.json({ delegation });
+//     } catch (error: any) {
+//         console.error(error);
+//         res.status(500).json({ error: 'DELEGATION_FAILED', detail: error.message });
+ //   }    // async getUserWriteDelegation(didString: string, surveyId: string) {
+    //     console.log('builderSigner:', this.builderSigner ? 'present' : 'MISSING');
+    //     console.log('collection', surveyId);
+
+    //     const userDid = Did.parse(didString);
+    //     console.log('issuing delegation to DID:', userDid);
+
+    //     const delegation = await Builder.delegation()
+    //         .command(NucCmd.nil.db.data.create as Command)
+    //         .subject(this.builderDid!)
+    //         .audience(userDid)
+    //         .expiresIn(3600_000)
+    //         .signAndSerialize(this.builderSigner);
+
+    //     return delegation;
+    // }
+// });
 
 // Submit survey answers
 // Body: { userData, signature, signer }
@@ -227,17 +242,15 @@ router.post('/surveys/:id/results', async (req: Request, res: Response) => {
 });
 
 router.post('/surveys/:surveyId/delegation', async (req, res) => {
-    const { surveyId } = req.params;
-    const { didString, signature } = req.body;
 
-    // Optional: verify signature to ensure request is from the user
+    const { surveyId } = req.params;
+    const { didString, signature, poolId, pkpId, pkpDid} = req.body;
+
+    console.log({ didString, signature, poolId, pkpId, pkpDid})
+
+    const { delegations } = await survey.getUserDelegation(poolId, surveyId, didString, pkpId, pkpDid)
     
-    console.log('Creating delegation for:', didString, 'surveyId:', surveyId);
-    
-    const delegation = await nildb.getUserWriteDelegation(didString, surveyId);
-    console.log('Delegation created:', delegation);
-    
-    res.json({ delegation });
+    res.json({ delegations });
 });
 
 // --- Lit Protocol ---
@@ -287,6 +300,7 @@ async function startServer() {
     try {
         app.listen(PORT, () => {
             console.log(`server running at ${PORT}`);
+            console.log("kip")
         });
     } catch (error) {
         console.error('Failed to start server:', error);

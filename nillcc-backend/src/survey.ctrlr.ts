@@ -1,4 +1,4 @@
-import { createSurveyCollectionSchema, EncryptedConfig, isScored } from "@s3ntiment/shared";
+import { createSurveyCollectionSchema, EncryptedConfig, isScored, withRetry } from "@s3ntiment/shared";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 import { calculateScore, stripScoring } from "@s3ntiment/shared";
 import { NillionPkpClient } from "./services/nildb.pkp.service.js";
@@ -149,6 +149,19 @@ export class SurveyController {
         return false;
 
        }
+    }
+
+    async getUserDelegation(poolId: string, surveyId: string, userDid: string, pkpId: string, pkpDid: string) {
+
+        console.log("POOLID",poolId)
+
+        const usageKey = await this.litPoolKeys.get(poolId);
+
+        console.log("KEY", usageKey)
+
+        const nillPkp = new NillionPkpClient(this.lit)
+        return await nillPkp.getUserWriteDelegation(surveyId, userDid, poolId, usageKey, pkpId, pkpDid);
+        
     }
 
     // async verifyPoolOwner(signature: `0x${string}`, poolId: string, contract: `0x${string}`, safeAddress: `0x${string}`): Promise<string | null> {

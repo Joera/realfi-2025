@@ -4,7 +4,7 @@ import '@s3ntiment/shared/components';
 import '../components/survey-questions.js';
 import { IServices } from '../services.js';
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
-import { fetchAndDecryptSurveyWithRespondent, fetchNillionDelegation, getDecryptForRespondentAction, getDelegationAction, isScored, Survey, withRetry } from '@s3ntiment/shared';
+import { fetchAndDecryptSurveyWithRespondent, isScored, Survey } from '@s3ntiment/shared';
 
 import { store } from '../state';
 import { createUserDataObject } from '@s3ntiment/shared'
@@ -104,11 +104,8 @@ export class SurveyController {
   async setSurveyListener() {
 
     document.addEventListener('survey-complete', async (event: any) => {
+      
       console.log('Survey completed!');
-      console.log('event:', event);
-
-      console.log("FROM STORE", store.activeSurvey)
-
       const seed = await this.services.account.createNillDBSeed();
       await this.services.nillDB.init(seed);
 
@@ -118,20 +115,33 @@ export class SurveyController {
       // replace with pool issued lit action 
       const signature = await this.services.account.signMessage(`s3ntiment:submit:${this.surveyId}`);
 
-      const params = { 
-        pkpId: this.config?.config?.pkpId,
-        pkpDid: this.config?.config?.pkpDid,
-        userDid: this.services.nillDB.userDidString,
-        builderDelegation: this.config?.config?.delegation
+      const url = `${BACKENDURL}/api/surveys/${this.surveyId}/delegation`;
+
+      console.log(url)
+
+      const args = {
+        userDid: this.services.nillDB.userDidString, 
+        signature, 
+        poolId: this.config?.pool, 
+        pkpId: this.config?.config?.pkpId, 
+        pkpDid: this.config?.config?.pkpDid 
       }
 
-      const userDelegationResult: any = await this.services.lit.executeAction(this.config?.pool!, getDelegationAction, params)
-      const userDelegation = userDelegationResult.response.delegation;
+      const { delegations } = await fetch(url, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(args)
+      }).then(r => r.json());
 
-      console.log(userDelegation)
+      console.log(delegations)
+   
+      const delegation = Object.values(delegations)[0] as string;
 
-      const result = await this.services.nillDB.storeOwned(docIUd, this.config!, event.detail.answers, this.surveyId, userDelegation)
+      console.log("delegation", delegation)
 
+      const result = await this.services.nillDB.storeOwned(docIUd, this.config!, event.detail.answers, this.surveyId, delegation)
 
       console.log(result)
 
@@ -139,18 +149,7 @@ export class SurveyController {
 
         router.navigate(`complete/${this.surveyId}/${docIUd}`)
 
-      } else {  
-
-        // let r = result;
-
-        // if (r.error == "UNAUTHORISED") {
-        //   console.log("isValidSignature", r.isValidSignature)
-        //   console.log("isRespondent", r.isRespondent)
-        // } else {
-        //   console.log("other error - network?")
-        // }
-
-      }
+      } 
 
       // FLOW AS DESIGNED FOR OWNED COLLECTIONS
       // const delegationToken = await this.services.nillDB.getUserDelegationToken("", this.surveyId, BACKENDURL);

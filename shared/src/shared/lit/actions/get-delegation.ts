@@ -1,5 +1,5 @@
-export const getDelegationAction = `
-async function main({ pkpId, pkpDid, userDid, builderDelegation }) {
+export const getUserWriteDelegationAction = `
+async function main({ pkpId, pkpDid, userDid, nodeDid, collectionId }) {
     const privateKey = await Lit.Actions.getPrivateKey({ pkpId });
     const wallet = new ethers.Wallet(privateKey);
     
@@ -11,25 +11,41 @@ async function main({ pkpId, pkpDid, userDid, builderDelegation }) {
     
     const payload = {
         iss: pkpDid,
-        aud: userDid,
-        sub: pkpDid,
+        aud: nodeDid,       
+        sub: userDid,         
         cmd: '/nil/db/data/create',
-        pol: [],
+        args: {
+            collection: collectionId  
+        },
         exp: Math.floor(Date.now() / 1000) + 3600,
-        nonce: [...Array(32)].map(() => Math.floor(Math.random() * 16).toString(16)).join(''),
-        prf: [builderDelegation]
+        nonce: Array.from({length: 32}, () => Math.floor(Math.random() * 16).toString(16)).join(''),
+        prf: [] 
     };
     
-    const base64url = (obj) => Buffer.from(JSON.stringify(obj)).toString('base64url');
-    const headerB64 = base64url(header);
-    const payloadB64 = base64url(payload);
+    const b64url = (obj) => {
+        const str = JSON.stringify(obj);
+        const b64 = btoa(str);
+        return b64.replace(/[+]/g, '-').replace(/[/]/g, '_').replace(/=+$/g, '');
+    };
+    
+    const headerB64 = b64url(header);
+    const payloadB64 = b64url(payload);
     const message = headerB64 + '.' + payloadB64;
     
-    // Sign without Ethereum prefix
-    const messageHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(message));
-    const sig = wallet._signingKey().signDigest(messageHash);
-    const sigBytes = ethers.utils.concat([sig.r, sig.s]);
-    const sigB64 = Buffer.from(ethers.utils.arrayify(sigBytes)).toString('base64url');
+    const msgBytes = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBytes);
+    const hashArray = new Uint8Array(hashBuffer);
+    const hashHex = '0x' + Array.from(hashArray).map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    const sig = wallet._signingKey().signDigest(hashHex);
+    
+    const r = sig.r.slice(2);
+    const s = sig.s.slice(2);
+    const sigHex = r + s;
+    
+    const sigBytes = new Uint8Array(sigHex.match(/.{2}/g).map(byte => parseInt(byte, 16)));
+    const sigB64 = btoa(String.fromCharCode(...sigBytes))
+        .replace(/[+]/g, '-').replace(/[/]/g, '_').replace(/=+$/g, '');
     
     return { delegation: headerB64 + '.' + payloadB64 + '.' + sigB64 };
 }
