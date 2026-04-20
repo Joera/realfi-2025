@@ -73,7 +73,7 @@ export interface EncryptedConfig {
     poolId: string,
     nilDid: string, // surveyOwnerDid.didString,
     pkpId: string,
-    groupId: string,
+    groupId: number,
     encryptedForOwner: EncryptedData
     encryptedForRespondent: EncryptedData
     encryptedScoring: string
