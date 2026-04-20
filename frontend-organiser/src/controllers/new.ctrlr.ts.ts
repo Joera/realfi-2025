@@ -3,7 +3,7 @@
 
 import { Batch, Survey } from '@s3ntiment/shared';
 import '../components/draft-survey-editor.js';
-import { createBatch, createInvitations } from '../factories/survey.factory.js';
+import { createBatch  } from '../factories/survey.factory.js';
 import { IServices } from '../services/services.js';
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
 import { store } from '../state/store.js';
@@ -135,9 +135,9 @@ export class NewSurveyController {
       if (res.receipt?.status == "success") {
 
         if (isNewPool) {
-          survey.batches = await Promise.all(
-            survey.batches.map((batch: Batch) => createInvitations(batch))
-          );
+          // survey.batches = await Promise.all(
+          //   survey.batches.map((batch: Batch) => createInvitations(batch))
+          // );
 
           surveyConfig.batches = survey.batches;
           

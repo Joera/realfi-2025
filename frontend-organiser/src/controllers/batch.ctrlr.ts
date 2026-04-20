@@ -124,14 +124,14 @@ export class BatchController {
                 case 'ipfs':
                     return this.batch?.cards
                         ? this.batch.cards.map((c: CardData) =>
-                            `<div class="url ${c.isUsed ? 'used' : ''}"><copy-link value="${c.url}" ${c.isUsed ? 'used' : ''}>${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${c.ipfsCid}</copy-link></div>`
+                            `<div class="url ${c.isUsed ? 'used' : ''}"><copy-link value="${c.ipfsCid}" ${c.isUsed ? 'used' : ''}>${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${c.ipfsCid}</copy-link></div>`
                         ).join('')
                         : `<loading-spinner></loading-spinner>`;
                 case 'urls':
                     console.log(this.batch?.cards);
                     return this.batch?.cards
                         ? this.batch.cards.map((c: CardData) =>
-                            `<div class="url"><copy-link value="${c.url}" ${c.isUsed ? 'used' : ''}></copy-link></div>`
+                            `<div class="url ${c.isUsed ? 'used' : ''}"><copy-link value="${c.url}" >${c.url}</copy-link></div>`
                         ).join('')
                         : `<loading-spinner></loading-spinner>`;
                 default:
