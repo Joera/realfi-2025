@@ -201,7 +201,7 @@ export class PoolController {
             const event = e as CustomEvent
             const { batch, index, poolId, surveyId } = event.detail;
 
-            console.log(batch, poolId)
+            // console.log(batch, poolId)
 
             const b = await createBatch(this.services, batch, poolId, surveyId)
 
