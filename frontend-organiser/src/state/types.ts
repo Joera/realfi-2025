@@ -26,6 +26,7 @@ export interface UIState {
   landingStep: 'welcome' | 'register' | 'choice';
   newStep: 'intro' | 'questions' | 'batches';
   resultTab: 'spinner' | 'results' | 'access' | 'questions' | 'batches';
+  batchTab: 'qr-codes' | 'ipfs' | 'urls';
 }
 
 export interface AppState {
