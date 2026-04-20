@@ -1,0 +1,58 @@
+@use 'typography' as *;
+@use '_colours' as *;
+
+#crowd {
+
+    position: fixed;
+    // z-index: 1;
+    top: 5rem;
+    left: 0;
+    width: 100vw;
+    height: auto;
+}
+
+main {
+    position: relative;
+    // z-index: 2;
+}
+
+#intro { 
+
+    position: relative;
+
+    svg {
+
+        position: absolute;
+        margin-top: 6rem;
+        width: 800px;
+        opacity: .8;
+    }
+
+    article {
+
+        margin-top: 0rem;
+        position: relative;
+        padding: 1.5rem 6rem;
+    }
+
+
+    h2 {
+
+        @include heading-h3;
+        color: $pink-too-dark;
+    }
+
+    p {
+        text-align: center;
+    }
+
+    button {
+
+        position: absolute;
+        bottom: 6rem;
+        align-self: center;
+        margin-top: 3rem;
+        color: $pink-too-dark;
+        background: $pink;
+    }
+}

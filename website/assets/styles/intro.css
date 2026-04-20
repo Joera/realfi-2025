@@ -1,0 +1,47 @@
+#crowd {
+  position: fixed;
+  top: 5rem;
+  left: 0;
+  width: 100vw;
+  height: auto;
+}
+
+main {
+  position: relative;
+}
+
+#intro {
+  position: relative;
+}
+#intro svg {
+  position: absolute;
+  margin-top: 6rem;
+  width: 800px;
+  opacity: 0.8;
+}
+#intro article {
+  margin-top: 0rem;
+  position: relative;
+  padding: 1.5rem 6rem;
+}
+#intro h2 {
+  font-family: "Oswald";
+  font-weight: 600;
+  font-size: 1.8rem;
+  line-height: 1.33;
+  margin: 0;
+  color: #57212d;
+}
+#intro p {
+  text-align: center;
+}
+#intro button {
+  position: absolute;
+  bottom: 6rem;
+  align-self: center;
+  margin-top: 3rem;
+  color: #57212d;
+  background: #cd7c8d;
+}
+
+/*# sourceMappingURL=intro.css.map */
