@@ -124,7 +124,7 @@ export class BatchController {
                 case 'ipfs':
                     return this.batch?.cards
                         ? this.batch.cards.map((c: CardData) =>
-                            `<div class="url ${c.isUsed ? 'used' : ''}"><copy-link value="${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${c.ipfsCid}>${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${c.ipfsCid}</copy-link></div>`
+                            `<div class="url ${c.isUsed ? 'used' : ''}"><copy-link value="${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${c.ipfsCid}">${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${c.ipfsCid}</copy-link></div>`
                         ).join('')
                         : `<loading-spinner></loading-spinner>`;
                 case 'urls':
