@@ -8,13 +8,14 @@ import '../components/pool-detail-access.js';
 import '../components/survey-forms/pool-form-batches.js';
 import '../components/registered-questions-editor.js';
 import { router } from "../router.js";
-import { createBatch, createInvitations } from "../factories/survey.factory.js";
+import { createBatch } from "../factories/survey.factory.js";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
 import {  fetchAndDecryptSurveyWithOwner, Pool, Survey } from "@s3ntiment/shared";
 import { renderIcon } from "@s3ntiment/shared/assets";
 import '@s3ntiment/shared/components';
 import { authenticate } from "../factories/auth.factory.js";
 import { getPoolInfo } from "../factories/pool.factory.js";
+import { PoolFormBatches } from "../components/survey-forms/pool-form-batches.js";
 
 
 export class PoolController {
@@ -204,12 +205,15 @@ export class PoolController {
 
             const b = await createBatch(this.services, batch, poolId, surveyId)
 
-            store.addBatch(b);
-
             const receipt = await this.services.safe.write(surveyStore.address, surveyStore.abi, 'registerBatch', [poolId, b.id], { waitForReceipt: true});
             console.log(receipt);
 
-            await createInvitations(b);
+            store.addBatch(b);
+
+            // await createInvitations(b);
+
+            const el = document.querySelector('pool-form-batches') as PoolFormBatches;
+            el?.refreshBatches();
             
         })
 
