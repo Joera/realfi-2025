@@ -2,7 +2,7 @@ import { getAddress, http, keccak256, toBytes } from "viem";
 import { Batch } from "@s3ntiment/shared";
 
 import { isCid } from "../utils/regex";
-import { createBatchWallet, createZipFile, generateCardSecrets } from "./invitation.factory";
+import { createBatchWallet, createZipFile, generateCardSecrets, uploadToPinata } from "./invitation.factory";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
 import { toSafeSmartAccount } from "permissionless/accounts";
 
@@ -16,21 +16,9 @@ export const createBatch = async (services: any, batch: Batch, poolId: string, s
     batch.survey = surveyId;
     batch.pool = poolId;
     batch.cards = await generateCardSecrets(batchAccount, batch);
+    batch.cards = await uploadToPinata(services, batch.cards);
     return batch;
 }
-
-export const createInvitations = async (batch: Batch) => {
-
-    if (batch.cards == undefined) return;
-
-    if (batch.medium == 'zip-file') {
-
-        await createZipFile(batch.cards, batch.survey)
-    }
-
-    return batch;
-}
-
 
 export const registerBatch = async (services: any, batch: Batch) => {
 
