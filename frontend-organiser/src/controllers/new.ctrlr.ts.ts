@@ -68,25 +68,29 @@ export class NewSurveyController {
 
     console.log("safeAddress", safeAddress)
 
-    let poolResponse: any = await fetch(`${BACKENDURL}/api/pools`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({    
-        poolId,
-        safeAddress
-      })
-    });
+    // HACK: reuse existing Lit setup for MTE pool instead of minting new PKP/group
+    // TODO: properly handle existing pools (fixed in newer version)
+    let pkpId: string;
+    let groupId: number;
 
-    const { pkpId, groupId }  = await poolResponse.json();
-
-    console.log("POOL CREATED");
+    if (poolId === '5f6b3f9b-5676-4927-b11a-0b1f02344cdf') {
+      pkpId = '0x7598155069ba02e7dd87afc0c2b5e587b34b2379';
+      groupId = 22;
+      console.log("Reusing existing pool Lit setup", { pkpId, groupId });
+    } else {
+      const poolResponse: any = await fetch(`${BACKENDURL}/api/pools`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ poolId, safeAddress })
+      });
+      ({ pkpId, groupId } = await poolResponse.json());
+      console.log("POOL CREATED");
+    }
 
     const config = {
       safe: safeAddress,
-      pkpId,
-      groupId,
+      // pkpId,
+      // groupId,
       chainId: import.meta.env.VITE_L2 == 'base' ? 8453 : 1,
       litNetwork: import.meta.env.VITE_LIT_NETWORK
     }
@@ -120,9 +124,6 @@ export class NewSurveyController {
     const { cid }  = await surveyResponse.json();
 
     // run create survey in action 
-
-
-    
 
     if (this.services.ipfs.isCID(cid)) {
 
