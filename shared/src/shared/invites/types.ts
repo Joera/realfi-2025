@@ -7,4 +7,5 @@ export interface CardData {
     url?: string;
     svgString?: string
     isUsed?: boolean
+    ipfsCid?: string
 }
