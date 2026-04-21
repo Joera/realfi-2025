@@ -51,7 +51,7 @@ export class SurveyController {
             const decryptForOwnerAction = compactAction(getDecryptForOwnerAction(poolId, contract, safeAddress));
             const decryptForRespondentAction = compactAction(getDecryptForRespondentAction(poolId, contract));
 
-            console.log(decryptForOwnerAction)
+            // console.log(decryptForOwnerAction)
 
             const encryptCid = await this.lit.getActionCid(encryptAction);
             const decryptOwnerCid = await this.lit.getActionCid(decryptForOwnerAction);
@@ -74,11 +74,19 @@ export class SurveyController {
             this.lit.encrypt(usage_api_key, pkpId, JSON.stringify(safeConfig))
         ]);
 
+
+
         console.log('Pool setup verification:');
         console.log('- poolId:', poolId);
         console.log('- pkpId:', pkpId);
         console.log('- groupId:', groupId);
         console.log('- usageKey:', usage_api_key);
+
+        surveyConfig.config = {
+            ...surveyConfig.config,
+            pkpId,
+            groupId
+        }
 
         const encryptedScoring = this.nildb.encryptToBuilder({ scoring, groups: surveyConfig.groups });
 
@@ -86,8 +94,6 @@ export class SurveyController {
             surveyId: collectionId,
             poolId,
             nilDid: this.nildb.builderDid.didString,
-            pkpId,
-            groupId: groupId,
             encryptedForOwner,
             encryptedForRespondent,
             encryptedScoring,
@@ -115,10 +121,7 @@ export class SurveyController {
             safeAddress: body.safeAddress
         });
 
-        const contract = surveyStore.address;
         const { surveyId, poolId, pkpId, groupId, surveyConfig, safeAddress } = body;
-
-        console.log(surveyConfig);
 
         const { safeConfigWithScoring, safeConfig, scoring } = stripScoring(surveyConfig);
         const _isScored = isScored(surveyConfig.groups);
@@ -136,12 +139,20 @@ export class SurveyController {
 
         const encryptedScoring = this.nildb.encryptToBuilder({ scoring, groups: surveyConfig.groups });
 
+
+        if (surveyConfig.config.pkpId == undefined) {
+
+            surveyConfig.config = {
+                ...surveyConfig.config,
+                pkpId,
+                groupId
+            }
+        }
+
         const config: EncryptedConfig = {
             surveyId,
             poolId,
             nilDid: this.nildb.builderDid.didString,
-            pkpId,
-            groupId,
             encryptedForOwner,
             encryptedForRespondent,
             encryptedScoring,

@@ -50,9 +50,8 @@ export class LitService {
     }
 
     // console.log(`[Lit API] ${method} ${this.baseUrl}${endpoint}`, body ? JSON.stringify(body).slice(0, 200) : '');
-
-    console.log(`${this.baseUrl}${endpoint}`)
-    console.log("headers", headers)
+    // console.log(`${this.baseUrl}${endpoint}`)
+    // console.log("headers", headers)
 
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method,
@@ -252,7 +251,7 @@ export class LitService {
 
   async decrypt(key: string, pkpId: string, ciphertext: string, userAddress: string, signature: string, action: string): Promise<string> {
 
-    console.log(action);
+    // console.log(action);
 
     const result = await withRetry<{ response: { plaintext?: string; error?: string } }>(
       (signal) => this.call('/lit_action', {

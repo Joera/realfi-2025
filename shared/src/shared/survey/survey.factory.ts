@@ -82,7 +82,7 @@ export const fetchAndDecryptSurveyWithRespondent = async (services: any, deploym
     const decryptForRespondentAction = compactAction(getDecryptForRespondentAction(poolId, deployment.address));
 
     let d: any;
-    const data = await services.lit.decrypt(litApiKey, config.pkpId, config.encryptedForRespondent, services.account.getSignerAddress(), signature, decryptForRespondentAction);
+    const data = await services.lit.decrypt(litApiKey, config.config.pkpId, config.encryptedForRespondent, services.account.getSignerAddress(), signature, decryptForRespondentAction);
     d = JSON.parse(data);
   
     return {

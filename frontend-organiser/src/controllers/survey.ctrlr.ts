@@ -188,10 +188,9 @@ export class SurveyController {
 
         await this.services.safe.connectToExistingSafe(this.survey.config?.safe || "") 
 
-        console.log("!!!!!!!!", this.survey.config)
 
         this.survey = await fetchAndDecryptSurveyWithOwner(this.services, surveyStore, this.surveyId, BACKENDURL, this.survey.config?.pkpId)
-        console.log("Survey: ",this.survey)
+     
         await this.resreshResponses() 
     }
 
@@ -230,8 +229,7 @@ export class SurveyController {
         this.survey.results = talliedResults.results;
 
         console.log("RESULTS", this.survey.results)
-        console.log(this.survey);
-        // store.addSurvey(this.survey);
+        store.addSurvey(this.survey);
     }
 
     setListeners() {

@@ -60,9 +60,11 @@ export interface Batch {
 export interface Config {
     safe?: string
     chainId?: number
-    litNetwork?: string,
+    litNetwork?: string
     pkpId?: string,
-    groupId?: number
+    pkpDid?: string,
+    groupId?: string,
+    delegation?: string
 }
 
 export interface EncryptedData {
@@ -97,7 +99,7 @@ export interface Pool {
     id: string, 
     name: string,
     safeAddress: string, 
-    batches: string[] | Batch[], 
+    batches: string[], 
     owners?: string[],
     readers?: string[],
     createdAt: number 
