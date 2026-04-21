@@ -146,7 +146,6 @@ export class SurveyController {
             return `
                 <button class="tab ${resultTab === 'results' ? 'active' : ''}" data-tab="results">Results</button>
                 <button class="tab ${resultTab === 'questions' ? 'active' : ''}" data-tab="questions">Questions</button>
-
             `;
         });
 
