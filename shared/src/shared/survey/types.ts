@@ -60,7 +60,9 @@ export interface Batch {
 export interface Config {
     safe?: string
     chainId?: number
-    litNetwork?: string
+    litNetwork?: string,
+    pkpId?: string,
+    groupId?: number
 }
 
 export interface EncryptedData {
@@ -72,8 +74,6 @@ export interface EncryptedConfig {
     surveyId: string
     poolId: string,
     nilDid: string, // surveyOwnerDid.didString,
-    pkpId: string,
-    groupId: number,
     encryptedForOwner: EncryptedData
     encryptedForRespondent: EncryptedData
     encryptedScoring: string

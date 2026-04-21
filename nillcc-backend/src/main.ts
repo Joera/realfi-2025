@@ -70,8 +70,8 @@ const router = express.Router();
 // Body: { surveyConfig, safeAddress, idempotencyKey? }
 router.post('/surveys', async (req: Request, res: Response) => {
     try {
-        const surveyCid = await survey.create(req.body);
-        res.status(201).json({ cid: surveyCid });
+        const { cid, pkpId, groupId } = await survey.create(req.body);
+        res.status(201).json({ cid, pkpId, groupId });
     } catch (error: any) {
         console.error(error);
         res.status(500).json({ error: 'CREATE_FAILED', detail: error.message });
@@ -225,16 +225,18 @@ router.post('/lit/usage-key', async (req: Request, res: Response) => {
 
         const { userAddr, signature, poolId } = req.body;
 
-        const hasValidSignature = await viem.publicClient.verifyMessage({
-            address: userAddr,
-            message: 'Request capability to decrypt',
-            signature
-        });
+        // check for origin url .. we only pay for users of our apps 
 
-        if (!hasValidSignature) {
-            res.status(401).json({ error: 'INVALID_SIGNATURE' });
-            return;
-        }
+        // const hasValidSignature = await viem.publicClient.verifyMessage({
+        //     address: userAddr,
+        //     message: 'Request capability to decrypt',
+        //     signature
+        // });
+
+        // if (!hasValidSignature) {
+        //     res.status(401).json({ error: 'INVALID_SIGNATURE' });
+        //     return;
+        // }
 
         const key = await litPoolKeys.get(poolId);
         res.json({ apiKey: key });

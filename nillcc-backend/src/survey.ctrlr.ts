@@ -51,6 +51,8 @@ export class SurveyController {
             const decryptForOwnerAction = compactAction(getDecryptForOwnerAction(poolId, contract, safeAddress));
             const decryptForRespondentAction = compactAction(getDecryptForRespondentAction(poolId, contract));
 
+            console.log(decryptForOwnerAction)
+
             const encryptCid = await this.lit.getActionCid(encryptAction);
             const decryptOwnerCid = await this.lit.getActionCid(decryptForOwnerAction);
             const decryptMemberCid = await this.lit.getActionCid(decryptForRespondentAction);
@@ -93,32 +95,50 @@ export class SurveyController {
             isScored: _isScored
         };
 
-        return await this.ipfs.uploadToPinata(JSON.stringify(config));
+        const cid = await this.ipfs.uploadToPinata(JSON.stringify(config));
+
+        return {
+            cid,
+            pkpId,
+            groupId
+        }
     }
 
     async update(body: any) {
 
+        console.log('update body received:', { 
+            surveyId: body.surveyId, 
+            poolId: body.poolId, 
+            pkpId: body.pkpId, 
+            groupId: body.groupId,
+            hasConfig: !!body.surveyConfig,
+            safeAddress: body.safeAddress
+        });
+
         const contract = surveyStore.address;
         const { surveyId, poolId, pkpId, groupId, surveyConfig, safeAddress } = body;
 
-        console.log(surveyConfig)
+        console.log(surveyConfig);
 
         const { safeConfigWithScoring, safeConfig, scoring } = stripScoring(surveyConfig);
         const _isScored = isScored(surveyConfig.groups);
 
-        const decryptForOwnerAction = getDecryptForOwnerAction(poolId, contract, safeAddress);
-        const decryptForRespondentAction = getDecryptForRespondentAction(poolId, contract);
+        // Get the pool's stored usage key (same as create() does for existing pool branch)
+        const usage_api_key = await this.litPoolKeys.get(poolId);
+        if (!usage_api_key) {
+            throw new Error(`No stored usage key for pool ${poolId}`);
+        }
 
-        const [ encryptedForOwner, encryptedForRespondent] = await Promise.all([
-            this.lit.encrypt(safeConfigWithScoring, decryptForOwnerAction),
-            this.lit.encrypt(safeConfig, decryptForRespondentAction)
-        ])
+        const [ encryptedForOwner, encryptedForRespondent ] = await Promise.all([
+            this.lit.encrypt(usage_api_key, pkpId, JSON.stringify(safeConfigWithScoring)),
+            this.lit.encrypt(usage_api_key, pkpId, JSON.stringify(safeConfig))
+        ]);
 
-        const encryptedScoring = this.nildb.encryptToBuilder({scoring: scoring, groups: surveyConfig.groups});
+        const encryptedScoring = this.nildb.encryptToBuilder({ scoring, groups: surveyConfig.groups });
 
         const config: EncryptedConfig = {
             surveyId,
-            poolId: poolId,
+            poolId,
             nilDid: this.nildb.builderDid.didString,
             pkpId,
             groupId,
@@ -127,9 +147,9 @@ export class SurveyController {
             encryptedScoring,
             config: surveyConfig.config,
             isScored: _isScored
-        }
+        };
 
-        return await this.ipfs.uploadToPinata(JSON.stringify(config))
+        return await this.ipfs.uploadToPinata(JSON.stringify(config));
     }
 
     async get(surveyId: string) {

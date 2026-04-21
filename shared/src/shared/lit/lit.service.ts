@@ -252,6 +252,8 @@ export class LitService {
 
   async decrypt(key: string, pkpId: string, ciphertext: string, userAddress: string, signature: string, action: string): Promise<string> {
 
+    console.log(action);
+
     const result = await withRetry<{ response: { plaintext?: string; error?: string } }>(
       (signal) => this.call('/lit_action', {
         method: 'POST',

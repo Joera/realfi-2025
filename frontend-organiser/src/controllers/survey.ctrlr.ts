@@ -4,16 +4,13 @@ import { store } from "../state/store.js";
 import { reactive } from "../utils/reactive.js";
 import '../components/survey-detail-responses.js';
 import '../components/pool-detail-access.js';
-// import '../components/survey-forms/survey-form-questions.js';
 import '../components/survey-forms/pool-form-batches.js';
 import '../components/registered-questions-editor.js';
 import { router } from "../router.js";
-import { createBatch, createInvitations } from "../factories/survey.factory.js";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
-import {  fetchAndDecryptSurveyWithOwner, fetchLitApiKey, Survey } from "@s3ntiment/shared";
+import {  fetchAndDecryptSurveyWithOwner, Survey } from "@s3ntiment/shared";
 import { renderIcon } from "@s3ntiment/shared/assets";
 import '@s3ntiment/shared/components';
-import { authenticate } from "../factories/auth.factory.js";
 
 const BACKENDURL = import.meta.env.VITE_PROD  == "true" ? import.meta.env.VITE_BACKEND_PROD : import.meta.env.VITE_BACKEND_DEV;
 
@@ -189,36 +186,13 @@ export class SurveyController {
     
     async process() {
 
-        this.survey = await fetchAndDecryptSurveyWithOwner(this.services, surveyStore, this.surveyId, BACKENDURL)
-        console.log("Survey: ",this.survey)
-
         await this.services.safe.connectToExistingSafe(this.survey.config?.safe || "") 
 
-        // switch spinner msg
+        console.log("!!!!!!!!", this.survey.config)
 
-        await this.resreshResponses()
-
-
-        // const nillDid = await this.services.nillion.getDid();
-
-        // const message = `Request delegation for ${nillDid.didString}`;
-        // const signature = await this.services.viem.signMessage(message);
-
-        // let nillDelegation: any  = await fetch(`${import.meta.env.VITE_BACKEND}/api/surveys/${this.surveyId}/delegation`, { // or directly get results 
-        //   method: 'POST',
-        //   headers: {
-        //       'Content-Type': 'application/json', 
-        //   },
-        //   body: JSON.stringify({ 
-        //       surveyId: this.surveyId,
-        //       nillDid,
-        //       signature,     
-        //       message  
-        //   })
-        // });
-
-        
-        
+        this.survey = await fetchAndDecryptSurveyWithOwner(this.services, surveyStore, this.surveyId, BACKENDURL, this.survey.config?.pkpId)
+        console.log("Survey: ",this.survey)
+        await this.resreshResponses() 
     }
 
     async render() {
@@ -256,7 +230,8 @@ export class SurveyController {
         this.survey.results = talliedResults.results;
 
         console.log("RESULTS", this.survey.results)
-        store.addSurvey(this.survey);
+        console.log(this.survey);
+        // store.addSurvey(this.survey);
     }
 
     setListeners() {
@@ -330,55 +305,61 @@ export class SurveyController {
 
             await this.services.safe.connectToExistingSafe(this.survey.config?.safe || "");
 
-            // old state !
             const existing = store.surveys.find((s: any) => s.id === surveyId)
             if (existing) {
 
                 const surveyConfig: Survey = { 
                     id: existing.id,
-                    pool: existing. pool,
+                    pool: existing.pool,
                     title: existing.title,
                     introduction: existing.introduction,
-                    createdAt: existing.createdAt, /// ???? 
-                    config:existing.config,   // ????
-                    batches: existing.batches,   // ????? 
+                    createdAt: existing.createdAt,
+                    config: existing.config,
+                    batches: existing.batches,
                     groups: groups
                 };
 
-                console.log("UPDATING WITH THIS", surveyConfig)
-        
+                // HACK: hardcode MTE pool Lit values if missing from survey config
+                const isMtePool = existing.pool === '5f6b3f9b-5676-4927-b11a-0b1f02344cdf';
+                const pkpId = this.survey.config?.pkpId 
+                    ?? (isMtePool ? '0x7598155069ba02e7dd87afc0c2b5e587b34b2379' : undefined);
+                const groupId = this.survey.config?.groupId 
+                    ?? (isMtePool ? 22 : undefined);
+
+                if (!pkpId || !groupId) {
+                    console.error('Missing pkpId or groupId, aborting update', { pkpId, groupId });
+                    return;
+                }
+
+                console.log("UPDATING WITH THIS", surveyConfig, { pkpId, groupId })
+
                 let res: any = await fetch(`${BACKENDURL}/api/surveys/${surveyId}`, {
                     method: 'PUT',
-                    headers: {
-                    'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({   
                         surveyId,      
                         surveyConfig,
                         safeAddress: this.survey.config?.safe,
-                        poolId: existing.pool
+                        poolId: existing.pool,
+                        pkpId,
+                        groupId
                     })
                 });
 
                 const result = JSON.parse(await res.text());
 
                 if (this.services.ipfs.isCID(result.cid)) {
-
                     const args = [surveyId, result.cid.toString()];
-
                     const receipt = await this.services.safe.write(surveyStore.address, surveyStore.abi, 'updateSurvey', args, { waitForReceipt: true});
                     console.log(receipt);
-
                     store.addSurvey(surveyConfig)
-
                 } else {
-
                     console.log("IPFS upload failed", result.cid)
                 }
-
             }
 
             console.log('save groups', surveyId, groups)
         });
+
     }
 }

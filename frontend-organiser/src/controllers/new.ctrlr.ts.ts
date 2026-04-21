@@ -102,11 +102,18 @@ export class NewSurveyController {
       })
     });
 
-    const result = await res.json();
 
-    console.log(result);
+    const { cid, pkpId, groupId } = await res.json();
 
-    if (this.services.ipfs.isCID(result.cid)) {
+    surveyConfig.config = {
+      ...config,
+      pkpId,
+      groupId
+    }
+      
+    console.log("SSSSSSSSSS", surveyConfig);
+
+    if (this.services.ipfs.isCID(cid)) {
 
       let batchIds = [];
 
@@ -125,7 +132,7 @@ export class NewSurveyController {
 
       console.log("BATCHIDS", batchIds)
 
-      const args = [surveyId, poolId, result.cid.toString(), batchIds];
+      const args = [surveyId, poolId, cid.toString(), batchIds];
 
       const res = await this.services.safe.write(surveyStore.address, surveyStore.abi, 'createSurvey', args, { waitForReceipt: true });
       

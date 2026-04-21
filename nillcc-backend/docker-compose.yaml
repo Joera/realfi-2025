@@ -11,9 +11,8 @@ services:
     env_file:
       - .env
     restart: unless-stopped
-    # Uncomment if you need to persist data
-    # volumes:
-    #   - ./data:/app/data
+    volumes:
+      - ./data:/app/.data
     networks:
       - nillion-network
 
