@@ -249,7 +249,7 @@ export class NilDBBuilderService {
 
             /// pagination on 1000 records!!!!!
             
-            console.log(rawResults)
+            // console.log(rawResults)
 
             try  {
                 const talliedResults = tallyResults(rawResults.data, groups);

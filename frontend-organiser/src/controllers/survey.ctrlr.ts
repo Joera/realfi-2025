@@ -19,6 +19,7 @@ export class SurveyController {
     private services: IServices;
     private surveyId: string;
     private survey!: Survey;
+    private cancelled = false;
 
     constructor(services: IServices, surveyId: string) {
 
