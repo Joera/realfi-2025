@@ -207,6 +207,7 @@ export class SurveyController {
     }
 
     destroy() {
+        this.cancelled = true;
         this.reactiveViews.forEach(view => view.destroy());
         this.reactiveViews = [];
     }
