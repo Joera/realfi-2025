@@ -1,4 +1,3 @@
-export const getUserWriteDelegationAction = `
 /**
  * PKP-signed delegation token for user data writes.
  * 
@@ -21,7 +20,37 @@ export const getUserWriteDelegationAction = `
  * The collection is NOT in the token - it's passed in the HTTP request body.
  * The SDK handles building node-specific invocations from this single delegation.
  */
+
+
+export const userDelegationAction = (poolId: string, contract: string) => `
+
 async function main({ pkpId, pkpDid, userDid, collectionId }) {
+
+        const signerAddress = ethers.utils.verifyMessage(
+        'Request capability to decrypt',
+        signature
+    );
+
+    const isValid = signerAddress.toLowerCase() === userAddress.toLowerCase();
+
+    if (!isValid) {
+        return { error: 'INVALID_SIGNATURE' }
+    }
+
+    const provider = new ethers.providers.JsonRpcProvider('https://base-mainnet.g.alchemy.com/v2/NFOkRqUo2swIC9g5tRJ7c');
+
+    const poolContract = new ethers.Contract(
+        '${contract}',
+        ['function isPoolMember(string poolId, address member) view returns (bool)'],
+        provider
+    );
+
+    const isMember = await poolContract.isPoolMember('${poolId}', userAddress);
+    console.log('ISMEMBER', isMember);
+    
+    if (!isMember) {
+        return { error: 'Not a pool member' };
+    }
 
     const privateKey = await Lit.Actions.getPrivateKey({ pkpId });
     const wallet = new ethers.Wallet(privateKey);

@@ -1,12 +1,18 @@
-import { createNillionInvocationAction, getUserWriteDelegationAction } from "@s3ntiment/shared";
+import { ownerInvocationAction, userDelegationAction } from "@s3ntiment/shared";
 
 // Backend service that uses PKP-signed invocations
 export class NillionPkpClient {
 
     lit: any;
+    poolId: string;
+    safeAddress: string;
+    contract: string;
 
-    constructor(lit: any) {
-        this.lit = lit
+    constructor(lit: any, poolId: string, safeAddress: string, contract: string) {
+        this.lit = lit;
+        this.poolId = poolId;
+        this.safeAddress = safeAddress;
+        this.contract = contract;
     }
 
     private nodes = [
@@ -21,7 +27,7 @@ export class NillionPkpClient {
         for (const node of this.nodes) {
             const result  = await this.lit.executeAction(
                 'nillion-invocation',
-                createNillionInvocationAction,
+                ownerInvocationAction(this.poolId, this.contract, this.safeAddress),
                 { 
                     pkpId, 
                     pkpDid, 
@@ -59,7 +65,7 @@ export class NillionPkpClient {
             
             const result = await this.lit.executeAction(
                 'create-invocation',
-                createNillionInvocationAction,
+                ownerInvocationAction(this.poolId, this.contract, this.safeAddress),
                 { pkpId, pkpDid, nodeDid: node.did, command: '/nil/db/collections/create' },
                 usageKey
             );
@@ -93,7 +99,7 @@ export class NillionPkpClient {
         
         const result = await this.lit.executeAction(
             'get-collection',
-            createNillionInvocationAction,
+            ownerInvocationAction(this.poolId, this.contract, this.safeAddress),
             { pkpId, pkpDid, nodeDid: node.did, command: '/nil/db/collections/read' },
             usageKey
         );
@@ -114,7 +120,7 @@ export class NillionPkpClient {
         
         const result = await this.lit.executeAction(
             'list-collections',
-            createNillionInvocationAction,
+            ownerInvocationAction(this.poolId, this.contract, this.safeAddress),
             { pkpId, pkpDid, nodeDid: node.did, command: '/nil/db/collections/read' },
             usageKey
         );
@@ -162,7 +168,7 @@ export class NillionPkpClient {
 
         const result = await this.lit.executeAction(
             poolId,
-            getUserWriteDelegationAction,
+            userDelegationAction(this.poolId, this.contract),
             params,
             usageKey
         );

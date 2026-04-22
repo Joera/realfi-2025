@@ -1,4 +1,4 @@
-import { compactAction, createNillionInvocationAction, encryptAction, getDecryptForOwnerAction, getDecryptForRespondentAction, getPkpPublicKeyAction, getUserWriteDelegationAction, publicKeyToDidKey  } from "@s3ntiment/shared";
+import { compactAction, encryptAction, getDecryptForOwnerAction, getDecryptForRespondentAction, getPkpPublicKeyAction, ownerInvocationAction, publicKeyToDidKey, userDelegationAction  } from "@s3ntiment/shared";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 import { NillionPkpClient } from "./services/nildb.pkp.service.js";
 import { NucCmd } from "@nillion/secretvaults";
@@ -24,27 +24,29 @@ export class PoolController {
         if (safeAddress == undefined) return 'missing safeAddress';
 
         // Step 1: Create PKP + get all action CIDs in parallel
-        const decryptForOwnerAction = compactAction(getDecryptForOwnerAction(poolId, contract, safeAddress));
-        const decryptForRespondentAction = compactAction(getDecryptForRespondentAction(poolId, contract));
+        const _decryptForOwnerAction = compactAction(getDecryptForOwnerAction(poolId, contract, safeAddress));
+        const _decryptForRespondentAction = compactAction(getDecryptForRespondentAction(poolId, contract));
+        const _ownerInvocationAction = compactAction(ownerInvocationAction(poolId, contract, safeAddress));
+        const _userDelegationAction = compactAction(userDelegationAction(poolId, contract));
 
-        const [pkpAddress, encryptCid, decryptOwnerCid, decryptMemberCid, getPubKeyCid, getInvocationCid, getUserWriteDelegationCid] = await Promise.all([
+        const [pkpAddress, encryptCid, decryptOwnerCid, decryptMemberCid, getPubKeyCid, OwnerInvocationCid, UsereDelegationCid] = await Promise.all([
             this.lit.createPkp(),
             this.lit.getActionCid(encryptAction),
-            this.lit.getActionCid(decryptForOwnerAction),
-            this.lit.getActionCid(decryptForRespondentAction),
+            this.lit.getActionCid(_decryptForOwnerAction),
+            this.lit.getActionCid(_decryptForRespondentAction),
             this.lit.getActionCid(getPkpPublicKeyAction),
-            this.lit.getActionCid(createNillionInvocationAction),
-            this.lit.getActionCid(getUserWriteDelegationAction)
+            this.lit.getActionCid(_ownerInvocationAction),
+            this.lit.getActionCid(_userDelegationAction)
         ]);
 
         // Step 2: Register all actions in parallel (this returns hashed CIDs)
-        const [encryptResult, decryptOwnerResult, decryptMemberResult, getPubKeyResult, getInvocationResult, getUserWriteDelegationResult] = await Promise.all([
+        const [encryptResult, decryptOwnerResult, decryptMemberResult, getPubKeyResult, getOwnerInvocationResult, getUserDelegationResult] = await Promise.all([
             this.lit.registerAction(encryptCid, 'encrypt'),
             this.lit.registerAction(decryptOwnerCid, `decrypt-owner-${poolId}`),
             this.lit.registerAction(decryptMemberCid, `decrypt-member-${poolId}`),
             this.lit.registerAction(getPubKeyCid, `get-public-key`),
-            this.lit.registerAction(getInvocationCid, 'get-invocation'),
-            this.lit.registerAction(getUserWriteDelegationCid, 'get-user-write-delegation')
+            this.lit.registerAction(OwnerInvocationCid, `owner-invocation-${poolId}`),
+            this.lit.registerAction(UsereDelegationCid, `user-delegation-${poolId}`)
         ]);
 
 
@@ -54,7 +56,7 @@ export class PoolController {
             `s3ntiment-${poolId}`,
             '',
             [pkpAddress],  // pkp_ids_permitted - try with address first
-            [encryptResult.hashedCid, decryptOwnerResult.hashedCid, decryptMemberResult.hashedCid, getPubKeyResult.hashedCid, getInvocationResult.hashedCid, getUserWriteDelegationResult.hashedCid]  // cid_hashes_permitted
+            [encryptResult.hashedCid, decryptOwnerResult.hashedCid, decryptMemberResult.hashedCid, getPubKeyResult.hashedCid, getOwnerInvocationResult.hashedCid, getUserDelegationResult.hashedCid]  // cid_hashes_permitted
         );
 
         // Step 5: Create usage key
@@ -67,7 +69,7 @@ export class PoolController {
 
         // const info = await this.nillDB.getNodeInfo();
         // console.log(info);
-        const nillPkp = new NillionPkpClient(this.lit)
+        const nillPkp = new NillionPkpClient(this.lit, poolId, safeAddress, contract)
         const builderRegistrationResult = await nillPkp.registerAsBuilder(pkpAddress, pkpDid, usage_api_key, `builder-${poolId}`);
         console.log(builderRegistrationResult)
 

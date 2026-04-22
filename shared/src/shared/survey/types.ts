@@ -80,7 +80,8 @@ export interface EncryptedConfig {
     encryptedForRespondent: EncryptedData
     encryptedScoring: string
     config: Config,
-    isScored: boolean
+    isScored: boolean,
+    createdAt?: number
 }
 
 export interface Survey {

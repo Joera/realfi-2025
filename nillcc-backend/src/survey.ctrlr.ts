@@ -1,4 +1,4 @@
-import { createSurveyCollectionSchema, EncryptedConfig, isScored, withRetry } from "@s3ntiment/shared";
+import { createSurveyCollectionSchema, EncryptedConfig, fetchSurveyAndParseCid, isScored, withRetry } from "@s3ntiment/shared";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 import { calculateScore, stripScoring } from "@s3ntiment/shared";
 import { NillionPkpClient } from "./services/nildb.pkp.service.js";
@@ -22,6 +22,7 @@ export class SurveyController {
     // for existing pools, the contract reverts if msg.sender != pool.safe.
     async create(body: any) {
 
+        const contract = surveyStore.address;
         const { surveyConfig } = body;
         const { pkpId, pkpDid } = surveyConfig.config;
 
@@ -32,15 +33,15 @@ export class SurveyController {
         const rawSchema = createSurveyCollectionSchema(safeConfig, "owned")
 
         console.log(rawSchema)
-        const nillPkp = new NillionPkpClient(this.lit)
+        const nillPkp = new NillionPkpClient(this.lit, surveyConfig.pool, surveyConfig.config.safe, contract)
         const collectionResponse = await nillPkp.createCollection(pkpId, pkpDid, usage_api_key, rawSchema);
 
-        console.log("collectionResponse", collectionResponse);
+        // console.log("collectionResponse", collectionResponse);
 
         await nillPkp.getCollection(pkpId, pkpDid, usage_api_key, surveyConfig.id) 
 
-        const collections = await nillPkp.listCollections(pkpId, pkpDid, usage_api_key);
-        console.log('Existing collections:', collections);
+        // const collections = await nillPkp.listCollections(pkpId, pkpDid, usage_api_key);
+        // console.log('Existing collections:', collections);
 
         const [ encryptedForOwner, encryptedForRespondent] = await Promise.all([
             this.lit.encrypt(usage_api_key, pkpId, JSON.stringify(safeConfigWithScoring)),
@@ -162,65 +163,12 @@ export class SurveyController {
 
     async getUserDelegation(poolId: string, surveyId: string, userDid: string, pkpId: string, pkpDid: string) {
 
-        console.log("POOLID",poolId)
-
+        const contract = surveyStore.address;
         const usageKey = await this.litPoolKeys.get(poolId);
+        const survey = await fetchSurveyAndParseCid( { viem: this.viem, ipfs: this.ipfs }, surveyStore.address, surveyId)
 
-        console.log("KEY", usageKey)
-
-        const nillPkp = new NillionPkpClient(this.lit)
+        const nillPkp = new NillionPkpClient(this.lit, survey.poolId, survey.config.safe!, contract)
         return await nillPkp.getUserWriteDelegation(surveyId, userDid, poolId, usageKey, pkpId, pkpDid);
         
     }
-
-    // async verifyPoolOwner(signature: `0x${string}`, poolId: string, contract: `0x${string}`, safeAddress: `0x${string}`): Promise<string | null> {
-
-    //     const signerAddress = await this.viem.verifyMessage('create a s3ntiment survey', signature);
-
-    //     console.log("SIGNER", signerAddress)
-    //     console.log("SAFE", safeAddress)
-    //     console.log("POOLID", poolId)
-        
-    //     const isPoolSafe = await this.viem.read(
-    //         contract, 
-    //         parseAbi(['function isPoolSafe(address addr, string poolId) view returns (bool)']),
-    //         'isPoolSafe', 
-    //         [safeAddress, poolId]
-    //     );
-
-    //     console.log("ISPOOLSAFE", isPoolSafe)
-        
-    //     if (!isPoolSafe) return null;
-
-    //     const isOwner = await this.viem.read(
-    //         safeAddress,
-    //         parseAbi(['function isOwner(address owner) view returns (bool)']),
-    //         'isOwner',
-    //         [signerAddress]
-    //     );
-
-    //     console.log("ISOWNER", isOwner)
-
-    //     if (!isOwner) return null;
-
-    //     return signerAddress;
-    // }
-
-    // async verifyOwnership(
-    //     surveyOwnerAddress: string,
-    //     requestorDid: string,
-    //     message: string,
-    //     signature: Signature
-    // ): Promise<boolean> {
-    //     // Verify signature matches survey owner
-    //     const recoveredAddress = await recoverMessageAddress({ message, signature });
-        
-    //     if (recoveredAddress.toLowerCase() !== surveyOwnerAddress.toLowerCase()) {
-    //         return false;
-    //     }
-
-    //     // Verify the DID in message matches requestor
-    //     const expectedMessage = `Request delegation for ${requestorDid}`;
-    //     return message === expectedMessage;
-    // }
 }

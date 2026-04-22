@@ -52,6 +52,7 @@ export class NewSurveyController {
   private handleSurveySubmit = async (event: any) => {
 
 
+    // CREATE POOL 
     store.setUI({ newStep: 'creating-pool' });
 
     const survey = event.detail.survey;
@@ -86,6 +87,7 @@ export class NewSurveyController {
 
     const { pkpId, pkpDid, groupId, delegation }  = await poolResponse.json();
 
+    // CREATE SURVEY 
     store.setUI({ newStep: 'creating-survey' });
 
     const config = {
@@ -125,10 +127,7 @@ export class NewSurveyController {
 
     const { cid }  = await surveyResponse.json();
 
-
-    // run create survey in action 
-
-
+    // CREATE INVITES
     store.setUI({ newStep: 'creating-invites' });
 
     if (this.services.ipfs.isCID(cid)) {

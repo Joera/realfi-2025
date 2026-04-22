@@ -22,11 +22,17 @@ export const fetchSurvey = async (services: any, deployment: any, surveyId: stri
     );  
 }
 
+export const fetchSurveyAndParseCid = async (services: any, deployment: any, surveyId: string) : Promise<EncryptedConfig> => {
+
+  const [ipfsCid, poolId, createdAt] = await fetchSurvey(services, deployment, surveyId);
+  const cid = extractCid(ipfsCid)
+  return JSON.parse(await services.ipfs.fetchFromPinata(cid));
+
+}
+
 export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: any, surveyId: string, backendUrl: string) => {
 
-    const [ipfsCid, poolId, createdAt] = await fetchSurvey(services, deployment, surveyId);
-    const cid = extractCid(ipfsCid)
-    const config: EncryptedConfig = JSON.parse(await services.ipfs.fetchFromPinata(cid));
+   const survey = await fetchSurveyAndParseCid(services, deployment, surveyId)
 
     let d: any;
     // Survey ownership is managed through a safe. Organiser is a signer to this safe 
@@ -34,7 +40,7 @@ export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: 
     const safeAddress = services.safe.getAddress();
     const signature = await services.safe.signMessage('Request capability to decrypt');
     const litApiKey = await withRetry(
-      (signal) => fetchLitApiKey(backendUrl, userAddress, signature, poolId, signal),
+      (signal) => fetchLitApiKey(backendUrl, userAddress, signature, survey.poolId, signal),
       {
         timeoutMs: 5_000,
         onRetry: (attempt, error) =>
@@ -42,18 +48,18 @@ export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: 
       }
     );
 
-    const decryptForOwnerAction = compactAction(getDecryptForOwnerAction(poolId, deployment.address, safeAddress));
+    const decryptForOwnerAction = compactAction(getDecryptForOwnerAction(survey.poolId, deployment.address, safeAddress));
     // let _cid = await services.lit.getActionCid(decryptForOwnerAction)
     // console.log(decryptForOwnerAction)
 
-    const data = await services.lit.decrypt(litApiKey, config.config.pkpId, config.encryptedForOwner, userAddress, signature, decryptForOwnerAction);
+    const data = await services.lit.decrypt(litApiKey, survey.config.pkpId, survey.encryptedForOwner, userAddress, signature, decryptForOwnerAction);
       d = JSON.parse(data);
 
     return {
         id: surveyId,
-        createdAt: Number(createdAt),
+        createdAt: Number(survey.createdAt),
         ...d,
-        ...config
+        ...survey
     }
 }
 

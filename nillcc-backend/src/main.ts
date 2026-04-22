@@ -121,36 +121,6 @@ router.put('/surveys/:id', async (req: Request, res: Response) => {
     }
 });
 
-// --- Participation ---
-
-// Request nilDB write delegation for a participant
-// Body: { didString, signature, signer }
-// router.post('/surveys/:id/delegation', async (req: Request, res: Response) => {
-//     try {
-//         const { didString, surveyId } = req.body;
-//         const delegation = await nildb.getUserWriteDelegation(didString, req.params.id);
-//         res.json({ delegation });
-//     } catch (error: any) {
-//         console.error(error);
-//         res.status(500).json({ error: 'DELEGATION_FAILED', detail: error.message });
- //   }    // async getUserWriteDelegation(didString: string, surveyId: string) {
-    //     console.log('builderSigner:', this.builderSigner ? 'present' : 'MISSING');
-    //     console.log('collection', surveyId);
-
-    //     const userDid = Did.parse(didString);
-    //     console.log('issuing delegation to DID:', userDid);
-
-    //     const delegation = await Builder.delegation()
-    //         .command(NucCmd.nil.db.data.create as Command)
-    //         .subject(this.builderDid!)
-    //         .audience(userDid)
-    //         .expiresIn(3600_000)
-    //         .signAndSerialize(this.builderSigner);
-
-    //     return delegation;
-    // }
-// });
-
 // Submit survey answers
 // Body: { userData, signature, signer }
 router.post('/surveys/:id/submit', async (req: Request, res: Response) => {
@@ -242,8 +212,6 @@ router.post('/surveys/:id/results', async (req: Request, res: Response) => {
 });
 
 router.post('/surveys/:surveyId/delegation', async (req, res) => {
-
-    console.log("B",req.body)
 
     const { surveyId } = req.params;
     const { userDid, signature, poolId, pkpId, pkpDid} = req.body;
