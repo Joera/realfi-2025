@@ -1,10 +1,10 @@
 export const ownerInvocationAction = (poolId: string, contract: string, safeAddress: string) => `
-async function main({ pkpId, pkpDid, nodeDid, command }) {
+async function main({ signature, userAddress, pkpId, pkpDid, nodeDid, command }) {
 
     const provider = new ethers.providers.JsonRpcProvider('https://base-mainnet.g.alchemy.com/v2/NFOkRqUo2swIC9g5tRJ7c');
 
     const signerAddress = ethers.utils.verifyMessage(
-        'Request capability to decrypt',
+        'Request owner invocation',
         signature
     );
 
@@ -67,7 +67,6 @@ async function main({ pkpId, pkpDid, nodeDid, command }) {
         const payloadB64 = b64url(payload);
         const message = headerB64 + '.' + payloadB64;
         
-        // ES256K uses SHA-256, not keccak256
         const msgBytes = new TextEncoder().encode(message);
         const hashBuffer = await crypto.subtle.digest('SHA-256', msgBytes);
         const hashArray = new Uint8Array(hashBuffer);

@@ -216,25 +216,34 @@ export class SurveyController {
 
     async refreshResponses () {
 
+        const auth = {
+            signature: await this.services.safe.signMessage('Request owner invocation'),
+            userAddress: this.services.safe.getSignerAddress()
+        }
+
         const response = await fetch(`${BACKENDURL}/api/surveys/${this.surveyId}/results`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ 
-                surveyId: this.survey.id,
-                groups: this.survey.groups   
+                auth,
+                poolId: this.survey.pool,
+                groups: this.survey.groups,
+                surveyConfig: this.survey.config 
             })
         });
 
-        const talliedResults = await response.json();
+        console.log(response);
 
-        this.survey.results = talliedResults.results;
+        // const talliedResults = await response.json();
 
-        if (this.cancelled) return;  
+        // this.survey.results = talliedResults.results;
 
-        console.log("RESULTS", this.survey.results)
-        store.addSurvey(this.survey);
+        // if (this.cancelled) return;  
+
+        // console.log("RESULTS", this.survey.results)
+        // store.addSurvey(this.survey);
     }
 
     setListeners() {

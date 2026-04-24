@@ -38,7 +38,7 @@ export class NilDBBuilderService {
         this.builderClient = await SecretVaultBuilderClient.from({
             signer: this.builderSigner,
             dbs: config.NILDB_NODES,
-            blindfold: { operation: "store" },
+            blindfold: { operation: "sum" },
         });
 
         console.log('Builder client initialized');

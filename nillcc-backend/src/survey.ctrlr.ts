@@ -1,4 +1,4 @@
-import { createSurveyCollectionSchema, EncryptedConfig, fetchSurveyAndParseCid, isScored, withRetry } from "@s3ntiment/shared";
+import { createSurveyAggregationQuery, createSurveyCollectionSchema, EncryptedConfig, fetchSurveyAndParseCid, isScored, withRetry } from "@s3ntiment/shared";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 import { calculateScore, stripScoring } from "@s3ntiment/shared";
 import { NillionPkpClient } from "./services/nildb.pkp.service.js";
@@ -23,7 +23,7 @@ export class SurveyController {
     async create(body: any) {
 
         const contract = surveyStore.address;
-        const { surveyConfig } = body;
+        const { signature, userAddress, surveyConfig } = body;
         const { pkpId, pkpDid } = surveyConfig.config;
 
         const usage_api_key = await this.litPoolKeys.get(surveyConfig.pool)
@@ -33,15 +33,21 @@ export class SurveyController {
         const rawSchema = createSurveyCollectionSchema(safeConfig, "owned")
 
         console.log(rawSchema)
+
         const nillPkp = new NillionPkpClient(this.lit, surveyConfig.pool, surveyConfig.config.safe, contract)
-        const collectionResponse = await nillPkp.createCollection(pkpId, pkpDid, usage_api_key, rawSchema);
+        const collectionResponse = await nillPkp.createCollection(signature, userAddress, pkpId, pkpDid, usage_api_key, rawSchema);
+        console.log("collectionResponse", collectionResponse);
 
-        // console.log("collectionResponse", collectionResponse);
-
-        await nillPkp.getCollection(pkpId, pkpDid, usage_api_key, surveyConfig.id) 
-
+        // await nillPkp.getCollection(pkpId, pkpDid, usage_api_key, surveyConfig.id) 
         // const collections = await nillPkp.listCollections(pkpId, pkpDid, usage_api_key);
         // console.log('Existing collections:', collections);
+
+
+        // Create aggregation query
+        const queryDef = createSurveyAggregationQuery(surveyConfig.id, surveyConfig.groups);
+        const queryResponse = await nillPkp.createQuery(signature, userAddress, pkpId, pkpDid, usage_api_key, queryDef);
+
+        surveyConfig.config.queryIds = [queryDef._id];
 
         const [ encryptedForOwner, encryptedForRespondent] = await Promise.all([
             this.lit.encrypt(usage_api_key, pkpId, JSON.stringify(safeConfigWithScoring)),
@@ -161,14 +167,20 @@ export class SurveyController {
        }
     }
 
-    async getUserDelegation(poolId: string, surveyId: string, userDid: string, pkpId: string, pkpDid: string) {
+    async getUserDelegation(signature: string, userAddress: string, poolId: string, surveyId: string, userDid: string, pkpId: string, pkpDid: string) {
+
+        const deployment = {
+            address: surveyStore.address,
+            abi: surveyStore.abi
+        }
 
         const contract = surveyStore.address;
         const usageKey = await this.litPoolKeys.get(poolId);
-        const survey = await fetchSurveyAndParseCid( { viem: this.viem, ipfs: this.ipfs }, surveyStore.address, surveyId)
+        const survey = await fetchSurveyAndParseCid( { viem: this.viem, ipfs: this.ipfs }, deployment, surveyId)
 
         const nillPkp = new NillionPkpClient(this.lit, survey.poolId, survey.config.safe!, contract)
-        return await nillPkp.getUserWriteDelegation(surveyId, userDid, poolId, usageKey, pkpId, pkpDid);
-        
+        return await nillPkp.getUserWriteDelegation(signature, userAddress, surveyId, userDid, poolId, usageKey, pkpId, pkpDid);
     }
+
+    
 }

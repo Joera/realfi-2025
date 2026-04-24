@@ -18,7 +18,7 @@ export class PoolController {
 
     async create(body: any) {
         const contract = surveyStore.address;
-        const { poolId, safeAddress } = body;
+        const { signature, userAddress, poolId, safeAddress } = body;
 
         if (poolId == undefined) return "missing poolId";
         if (safeAddress == undefined) return 'missing safeAddress';
@@ -67,13 +67,6 @@ export class PoolController {
         const { publicKey } = result.response;
         const pkpDid = publicKeyToDidKey(publicKey);
 
-        // const info = await this.nillDB.getNodeInfo();
-        // console.log(info);
-        const nillPkp = new NillionPkpClient(this.lit, poolId, safeAddress, contract)
-        const builderRegistrationResult = await nillPkp.registerAsBuilder(pkpAddress, pkpDid, usage_api_key, `builder-${poolId}`);
-        console.log(builderRegistrationResult)
-
-
         console.log('Pool setup verification:');
         console.log('- poolId:', poolId);
         console.log('- pkpAddress:', pkpAddress);
@@ -91,6 +84,18 @@ export class PoolController {
         // so shouldnt there be an action that allows for use of pkp to add an action? 
 
         // potentially add actions? // rotate usage key? 
+    }
+
+    async registerBuilder(body: any) {
+
+        const {signature, userAddress, poolId, pkpId, pkpDid, safeAddress } = body;
+        const usage_api_key = await this.litPoolKeys.get(poolId)
+        const contract = surveyStore.address;
+
+        const nillPkp = new NillionPkpClient(this.lit, poolId, safeAddress, contract)
+        const builderRegistrationResult = await nillPkp.registerAsBuilder(signature, userAddress, pkpId, pkpDid, usage_api_key, `builder-${poolId}`);
+
+        return { ok: true }
     }
 
     

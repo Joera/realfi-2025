@@ -72,12 +72,17 @@ export class NewSurveyController {
 
     console.log("safeAddress", safeAddress)
 
+    const userAddress = this.services.safe.getSignerAddress();
+    const signature = await this.services.safe.signMessage("Request owner invocation")
+
     let poolResponse: any = await fetch(`${BACKENDURL}/api/pools`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({    
+      body: JSON.stringify({   
+        signature,
+        userAddress,
         poolId,
         safeAddress
       })
@@ -87,6 +92,45 @@ export class NewSurveyController {
 
     const { pkpId, pkpDid, groupId, delegation }  = await poolResponse.json();
 
+    let batchIds = [];
+
+    if (isNewPool) {
+        console.log("is new pool");
+        survey.batches = await Promise.all(
+          survey.batches.map((batch: Batch) => createBatch(this.services, batch, poolId, surveyId))
+        );
+        
+        batchIds = survey.batches.map((b: Batch) => b.id);
+    }
+
+    console.log("BATCHES", survey.batches)
+
+    // register pool on chain .. so create collection can check ...
+    const args = [surveyId, poolId, "0", batchIds];
+    const res = await this.services.safe.write(surveyStore.address, surveyStore.abi, 'createSurvey', args, { waitForReceipt: true });
+
+    console.log("create pool tx", res.receipt?.status);
+
+    // register builder with nillion 
+
+    let builderResponse: any = await fetch(`${BACKENDURL}/api/builder/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({   
+        signature, 
+        userAddress, 
+        poolId, 
+        pkpId, 
+        pkpDid, 
+        safeAddress
+      })
+    });
+
+   if (!builderResponse.ok) console.log("builder registration failed") 
+
+      
     // CREATE SURVEY 
     store.setUI({ newStep: 'creating-survey' });
 
@@ -119,6 +163,8 @@ export class NewSurveyController {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({  
+        signature,
+        userAddress,
         surveyConfig
       })
     });
@@ -127,26 +173,18 @@ export class NewSurveyController {
 
     const { cid }  = await surveyResponse.json();
 
+
+
     // CREATE INVITES
     store.setUI({ newStep: 'creating-invites' });
 
     if (this.services.ipfs.isCID(cid)) {
 
-      let batchIds = [];
-
-      if (isNewPool) {
-        survey.batches = await Promise.all(
-          survey.batches.map((batch: Batch) => createBatch(this.services, batch, poolId, surveyId))
-        );
-        
-        batchIds = survey.batches.map((b: Batch) => b.id);
-      }
-
-      const args = [surveyId, poolId, cid.toString(), batchIds];
-      const res = await this.services.safe.write(surveyStore.address, surveyStore.abi, 'createSurvey', args, { waitForReceipt: true });
+      const args = [surveyId, cid.toString()];
+      const res = await this.services.safe.write(surveyStore.address, surveyStore.abi, 'updateSurvey', args, { waitForReceipt: true });
       
       // console.log(res);
-      console.log("Survey created", survey)
+      console.log("Survey updated")
 
       if (res.receipt?.status == "success") {
 
@@ -156,6 +194,8 @@ export class NewSurveyController {
           // );
 
         surveyConfig.batches = survey.batches;
+
+        console.log("B4 batches", survey.batches)
         
         for (const batch of survey.batches) {
           store.addBatch(batch);

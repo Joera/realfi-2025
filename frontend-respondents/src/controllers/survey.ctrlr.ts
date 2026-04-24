@@ -113,11 +113,12 @@ export class SurveyController {
       const docIUd = crypto.randomUUID();
 
       // replace with pool issued lit action 
-      const signature = await this.services.account.signMessage(`s3ntiment:submit:${this.surveyId}`);
+      const signature = await this.services.account.signMessage(`s3ntiment:submit`);
 
       const args = {
         userDid: this.services.nillDB.userDidString, 
         signature, 
+        userAddress: this.services.account.getSignerAddress(),
         poolId: this.config?.pool, 
         pkpId: this.config?.config?.pkpId, 
         pkpDid: this.config?.config?.pkpDid 
@@ -135,20 +136,8 @@ export class SurveyController {
 
       console.log(result)
 
-      // if (result.ok) {
+      if (result.ok) router.navigate(`complete/${this.surveyId}/${docIUd}`)
 
-      //   router.navigate(`complete/${this.surveyId}/${docIUd}`)
-
-      // } 
-
-      // FLOW AS DESIGNED FOR OWNED COLLECTIONS
-      // const delegationToken = await this.services.nillDB.getUserDelegationToken("", this.surveyId, BACKENDURL);
-
-      // if (event.detail.documentId != undefined) {
-      //   await this.services.nillDB.updateOwned(this.config!, event.detail.answers, this.surveyId, delegationToken, event.detail.documentId);
-      // } else {
-      //   await this.services.nillDB.storeOwned(this.config!, event.detail.answers, this.surveyId, delegationToken);
-      // }
     });
   }
 }

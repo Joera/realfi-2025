@@ -24,10 +24,10 @@
 
 export const userDelegationAction = (poolId: string, contract: string) => `
 
-async function main({ pkpId, pkpDid, userDid, collectionId }) {
+async function main({ signature, userAddress, pkpId, pkpDid, userDid, collectionId }) {
 
         const signerAddress = ethers.utils.verifyMessage(
-        'Request capability to decrypt',
+        's3ntiment:submit',
         signature
     );
 
@@ -62,10 +62,10 @@ async function main({ pkpId, pkpDid, userDid, collectionId }) {
     };
     
     const payload = {
-        iss: pkpDid,           // PKP signs
-        sub: pkpDid,           // PKP is the granter (CHANGED)
-        aud: userDid,          // User receives delegation (CHANGED)
-        cmd: '/nil/db/data/create',  // Correct command (CHANGED)
+        iss: pkpDid,  
+        sub: pkpDid,     
+        aud: userDid,          
+        cmd: '/nil/db/data/create', 
         pol: [],
         exp: Math.floor(Date.now() / 1000) + 3600,
         nonce: Array.from({length: 32}, () => Math.floor(Math.random() * 16).toString(16)).join(''),

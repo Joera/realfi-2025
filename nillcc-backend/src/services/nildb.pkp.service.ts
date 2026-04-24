@@ -1,4 +1,4 @@
-import { ownerInvocationAction, userDelegationAction } from "@s3ntiment/shared";
+import { combineShares, compactAction, Config, ownerInvocationAction, QuestionGroup, tallyResults, userDelegationAction } from "@s3ntiment/shared";
 
 // Backend service that uses PKP-signed invocations
 export class NillionPkpClient {
@@ -21,14 +21,18 @@ export class NillionPkpClient {
         { url: 'https://nildb-stg-n3.nillion.network', did: 'did:key:zQ3sheuiqFDDhsiMcEdfHcGFbqbfAA1ttqDsSaLaUTk9LQfpe' },
     ];
 
-    async registerAsBuilder(pkpId: string, pkpDid: string, usageKey: string, name: string = 'S3ntiment PKP') {
+    async registerAsBuilder(signature: string, userAddress: string, pkpId: string, pkpDid: string, usageKey: string, name: string = 'S3ntiment PKP') {
         const results: Record<string, any> = {};
+
+        const action = compactAction(ownerInvocationAction(this.poolId, this.contract, this.safeAddress))
         
         for (const node of this.nodes) {
             const result  = await this.lit.executeAction(
                 'nillion-invocation',
-                ownerInvocationAction(this.poolId, this.contract, this.safeAddress),
+                action,
                 { 
+                    signature,
+                    userAddress,
                     pkpId, 
                     pkpDid, 
                     nodeDid: node.did, 
@@ -38,6 +42,12 @@ export class NillionPkpClient {
             );
 
             let { invocation } = result.response;
+
+
+            if (invocation == undefined ) {
+                console.log('invocation failed', result)
+                return;
+            }
 
             const response = await fetch(`${node.url}/v1/builders/register`, {
                 method: 'POST',
@@ -55,22 +65,26 @@ export class NillionPkpClient {
     }
 
     // In NillionPkpClient.createCollection, add better error handling:
-    async createCollection(pkpId: string, pkpDid: string, usageKey: string, collectionData: any) {
+    async createCollection(signature: string, userAddress: string, pkpId: string, pkpDid: string, usageKey: string, collectionData: any) {
         const results: Record<string, any> = {};
 
-        console.log('Creating collection with data:', JSON.stringify(collectionData, null, 2));
+        // console.log('Creating collection with data:', JSON.stringify(collectionData, null, 2));
 
-        
         for (const node of this.nodes) {
             
             const result = await this.lit.executeAction(
                 'create-invocation',
-                ownerInvocationAction(this.poolId, this.contract, this.safeAddress),
-                { pkpId, pkpDid, nodeDid: node.did, command: '/nil/db/collections/create' },
+                compactAction(ownerInvocationAction(this.poolId, this.contract, this.safeAddress)),
+                { signature, userAddress, pkpId, pkpDid, nodeDid: node.did, command: '/nil/db/collections/create' },
                 usageKey
             );
 
             const invocation = result?.invocation || result?.response?.invocation;
+
+            if (invocation == undefined ) {
+                console.log('invocation failed', result)
+                return;
+            }
             
             const response = await fetch(`${node.url}/v1/collections`, {
                 method: 'POST',
@@ -81,10 +95,10 @@ export class NillionPkpClient {
                 body: JSON.stringify(collectionData)
             });
 
-            console.log("COLLECTION", response)
+         //   console.log("COLLECTION", response)
             
             const text = await response.text();
-            console.log('Create collection response:', response.status, text);
+         //   console.log('Create collection response:', response.status, text);
 
             // Handle empty response
             const data = text ? JSON.parse(text) : { status: response.status };
@@ -94,49 +108,40 @@ export class NillionPkpClient {
         return results;
     }
 
-    async getCollection(pkpId: string, pkpDid: string, usageKey: string, collectionId: string) {
-        const node = this.nodes[0];
-        
-        const result = await this.lit.executeAction(
-            'get-collection',
-            ownerInvocationAction(this.poolId, this.contract, this.safeAddress),
-            { pkpId, pkpDid, nodeDid: node.did, command: '/nil/db/collections/read' },
-            usageKey
-        );
-        
-        const invocation = result?.response?.invocation;  
-        
-        const response = await fetch(`${node.url}/v1/collections/${collectionId}`, {
-            headers: { 'Authorization': `Bearer ${invocation}` }
-        });
-        
-        console.log(`Collection ${collectionId} exists?`, response.status);
-        const data = response.ok ? await response.json() : null;
-        return { status: response.status, data };
-    }
+    async createQuery(signature: string, userAddress: string, pkpId: string, pkpDid: string, usageKey: string, queryData: any) {
+        const results: Record<string, any> = {};
 
-    async listCollections(pkpId: string, pkpDid: string, usageKey: string) {
-        const node = this.nodes[0];
-        
-        const result = await this.lit.executeAction(
-            'list-collections',
-            ownerInvocationAction(this.poolId, this.contract, this.safeAddress),
-            { pkpId, pkpDid, nodeDid: node.did, command: '/nil/db/collections/read' },
-            usageKey
-        );
-        
-        const invocation = result?.response?.invocation;
-        
-        const response = await fetch(`${node.url}/v1/collections`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${invocation}`
+        for (const node of this.nodes) {
+            const result = await this.lit.executeAction(
+                'create-query',
+                compactAction(ownerInvocationAction(this.poolId, this.contract, this.safeAddress)),
+                { signature, userAddress, pkpId, pkpDid, nodeDid: node.did, command: '/nil/db/queries/create' },
+                usageKey
+            );
+
+            const invocation = result?.invocation || result?.response?.invocation;
+
+            if (!invocation) {
+                console.log('invocation failed', result);
+                return;
             }
-        });
-        
-        const data = await response.json();
-        console.log('Collections for this builder:', JSON.stringify(data, null, 2));
-        return data;
+
+            const response = await fetch(`${node.url}/v1/queries`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${invocation}`
+                },
+                body: JSON.stringify(queryData)
+            });
+
+            const text = await response.text();
+            const data = text ? JSON.parse(text) : { status: response.status };
+            results[node.did] = { status: response.status, data };
+            console.log(`Create query on ${node.url}:`, response.status);
+        }
+
+        return results;
     }
 
     /**
@@ -157,22 +162,158 @@ export class NillionPkpClient {
      * NOT:
      *   await sdk.createData(body, { auth: { invocations: {...} } })
      */
-    async getUserWriteDelegation(surveyId: string, userDid: string, poolId: string, usageKey: string, pkpId: string, pkpDid: string) {
+    async getUserWriteDelegation(signature: string, userAddress: string, surveyId: string, userDid: string, poolId: string, usageKey: string, pkpId: string, pkpDid: string) {
 
         const params = {
+            signature,
+            userAddress,
             pkpId,
             pkpDid,
             userDid,
             collectionId: surveyId
         };
 
+        const code = compactAction(userDelegationAction(this.poolId, this.contract));
+
+        console.log(code);
+
         const result = await this.lit.executeAction(
             poolId,
-            userDelegationAction(this.poolId, this.contract),
+            code,
             params,
             usageKey
         );
         
         return { delegation: result.response.delegation };
     }
+
+    // async computeResults(surveyId: string, groups: QuestionGroup[], signature: string, userAddress: string, pkpId: string, pkpDid: string, usageKey: string) {
+
+
+   
+    // }
+
+    async runQuery(auth: any, surveyConfig: Config, usageKey: string) {
+        const runIds: Record<string, string> = {};
+
+        console.log(1)
+
+        for (const node of this.nodes) {
+
+            const args = { 
+                ...auth,
+                ...surveyConfig, 
+                nodeDid: node.did, 
+                command: '/nil/db/queries/execute' 
+            }
+
+            const result = await this.lit.executeAction(
+                'run-query',
+                compactAction(ownerInvocationAction(this.poolId, this.contract, this.safeAddress)),
+                args,
+                usageKey
+            );
+
+            const invocation = result?.invocation || result?.response?.invocation;
+            const response = await fetch(`${node.url}/v1/queries/run`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${invocation}`
+                },
+                body: JSON.stringify({ _id: surveyConfig.queryIds![0], variables: {} })
+            });
+
+            const data: any = await response.json();
+            runIds[node.did] = data.data;  // runId
+            console.log(`Run query on ${node.url}:`, response.status, 'runId:', data.data);
+        }
+
+        return runIds;
+    }
+
+    async readQueryResults(auth: any, surveyConfig: Config, usageKey: string, runIds: Record<string, string>) {
+        const nodeResults: any[] = [];
+
+        for (const node of this.nodes) {
+            const runId = runIds[node.did];
+
+            const result = await this.lit.executeAction(
+                'read-query',
+                compactAction(ownerInvocationAction(this.poolId, this.contract, this.safeAddress)),
+                { 
+                    ...auth, 
+                    ...surveyConfig, 
+                    nodeDid: node.did, 
+                    command: '/nil/db/queries/read' 
+                },
+                usageKey
+            );
+
+            const invocation = result?.invocation || result?.response?.invocation;
+
+            const response = await fetch(`${node.url}/v1/queries/run/${runId}`, {
+                headers: { 'Authorization': `Bearer ${invocation}` }
+            });
+
+            const data: any = await response.json();
+            console.log(`Query result from ${node.url}:`, data.data?.status);
+            
+            if (data.data?.status === 'complete') {
+                nodeResults.push(data.data.result);
+            }
+
+            console.log(`Node ${node.url} raw result:`, JSON.stringify(data.data?.result, null, 2));
+        }
+
+        console.log(nodeResults)
+
+        return combineShares(nodeResults);
+    }
+
+        // async getCollection(pkpId: string, pkpDid: string, usageKey: string, collectionId: string) {
+    //     const node = this.nodes[0];
+        
+    //     const result = await this.lit.executeAction(
+    //         'get-collection',
+    //         ownerInvocationAction(this.poolId, this.contract, this.safeAddress),
+    //         { pkpId, pkpDid, nodeDid: node.did, command: '/nil/db/collections/read' },
+    //         usageKey
+    //     );
+        
+    //     const invocation = result?.response?.invocation;  
+        
+    //     const response = await fetch(`${node.url}/v1/collections/${collectionId}`, {
+    //         headers: { 'Authorization': `Bearer ${invocation}` }
+    //     });
+        
+    //     console.log(`Collection ${collectionId} exists?`, response.status);
+    //     const data = response.ok ? await response.json() : null;
+    //     return { status: response.status, data };
+    // }
+
+    // async listCollections(pkpId: string, pkpDid: string, usageKey: string) {
+    //     const node = this.nodes[0];
+        
+    //     const result = await this.lit.executeAction(
+    //         'list-collections',
+    //         ownerInvocationAction(this.poolId, this.contract, this.safeAddress),
+    //         { pkpId, pkpDid, nodeDid: node.did, command: '/nil/db/collections/read' },
+    //         usageKey
+    //     );
+        
+    //     const invocation = result?.response?.invocation;
+        
+    //     const response = await fetch(`${node.url}/v1/collections`, {
+    //         method: 'GET',
+    //         headers: {
+    //             'Authorization': `Bearer ${invocation}`
+    //         }
+    //     });
+        
+    //     const data = await response.json();
+    //     console.log('Collections for this builder:', JSON.stringify(data, null, 2));
+    //     return data;
+    // }
+
 }

@@ -12,16 +12,6 @@ import { createUserDataObject } from '../survey/index.js';
 import { Signature } from 'viem';
 import { StringifyOptions } from 'node:querystring';
 
-const randomUUID = () => {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-};
 
 export class NillDBUserService {
 
@@ -47,7 +37,7 @@ export class NillDBUserService {
             baseUrls: this.nilDBNodes.split(','),
             signer: this.signer,
             blindfold: {
-                operation: 'store',
+                operation: 'sum',
             },
         });
 
@@ -92,37 +82,6 @@ export class NillDBUserService {
         
 
     async createData(survey: Survey, userPrivateData: any, delegation: string) {
-
-        const decodeNucToken = (token: string) => {
-            const [headerB64, payloadB64, sigB64] = token.split('.');
-            
-            const decode = (b64: string) => {
-                const padded = b64 + '='.repeat((4 - b64.length % 4) % 4);
-                const binary = atob(padded.replace(/-/g, '+').replace(/_/g, '/'));
-                return JSON.parse(binary);
-            };
-            
-            return {
-                header: decode(headerB64),
-                payload: decode(payloadB64),
-            };
-        };
-
-        console.log("=== storeOwned debug ===");
-        console.log("surveyId (collection):", survey.id);
-        console.log("owner (userDid):", this.userDidString);
-        console.log("grantee (pkpDid):", survey.config!.pkpDid);
-        console.log("user client nodes:", this.user.nodes?.map((n: any) => n.id?.didString));
-
-        console.log('=== Delegation Token ===');
-        const decoded = decodeNucToken(delegation);
-        console.log('iss:', decoded.payload.iss);
-        console.log('sub:', decoded.payload.sub);
-        console.log('aud:', decoded.payload.aud);
-        console.log('cmd:', decoded.payload.cmd);
-        console.log('args:', decoded.payload.args);
-
-
 
         try { 
             // PKP-signed tokens grant users write permission. The SDK expects them as invocations (ready-to-use) rather than delegation (requires user to co-sign).
