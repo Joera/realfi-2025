@@ -1,4 +1,4 @@
-import { combineShares, compactAction, Config, ownerInvocationAction, QuestionGroup, tallyResults, userDelegationAction } from "@s3ntiment/shared";
+import { combineShares, compactAction, PoolConfig, ownerInvocationAction, QuestionGroup, Survey, tallyResults, userDelegationAction } from "@s3ntiment/shared";
 
 // Backend service that uses PKP-signed invocations
 export class NillionPkpClient {
@@ -28,7 +28,7 @@ export class NillionPkpClient {
         
         for (const node of this.nodes) {
             const result  = await this.lit.executeAction(
-                'nillion-invocation',
+                this.poolId,
                 action,
                 { 
                     signature,
@@ -64,7 +64,6 @@ export class NillionPkpClient {
         return results;
     }
 
-    // In NillionPkpClient.createCollection, add better error handling:
     async createCollection(signature: string, userAddress: string, pkpId: string, pkpDid: string, usageKey: string, collectionData: any) {
         const results: Record<string, any> = {};
 
@@ -73,7 +72,7 @@ export class NillionPkpClient {
         for (const node of this.nodes) {
             
             const result = await this.lit.executeAction(
-                'create-invocation',
+                this.poolId,
                 compactAction(ownerInvocationAction(this.poolId, this.contract, this.safeAddress)),
                 { signature, userAddress, pkpId, pkpDid, nodeDid: node.did, command: '/nil/db/collections/create' },
                 usageKey
@@ -113,7 +112,7 @@ export class NillionPkpClient {
 
         for (const node of this.nodes) {
             const result = await this.lit.executeAction(
-                'create-query',
+                this.poolId,
                 compactAction(ownerInvocationAction(this.poolId, this.contract, this.safeAddress)),
                 { signature, userAddress, pkpId, pkpDid, nodeDid: node.did, command: '/nil/db/queries/create' },
                 usageKey
@@ -193,22 +192,20 @@ export class NillionPkpClient {
    
     // }
 
-    async runQuery(auth: any, surveyConfig: Config, usageKey: string) {
+    async runQuery(auth: any, queryIds: string[], poolConfig: PoolConfig, usageKey: string) {
         const runIds: Record<string, string> = {};
-
-        console.log(1)
 
         for (const node of this.nodes) {
 
             const args = { 
                 ...auth,
-                ...surveyConfig, 
+                ...poolConfig, 
                 nodeDid: node.did, 
                 command: '/nil/db/queries/execute' 
             }
 
             const result = await this.lit.executeAction(
-                'run-query',
+                this.poolId,
                 compactAction(ownerInvocationAction(this.poolId, this.contract, this.safeAddress)),
                 args,
                 usageKey
@@ -221,7 +218,7 @@ export class NillionPkpClient {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${invocation}`
                 },
-                body: JSON.stringify({ _id: surveyConfig.queryIds![0], variables: {} })
+                body: JSON.stringify({ _id: queryIds![0], variables: {} })
             });
 
             const data: any = await response.json();
@@ -232,14 +229,14 @@ export class NillionPkpClient {
         return runIds;
     }
 
-    async readQueryResults(auth: any, surveyConfig: Config, usageKey: string, runIds: Record<string, string>) {
+    async readQueryResults(auth: any, surveyConfig: PoolConfig, usageKey: string, runIds: Record<string, string>) {
         const nodeResults: any[] = [];
 
         for (const node of this.nodes) {
             const runId = runIds[node.did];
 
             const result = await this.lit.executeAction(
-                'read-query',
+                this.poolId,
                 compactAction(ownerInvocationAction(this.poolId, this.contract, this.safeAddress)),
                 { 
                     ...auth, 

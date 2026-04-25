@@ -205,12 +205,12 @@ router.post('/surveys/:id/results', async (req: Request, res: Response) => {
     try {
         const surveyId = req.params.id;
         const contract = surveyStore.address;
-        const { auth, groups, poolId, surveyConfig } = req.body;
+        const { auth, groups, survey, poolId, poolConfig } = req.body;
         const usageKey = await litPoolKeys.get(poolId);
-        const nillPkp = new NillionPkpClient(lit, poolId, surveyConfig.safe, contract)
+        const nillPkp = new NillionPkpClient(lit, poolId, poolConfig.safe, contract)
 
-        const runIds = await nillPkp.runQuery(auth, surveyConfig, usageKey!)
-        const results = await nillPkp.readQueryResults(auth, surveyConfig, usageKey!, runIds);
+        const runIds = await nillPkp.runQuery(auth, survey, poolConfig, usageKey!)
+        const results = await nillPkp.readQueryResults(auth, poolConfig, usageKey!, runIds);
 
 
         console.log(results)
@@ -226,11 +226,11 @@ router.post('/surveys/:id/results', async (req: Request, res: Response) => {
 router.post('/surveys/:surveyId/delegation', async (req, res) => {
 
     const { surveyId } = req.params;
-    const { userDid, signature, userAddress, poolId, pkpId, pkpDid} = req.body;
+    const { userDid, signature, userAddress, poolId, poolConfig} = req.body;
 
-    console.log({ userDid, signature, poolId, pkpId, pkpDid})
+    console.log({ userDid, signature, poolId, poolConfig })
 
-    const { delegation } = await survey.getUserDelegation(signature, userAddress, poolId, surveyId, userDid, pkpId, pkpDid)
+    const { delegation } = await survey.getUserDelegation(signature, userAddress, poolId, poolConfig, surveyId, userDid)
     
     res.json({ delegation });
 });

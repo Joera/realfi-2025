@@ -7,7 +7,7 @@ import {
   SecretVaultBuilderClient,
   SecretVaultUserClient,
 } from '@nillion/secretvaults';
-import { Survey, SurveyAnswer } from '../survey/types.js';
+import { PoolConfig, Survey, SurveyAnswer } from '../survey/types.js';
 import { createUserDataObject } from '../survey/index.js';
 import { Signature } from 'viem';
 import { StringifyOptions } from 'node:querystring';
@@ -32,7 +32,6 @@ export class NillDBUserService {
         this.userDidString = (await this.signer.getDid()).didString;
         console.log('User DID:', this.userDidString);
 
-        // SDK 3.0: no more nilauthClient needed
         this.user = await SecretVaultUserClient.from({
             baseUrls: this.nilDBNodes.split(','),
             signer: this.signer,
@@ -57,17 +56,17 @@ export class NillDBUserService {
         });
     }
 
-    async storeOwned(uuid: string, survey: Survey, answers: any, surveyId: string, delegation: string) {
+    async storeOwned(uuid: string, survey: Survey, poolConfig: PoolConfig, answers: any, surveyId: string, delegation: string) {
     
    
         const userPrivateData = createUserDataObject(uuid, answers, survey, "");
 
         console.log("userPrivateData", userPrivateData)
 
-        return await this.createData(survey, userPrivateData, delegation) 
+        return await this.createData(survey, poolConfig, userPrivateData, delegation) 
     }
 
-     async updateOwned(uuid: string, survey: Survey, answers: any, surveyId: string, delegation:string, documentId: string) {
+     async updateOwned(uuid: string, survey: Survey, poolConfig: PoolConfig, answers: any, surveyId: string, delegation:string, documentId: string) {
         
         const userPrivateData = createUserDataObject(uuid, answers, survey, "");
         
@@ -77,11 +76,11 @@ export class NillDBUserService {
             document: documentId
         });
 
-        return await this.createData(survey, userPrivateData, delegation) 
+        return await this.createData(survey, poolConfig, userPrivateData, delegation) 
     } 
         
 
-    async createData(survey: Survey, userPrivateData: any, delegation: string) {
+    async createData(survey: Survey, poolConfig: PoolConfig, userPrivateData: any, delegation: string) {
 
         try { 
             // PKP-signed tokens grant users write permission. The SDK expects them as invocations (ready-to-use) rather than delegation (requires user to co-sign).
@@ -89,7 +88,7 @@ export class NillDBUserService {
                 {
                     owner: this.userDidString,
                     acl: {
-                        grantee: survey.config!.pkpDid, 
+                        grantee: poolConfig!.pkpDid, 
                         read: true,
                         write: false,
                         execute: true,
@@ -120,7 +119,7 @@ export class NillDBUserService {
 
  
 
-    async getUserDelegationToken(signature: string, surveyId: string, backendUrl: string) {
+    async getUserDelegationToken(signature: string, surveyId: string, poolConfig: PoolConfig, backendUrl: string) {
         console.log('requesting delegation for DID:', this.userDidString);
 
         try {
@@ -130,7 +129,8 @@ export class NillDBUserService {
                 body: JSON.stringify({
                     didString: this.userDidString,
                     surveyId,
-                    signature
+                    signature, 
+                    poolConfig
                 })
             });
 
@@ -179,7 +179,7 @@ export class NillDBUserService {
         }
     }
 
-    async testDirectWrite(survey: Survey, data: any, invocations: Record<string, string>) {
+    async testDirectWrite(survey: Survey, poolConfig: PoolConfig, data: any, invocations: Record<string, string>) {
         const nodes = [
             { url: 'https://nildb-stg-n1.nillion.network', did: 'did:key:zQ3shcivRHjnU2ASFFTFC3Y1uoLAqEhTTqMKHGUundhcywNy7' },
         ];
@@ -192,7 +192,7 @@ export class NillDBUserService {
             collection: survey.id,
             data: [data],
             acl: {
-                grantee: survey.config!.pkpDid,
+                grantee: poolConfig!.pkpDid,
                 read: true,
                 write: false,
                 execute: true

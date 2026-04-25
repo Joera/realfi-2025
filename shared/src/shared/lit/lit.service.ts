@@ -28,54 +28,58 @@ export class LitService {
   // ============================================================
 
   private async call<T>(
-    endpoint: string,
-    options: {
-      method?: 'GET' | 'POST';
-      body?: Record<string, unknown>;
-      key?: string | null;
-    } = {},
-    signal?: AbortSignal
+      endpoint: string,
+      options: {
+        method?: 'GET' | 'POST';
+        body?: Record<string, unknown>;
+        key?: string | null;
+      } = {},
+      signal?: AbortSignal
   ): Promise<T> {
- 
-    const { method = 'GET', body, key } = options;
-    const apiKey = key === null ? undefined : (key ?? this.accountKey);
+      const { method = 'GET', body, key } = options;
+      const apiKey = key === null ? undefined : (key ?? this.accountKey);
 
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
+      const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+      };
 
-    // console.log("KEY2", apiKey)
+      if (apiKey) {
+          headers['X-Api-Key'] = apiKey;
+      }
 
-    if (apiKey) {
-      headers['X-Api-Key'] = apiKey;
-    }
+      return withRetry<T>(
+          async (retrySignal) => {
+              const response = await fetch(`${this.baseUrl}${endpoint}`, {
+                  method,
+                  headers,
+                  body: body ? JSON.stringify(body) : undefined,
+                  signal: signal ?? retrySignal,
+              });
 
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method,
-      headers,
-      body: body ? JSON.stringify(body) : undefined,
-      signal, // <-- add this
-    });
+              const text = await response.text();
+              let data: any;
 
-    const text = await response.text();
-    
-    // Try to parse as JSON, handle HTML error pages
-    let data: any;
+              try {
+                  data = JSON.parse(text);
+              } catch {
+                  throw new Error(`Lit API returned non-JSON: ${response.status} ${text.slice(0, 200)}`);
+              }
 
-    try {
-      data = JSON.parse(text);
-    } catch {
-      throw new Error(`Lit API returned non-JSON: ${response.status} ${text.slice(0, 200)}`);
-    }
+              if (!response.ok) {
+                  console.log('[Lit API] Error response:', response.status, text);
+                  throw new Error(data.error ?? data.message ?? data.detail ?? `HTTP ${response.status}: ${text.slice(0, 500)}`);
+              }
 
-    if (!response.ok) {
-      console.log('[Lit API] Error response:', response.status, text);
-      console.log('[Lit API] Error data:', JSON.stringify(data, null, 2));
-      throw new Error(data.error ?? data.message ?? data.detail ?? `HTTP ${response.status}: ${text.slice(0, 500)}`);
-    }
-
-    return data;
-  }  
+              return data;
+          },
+          {
+              retries: 3,
+              timeoutMs: 25_000,
+              onRetry: (attempt, error) =>
+                  console.log(`[Lit API] ${endpoint} retry ${attempt}/3: ${error.message}`),
+          }
+      );
+  }
 
   // ============================================================
   // Public (no auth)
@@ -278,29 +282,22 @@ export class LitService {
   }
 
   async decrypt(key: string, pkpId: string, ciphertext: string, userAddress: string, signature: string, action: string): Promise<string> {
+      const result = await this.call<{ response: { plaintext?: string; error?: string } }>(
+          '/lit_action', {
+              method: 'POST',
+              body: { code: action, js_params: { pkpId, ciphertext, userAddress, signature } },
+              key,
+          }
+      );
 
-    const result = await withRetry<{ response: { plaintext?: string; error?: string } }>(
-      (signal) => this.call('/lit_action', {
-        method: 'POST',
-        body: { code: action, js_params: { pkpId, ciphertext, userAddress, signature } },
-        key,
-      }, signal),
-      {
-        retries: 3,
-        timeoutMs: 25_000,
-        onRetry: (attempt, error) =>
-          console.log(`[Lit decrypt] Attempt ${attempt}/3 failed: ${error.message}`),
+      if (result.response.error) {
+          throw new Error(`Lit decrypt error: ${result.response.error}`);
       }
-    );
 
-    if (result.response.error) {
-      throw new Error(`Lit decrypt error: ${result.response.error}`);
-    }
+      if (!result.response.plaintext) {
+          throw new Error(`Lit decrypt returned no plaintext. Response: ${JSON.stringify(result.response)}`);
+      }
 
-    if (!result.response.plaintext) {
-      throw new Error(`Lit decrypt returned no plaintext. Response: ${JSON.stringify(result.response)}`);
-    }
-
-    return result.response.plaintext!;
+      return result.response.plaintext!;
   }
 }

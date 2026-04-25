@@ -4,7 +4,7 @@ import '@s3ntiment/shared/components';
 import '../components/survey-questions.js';
 import { IServices } from '../services.js';
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
-import { fetchAndDecryptSurveyWithRespondent, isScored, Survey } from '@s3ntiment/shared';
+import { fetchAndDecryptSurveyWithRespondent, isScored, Pool, Survey } from '@s3ntiment/shared';
 
 import { store } from '../state';
 import { createUserDataObject } from '@s3ntiment/shared'
@@ -18,7 +18,8 @@ export class SurveyController {
   documentId: any;
   services: IServices;
   surveyId: string;
-  config?: Survey;
+  survey?: Survey;
+  pool?: Pool;
 
   constructor(services: IServices, surveyId: string) {
     this.services = services;
@@ -75,10 +76,10 @@ export class SurveyController {
 
       try {
         const survey = await fetchAndDecryptSurveyWithRespondent(
-          this.services, surveyStore, this.surveyId, BACKENDURL
+          this.services, surveyStore, this.surveyId, this.pool!.config, BACKENDURL
         );
 
-        this.config = survey;
+        this.survey = survey;
         survey.isScored = isScored(survey.groups);
         store.setSurveyData(this.surveyId, survey);
         store.persistSurveys();
@@ -119,9 +120,9 @@ export class SurveyController {
         userDid: this.services.nillDB.userDidString, 
         signature, 
         userAddress: this.services.account.getSignerAddress(),
-        poolId: this.config?.pool, 
-        pkpId: this.config?.config?.pkpId, 
-        pkpDid: this.config?.config?.pkpDid 
+        poolId: this.survey?.pool, 
+        pkpId: this.pool?.config.pkpId, 
+        pkpDid: this.pool?.config.pkpDid 
       }
 
       const { delegation } = await fetch(`${BACKENDURL}/api/surveys/${this.surveyId}/delegation`, {
@@ -132,7 +133,7 @@ export class SurveyController {
           body: JSON.stringify(args)
       }).then(r => r.json());
 
-      const result = await this.services.nillDB.storeOwned(docIUd, this.config!, event.detail.answers, this.surveyId, delegation)
+      const result = await this.services.nillDB.storeOwned(docIUd, this.survey!, this.pool?.config!, event.detail.answers, this.surveyId, delegation)
 
       console.log(result)
 

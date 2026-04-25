@@ -57,14 +57,14 @@ export interface Batch {
     cardCount?: number
 }
 
-export interface Config {
+export interface PoolConfig {
     safe?: string
     chainId?: number
     litNetwork?: string
     pkpId?: string,
     pkpDid?: string,
     groupId?: string,
-    queryIds?: string[]
+    
 }
 
 export interface EncryptedData {
@@ -79,7 +79,7 @@ export interface EncryptedConfig {
     encryptedForOwner: EncryptedData
     encryptedForRespondent: EncryptedData
     encryptedScoring: string
-    config: Config,
+    queryIds?: string[]
     isScored: boolean,
     createdAt?: number
 }
@@ -92,7 +92,7 @@ export interface Survey {
     introduction?: string
     groups?: QuestionGroup[]
     batches?: Batch[]
-    config?: Config
+    queryIds?: string[]
     results?: SurveyResultsTally
     isScored?: boolean
 }
@@ -103,7 +103,8 @@ export interface Pool {
     batches: string[], 
     owners?: string[],
     readers?: string[],
-    createdAt: number 
+    createdAt: number,
+    config: PoolConfig
 }
 
 // Event detail types

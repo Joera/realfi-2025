@@ -23,6 +23,8 @@ export class PoolController {
         if (poolId == undefined) return "missing poolId";
         if (safeAddress == undefined) return 'missing safeAddress';
 
+        console.log("creating new pool")
+
         // Step 1: Create PKP + get all action CIDs in parallel
         const _decryptForOwnerAction = compactAction(getDecryptForOwnerAction(poolId, contract, safeAddress));
         const _decryptForRespondentAction = compactAction(getDecryptForRespondentAction(poolId, contract));

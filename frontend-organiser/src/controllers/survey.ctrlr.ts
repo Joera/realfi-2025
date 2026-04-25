@@ -8,7 +8,7 @@ import '../components/survey-forms/pool-form-batches.js';
 import '../components/registered-questions-editor.js';
 import { router } from "../router.js";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
-import {  fetchAndDecryptSurveyWithOwner, fetchLitApiKey, Survey } from "@s3ntiment/shared";
+import {  fetchAndDecryptSurveyWithOwner, fetchLitApiKey, Pool, Survey } from "@s3ntiment/shared";
 import { renderIcon } from "@s3ntiment/shared/assets";
 import '@s3ntiment/shared/components';
 
@@ -19,6 +19,7 @@ export class SurveyController {
     private services: IServices;
     private surveyId: string;
     private survey!: Survey;
+    private pool!: Pool;
     private cancelled = false;
 
     constructor(services: IServices, surveyId: string) {
@@ -187,10 +188,10 @@ export class SurveyController {
     async process() {
 
         // we need safeAddress to decrypt
-        await this.services.safe.connectToExistingSafe(this.survey.config?.safe || "") 
+        await this.services.safe.connectToExistingSafe(this.pool.config?.safe || "") 
         if (this.cancelled) return;
         // overwrite with decrypted content 
-        this.survey = await fetchAndDecryptSurveyWithOwner(this.services, surveyStore, this.surveyId, BACKENDURL)
+        this.survey = await fetchAndDecryptSurveyWithOwner(this.services, surveyStore, this.surveyId, this.pool.config!, BACKENDURL)
         if (this.cancelled) return;
 
         await this.refreshResponses(); 
@@ -199,10 +200,12 @@ export class SurveyController {
     async render() {
 
         const survey = store.surveys.find((s: any) => s.id === this.surveyId);
-
+        
         if (survey && survey !== undefined) {
             this.survey = survey;
         } 
+
+        this.pool = store.getPool(this.survey.pool!)!
 
         this.renderTemplate();
         this.process();
@@ -228,9 +231,10 @@ export class SurveyController {
             },
             body: JSON.stringify({ 
                 auth,
+                queryIds: this.survey.queryIds,
                 poolId: this.survey.pool,
                 groups: this.survey.groups,
-                surveyConfig: this.survey.config 
+                poolConfig: this.pool.config 
             })
         });
 
@@ -315,20 +319,14 @@ export class SurveyController {
         document.addEventListener('survey-save', async (e: Event) => {
             const { surveyId, groups } = (e as CustomEvent).detail
 
-            await this.services.safe.connectToExistingSafe(this.survey.config?.safe || "");
+            await this.services.safe.connectToExistingSafe(this.pool.config?.safe || "");
 
             // old state !
             const existing = store.surveys.find((s: any) => s.id === surveyId)
             if (existing) {
 
                 const surveyConfig: Survey = { 
-                    id: existing.id,
-                    pool: existing. pool,
-                    title: existing.title,
-                    introduction: existing.introduction,
-                    createdAt: existing.createdAt, /// ???? 
-                    config:existing.config,   // ????
-                    batches: existing.batches,   // ????? 
+                    ...existing,
                     groups: groups
                 };
 
@@ -342,7 +340,7 @@ export class SurveyController {
                     body: JSON.stringify({   
                         surveyId,      
                         surveyConfig,
-                        safeAddress: this.survey.config?.safe,
+                        safeAddress: this.pool.config?.safe,
                         poolId: existing.pool
                     })
                 });

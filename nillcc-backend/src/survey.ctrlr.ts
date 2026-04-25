@@ -1,4 +1,4 @@
-import { createSurveyAggregationQuery, createSurveyCollectionSchema, EncryptedConfig, fetchSurveyAndParseCid, isScored, withRetry } from "@s3ntiment/shared";
+import { createSurveyAggregationQuery, createSurveyCollectionSchema, EncryptedConfig, fetchSurveyAndParseCid, isScored, PoolConfig, withRetry } from "@s3ntiment/shared";
 import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 import { calculateScore, stripScoring } from "@s3ntiment/shared";
 import { NillionPkpClient } from "./services/nildb.pkp.service.js";
@@ -57,13 +57,11 @@ export class SurveyController {
         const encryptedScoring = this.nildb.encryptToBuilder({scoring: scoring, groups: surveyConfig.groups});
 
         const config: EncryptedConfig = {
-            surveyId: surveyConfig.id,
-            poolId: surveyConfig.pool,
+            ...surveyConfig,
             nilDid: this.nildb.builderDid.didString,
             encryptedForOwner,
             encryptedForRespondent,
             encryptedScoring,
-            config: surveyConfig.config,
             isScored: _isScored
         }
 
@@ -74,28 +72,28 @@ export class SurveyController {
     // for existing pools, the contract reverts if msg.sender != pool.safe.
     async update(body: any) {
 
-        const { surveyConfig } = body;
+        const { survey , poolConfig } = body;
 
-        const usage_api_key = await this.litPoolKeys.get(surveyConfig.pool)
+        const usage_api_key = await this.litPoolKeys.get(survey.pool)
 
-        const { safeConfigWithScoring, safeConfig, scoring } = stripScoring(surveyConfig);
-        const _isScored = isScored(surveyConfig.groups);
+        const { safeConfigWithScoring, safeConfig, scoring } = stripScoring(survey);
+        const _isScored = isScored(survey.groups);
 
         const [ encryptedForOwner, encryptedForRespondent] = await Promise.all([
-            this.lit.encrypt(usage_api_key, surveyConfig.config.pkpId, JSON.stringify(safeConfigWithScoring)),
-            this.lit.encrypt(usage_api_key, surveyConfig.config.pkpId, JSON.stringify(safeConfig))
+            this.lit.encrypt(usage_api_key, poolConfig.pkpId, JSON.stringify(safeConfigWithScoring)),
+            this.lit.encrypt(usage_api_key, poolConfig.pkpId, JSON.stringify(safeConfig))
         ])
 
-        const encryptedScoring = this.nildb.encryptToBuilder({scoring: scoring, groups: surveyConfig.groups});
+        const encryptedScoring = this.nildb.encryptToBuilder({scoring: scoring, groups: survey.groups});
 
         const config: EncryptedConfig = {
-            surveyId: surveyConfig.id,
-            poolId: surveyConfig.pool,
+            surveyId: survey.id,
+            poolId: survey.pool,
             nilDid: this.nildb.builderDid.didString,
             encryptedForOwner,
             encryptedForRespondent,
             encryptedScoring,
-            config: surveyConfig.config,
+            queryIds: survey.queryIds,
             isScored: _isScored
         }
 
@@ -167,7 +165,7 @@ export class SurveyController {
        }
     }
 
-    async getUserDelegation(signature: string, userAddress: string, poolId: string, surveyId: string, userDid: string, pkpId: string, pkpDid: string) {
+    async getUserDelegation(signature: string, userAddress: string, poolId: string, poolConfig: PoolConfig, surveyId: string, userDid: string, ) {
 
         const deployment = {
             address: surveyStore.address,
@@ -178,9 +176,7 @@ export class SurveyController {
         const usageKey = await this.litPoolKeys.get(poolId);
         const survey = await fetchSurveyAndParseCid( { viem: this.viem, ipfs: this.ipfs }, deployment, surveyId)
 
-        const nillPkp = new NillionPkpClient(this.lit, survey.poolId, survey.config.safe!, contract)
-        return await nillPkp.getUserWriteDelegation(signature, userAddress, surveyId, userDid, poolId, usageKey, pkpId, pkpDid);
+        const nillPkp = new NillionPkpClient(this.lit, survey.poolId, poolConfig.safe!, contract)
+        return await nillPkp.getUserWriteDelegation(signature, userAddress, surveyId, userDid, poolId, usageKey, poolConfig.pkpId!, poolConfig.pkpDid!);
     }
-
-    
 }
