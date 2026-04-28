@@ -1,0 +1,5 @@
+/**
+ *
+ * @deprecated - use the one in networks package
+ */
+export declare const createRequestId: () => string;

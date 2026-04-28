@@ -1,0 +1,3 @@
+import { z } from 'zod';
+export declare const isEthAddress: z.ZodString;
+export declare const isIpfsCidV0: z.ZodString;

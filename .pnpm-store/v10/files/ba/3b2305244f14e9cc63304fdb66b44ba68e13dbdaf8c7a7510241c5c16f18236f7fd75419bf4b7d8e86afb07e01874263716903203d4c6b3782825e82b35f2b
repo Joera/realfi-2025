@@ -1,0 +1,2 @@
+import { RuleDefinition } from "./types.js";
+export declare function getAllRules(): Array<RuleDefinition<any>>;

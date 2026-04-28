@@ -1,0 +1,3 @@
+import { RuleDefinitionWithoutConfig } from "./types.js";
+export declare const SortImports: RuleDefinitionWithoutConfig;
+export declare function compareImportPaths(a: string, b: string): number;

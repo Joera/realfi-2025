@@ -1,0 +1,4 @@
+export declare class Logger {
+    static log: (...args: string[]) => void;
+    static error: (...args: string[]) => void;
+}

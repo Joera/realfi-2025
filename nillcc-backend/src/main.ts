@@ -269,7 +269,7 @@ app.use((_req: Request, res: Response) => {
 
 // ====== SERVER STARTUP ======
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8081;
 
 async function startServer() {
     try {

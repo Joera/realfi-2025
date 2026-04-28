@@ -1,0 +1,3 @@
+import type { DeploymentStore } from 'rocketh/types';
+export declare function createEmptyDeploymentStore(): DeploymentStore;
+//# sourceMappingURL=deployment-store.d.ts.map
