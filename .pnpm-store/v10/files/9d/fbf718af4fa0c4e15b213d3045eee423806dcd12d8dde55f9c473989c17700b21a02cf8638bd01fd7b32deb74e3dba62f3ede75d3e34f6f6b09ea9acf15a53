@@ -1,0 +1,5 @@
+import type { ResolvedUserConfig } from '@rocketh/core/types';
+export declare function exportMetadata(config: ResolvedUserConfig, environmentName: string, { out }: {
+    out: string;
+}): Promise<void>;
+//# sourceMappingURL=metadata.d.ts.map

@@ -1,0 +1,3 @@
+import type { SignerProtocolFunction } from '@rocketh/core/types';
+export declare const privateKey: SignerProtocolFunction;
+//# sourceMappingURL=index.d.ts.map
