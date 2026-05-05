@@ -32,8 +32,6 @@ export class SurveyController {
         const _isScored = isScored(surveyConfig.groups);
         const rawSchema = createSurveyCollectionSchema(safeConfig, "owned")
 
-        console.log(rawSchema)
-
         const nillPkp = new NillionPkpClient(this.lit, surveyConfig.pool, surveyConfig.config.safe, contract)
         const collectionResponse = await nillPkp.createCollection(signature, userAddress, pkpId, pkpDid, usage_api_key, rawSchema);
         console.log("collectionResponse", collectionResponse);

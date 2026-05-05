@@ -1,8 +1,0 @@
-packages:
-  - 'shared'
-  - 'frontend-organiser'
-  - 'contracts'
-  - 'frontend-respondents'
-  - 'protocol'
-  - 'nillcc-backend'
-  - 'website'

@@ -1,3 +1,10 @@
+p {
+  font-family: "Lato";
+  font-family: "Nunito_Sans";
+  font-family: "Open_Sans";
+  font-family: "Source_Sans";
+}
+
 #app {
   width: 100%;
 }

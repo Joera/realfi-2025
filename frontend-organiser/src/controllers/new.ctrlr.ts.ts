@@ -5,7 +5,7 @@ import { Batch, Survey } from '@s3ntiment/shared';
 import '../components/draft-survey-editor.js';
 import { createBatch } from '../factories/survey.factory.js';
 import { IServices } from '../services/services.js';
-import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
+import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 import { store } from '../state/store.js';
 import { router } from '../router.js';
 
@@ -50,10 +50,6 @@ export class NewSurveyController {
   }
 
   private handleSurveySubmit = async (event: any) => {
-
-
-    // CREATE POOL 
-    
 
     const survey = event.detail.survey;
     console.log("ready to submit", survey)

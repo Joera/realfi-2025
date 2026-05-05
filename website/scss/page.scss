@@ -5,6 +5,9 @@
 #page {
 
     margin-top: 5rem;
+    width: 100%;
+    // background-color: $gray-lightest;
+
 
     #page-intro {
 
@@ -12,12 +15,17 @@
 
         .tag {
             @include heading-h2;
+            margin-bottom: .25rem;
         }
 
         h2 {
             @include heading-h1;
-            color: $pink;
+            color: $teal-deeper;
             margin-bottom: 1.5rem;
+            font-size: 2.4rem;
+            line-height: 1.175;
+            text-transform: none;
+            letter-spacing: 0;
 
         }
 
@@ -30,6 +38,7 @@
     #main-image {
 
         margin: 3rem auto 6rem auto; 
+        background-color: $gray-lightest;
 
         img {
             width: 100%;

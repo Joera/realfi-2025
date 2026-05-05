@@ -1,5 +1,13 @@
+p {
+  font-family: "Lato";
+  font-family: "Nunito_Sans";
+  font-family: "Open_Sans";
+  font-family: "Source_Sans";
+}
+
 #page {
   margin-top: 5rem;
+  width: 100%;
 }
 #page #page-intro {
   margin-top: 6rem;
@@ -10,6 +18,7 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   font-weight: 400;
+  margin-bottom: 0.25rem;
 }
 #page #page-intro h2 {
   padding: 0;
@@ -20,11 +29,16 @@
   font-size: 1.8rem;
   line-height: 1.33;
   letter-spacing: 1px;
-  color: #cd7c8d;
+  color: #4C8175;
   margin-bottom: 1.5rem;
+  font-size: 2.4rem;
+  line-height: 1.175;
+  text-transform: none;
+  letter-spacing: 0;
 }
 #page #main-image {
   margin: 3rem auto 6rem auto;
+  background-color: #EDEFF0;
 }
 #page #main-image img {
   width: 100%;

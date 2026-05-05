@@ -42,6 +42,33 @@
   font-weight: 500;
   src: url("/assets/fonts/Oswald-Regular.ttf") format("truetype");
 }
+@font-face {
+  font-family: "Lato";
+  font-weight: 500;
+  src: url("/assets/fonts/Lato/Lato-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Nunito_Sans";
+  font-weight: 500;
+  src: url("/assets/fonts/Nunito_Sans/NunitoSans-VariableFont_YTLC,opsz,wdth,wght.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Open_Sans";
+  font-weight: 500;
+  src: url("/assets/fonts/Open_Sans/OpenSans-VariableFont_wdth,wght.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Source_Sans";
+  font-weight: 500;
+  src: url("/assets/fonts/Source_Sans_3/SourceSans3-VariableFont_wght.ttf") format("truetype");
+}
+p {
+  font-family: "Lato";
+  font-family: "Nunito_Sans";
+  font-family: "Open_Sans";
+  font-family: "Source_Sans";
+}
+
 .container-large {
   max-width: 1200px;
 }
@@ -149,7 +176,7 @@ h2.header {
 .block .circle {
   position: absolute;
   border-radius: 50%;
-  background: #cd7c8d;
+  background: #F1DEE1;
   width: 100%;
   height: 100%;
 }
@@ -167,7 +194,6 @@ h2.header {
   font-size: 1.8rem;
   line-height: 1.33;
   margin: 0;
-  color: #57212d;
 }
 .block a {
   position: relative;
@@ -175,6 +201,7 @@ h2.header {
   text-decoration: none;
   border-bottom: 1px solid #cd7c8d;
   align-self: flex-start;
+  color: #A8F3E3;
 }
 .block p {
   position: relative;
@@ -196,8 +223,8 @@ header {
   justify-content: center;
   align-items: center;
   width: 100%;
-  background: #cd7c8d;
-  border-bottom: 1px solid #57212d;
+  background: white;
+  border-bottom: 1px solid #EDEFF0;
   z-index: 99;
 }
 header svg#owl {
@@ -208,7 +235,7 @@ header svg#owl {
   width: auto;
 }
 header svg#owl path {
-  fill: #57212d;
+  fill: #355C53;
 }
 header .container {
   position: relative;
@@ -222,11 +249,11 @@ header nav ul li {
   padding: 0 0.75rem;
 }
 header h1 {
-  color: #57212d;
+  color: black;
   margin: 0.75rem;
 }
 header h1 span {
-  color: #fff;
+  color: #62A496;
 }
 
 #crowd {
@@ -250,10 +277,16 @@ main {
   width: 800px;
   opacity: 0.8;
 }
+#intro svg path {
+  fill: black;
+}
+#intro svg {
+  display: none;
+}
 #intro article {
   margin-top: 0rem;
   position: relative;
-  padding: 1.5rem 6rem;
+  padding: 1.5rem 11rem;
 }
 #intro h2 {
   font-family: "Oswald";
@@ -261,18 +294,28 @@ main {
   font-size: 1.8rem;
   line-height: 1.33;
   margin: 0;
-  color: #57212d;
+  font-size: 3.2rem;
+  line-height: 1.1;
+  color: #4C8175;
+  background: #EDEFF0;
+  padding: 1rem;
+  width: 100%;
 }
 #intro p {
-  text-align: center;
+  text-align: left;
+  color: #191B1C;
+  font-size: 1.125rem;
+  margin-top: 0;
+  background: #EDEFF0;
+  padding: 0.25rem 1rem 1.5rem 1rem;
 }
 #intro button {
   position: absolute;
   bottom: 6rem;
   align-self: center;
   margin-top: 3rem;
-  color: #57212d;
-  background: #cd7c8d;
+  color: #A8F3E3;
+  background: #355C53;
 }
 
 footer {
@@ -281,6 +324,7 @@ footer {
 
 #page {
   margin-top: 5rem;
+  width: 100%;
 }
 #page #page-intro {
   margin-top: 6rem;
@@ -291,6 +335,7 @@ footer {
   text-transform: uppercase;
   letter-spacing: 1px;
   font-weight: 400;
+  margin-bottom: 0.25rem;
 }
 #page #page-intro h2 {
   padding: 0;
@@ -301,11 +346,16 @@ footer {
   font-size: 1.8rem;
   line-height: 1.33;
   letter-spacing: 1px;
-  color: #cd7c8d;
+  color: #4C8175;
   margin-bottom: 1.5rem;
+  font-size: 2.4rem;
+  line-height: 1.175;
+  text-transform: none;
+  letter-spacing: 0;
 }
 #page #main-image {
   margin: 3rem auto 6rem auto;
+  background-color: #EDEFF0;
 }
 #page #main-image img {
   width: 100%;

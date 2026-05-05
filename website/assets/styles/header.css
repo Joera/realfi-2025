@@ -5,8 +5,8 @@ header {
   justify-content: center;
   align-items: center;
   width: 100%;
-  background: #cd7c8d;
-  border-bottom: 1px solid #57212d;
+  background: white;
+  border-bottom: 1px solid #EDEFF0;
   z-index: 99;
 }
 header svg#owl {
@@ -17,7 +17,7 @@ header svg#owl {
   width: auto;
 }
 header svg#owl path {
-  fill: #57212d;
+  fill: #355C53;
 }
 header .container {
   position: relative;
@@ -31,11 +31,11 @@ header nav ul li {
   padding: 0 0.75rem;
 }
 header h1 {
-  color: #57212d;
+  color: black;
   margin: 0.75rem;
 }
 header h1 span {
-  color: #fff;
+  color: #62A496;
 }
 
 /*# sourceMappingURL=header.css.map */

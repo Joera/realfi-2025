@@ -1,1 +1,0 @@
-pnpm dev 2>&1 | tee logs/dev-$(date +%Y-%m-%d-%H-%M).log      

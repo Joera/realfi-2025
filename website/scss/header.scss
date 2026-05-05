@@ -8,8 +8,8 @@ header {
     justify-content: center;
     align-items: center;
     width: 100%;
-    background: $pink;
-    border-bottom: 1px solid $pink-too-dark;
+    background: white;
+    border-bottom: 1px solid $gray-lightest;
     z-index: 99;
 
     svg#owl {
@@ -21,7 +21,7 @@ header {
         width: auto;
 
         path  {
-            fill: $pink-too-dark;
+            fill: $teal-darkest;
         }
         
     }
@@ -46,12 +46,12 @@ header {
 
     h1 {
 
-        color: $pink-too-dark;
+        color: black;
         margin: 0.75rem;
 
         
         span {
-            color: #fff;
+            color: $teal-dark;
         }
     }
 }
