@@ -262,11 +262,21 @@ export class SurveyController {
             const original = store.surveys.find( s => s.id === this.surveyId);
             if (!original) return;
 
+            const clonedGroups = structuredClone(original.groups);
+
+            for (const group of clonedGroups!) {
+                group.id = `group_${Date.now()}`;
+                group.questions = group.questions.map(q => ({
+                    ...q,
+                    id: `question_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                }));
+            }
+
             store.updateSurveyDraft({
                 title: `${original.title} (copy)`,
                 pool: original.pool,
                 introduction: original.introduction,
-                groups: structuredClone(original.groups),
+                groups: clonedGroups,
                 batches: [],           
             });
 
