@@ -26,7 +26,14 @@ export class SurveyController {
 
         const { surveyConfig } = body;
 
-        const usage_api_key = await this.litPoolKeys.get(surveyConfig.pool)
+        const pkpId = "0x7598155069ba02e7dd87afc0c2b5e587b34b2379";
+
+        let usage_api_key = await this.litPoolKeys.get(surveyConfig.pool)
+
+
+        if (usage_api_key == undefined) {
+            usage_api_key = "MCKlyMki/vKi2YvpWRoEmdROU+YFSR/aVNQJj9iVbEE=";
+        }
 
         const { safeConfigWithScoring, safeConfig, scoring } = stripScoring(surveyConfig)
         const _isScored = isScored(surveyConfig.groups);
@@ -35,8 +42,8 @@ export class SurveyController {
 
         // put this inside lit action
         const [ encryptedForOwner, encryptedForRespondent] = await Promise.all([
-            this.lit.encrypt(usage_api_key, surveyConfig.config.pkpId, JSON.stringify(safeConfigWithScoring)),
-            this.lit.encrypt(usage_api_key, surveyConfig.config.pkpId, JSON.stringify(safeConfig))
+            this.lit.encrypt(usage_api_key, pkpId, JSON.stringify(safeConfigWithScoring)),
+            this.lit.encrypt(usage_api_key, pkpId, JSON.stringify(safeConfig))
         ])
 
         const encryptedScoring = this.nildb.encryptToBuilder({scoring: scoring, groups: surveyConfig.groups});

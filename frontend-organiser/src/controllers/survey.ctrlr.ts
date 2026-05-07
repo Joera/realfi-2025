@@ -7,7 +7,7 @@ import '../components/pool-detail-access.js';
 import '../components/survey-forms/pool-form-batches.js';
 import '../components/registered-questions-editor.js';
 import { router } from "../router.js";
-import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' assert { type: 'json' }
+import surveyStore from 's3ntiment-contracts/deployments/base/S3ntimentSurveyStore.json' with { type: 'json' }
 import {  fetchAndDecryptSurveyWithOwner, fetchLitApiKey, Survey } from "@s3ntiment/shared";
 import { renderIcon } from "@s3ntiment/shared/assets";
 import '@s3ntiment/shared/components';
@@ -190,7 +190,7 @@ export class SurveyController {
 
         let safeAddress;
         // die weten we dus niet - opnieuw afleiden
-        console.log("this", this.survey)
+     
         if (this.survey.config?.safe) {
             safeAddress = this.survey.config?.safe;
         } else  {
@@ -238,6 +238,8 @@ export class SurveyController {
                 groups: this.survey.groups   
             })
         });
+
+        console.log(response)
 
         const talliedResults = await response.json();
 

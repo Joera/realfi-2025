@@ -11,10 +11,10 @@ export class LitPoolKeys {
 
   async get(poolId: string): Promise<string | undefined> {
     let key = this.keys.get(poolId);
-    console.log(1,key)
+    // console.log(1,key)
     if (key == undefined) {
       key = await getPoolKey(poolId) || undefined
-      console.log(2,key)
+      // console.log(2,key)
     }
     return key
   }

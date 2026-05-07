@@ -250,6 +250,7 @@ router.post('/lit/usage-key', async (req: Request, res: Response) => {
 
         let key = await litPoolKeys.get(poolId);
 
+
         if (key == undefined && poolId === "5f6b3f9b-5676-4927-b11a-0b1f02344cdf") {
             key = "MCKlyMki/vKi2YvpWRoEmdROU+YFSR/aVNQJj9iVbEE=";
         }
@@ -274,7 +275,7 @@ app.use((_req: Request, res: Response) => {
 
 // ====== SERVER STARTUP ======
 
-const PORT = process.env.PORT || 8081;
+const PORT = process.env.PORT || 8080;
 
 async function startServer() {
     try {

@@ -28,6 +28,8 @@ export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: 
     const cid = extractCid(ipfsCid)
     const config: EncryptedConfig = JSON.parse(await services.ipfs.fetchFromPinata(cid));
 
+    let pkpId = config.config.pkpId || "0x7598155069ba02e7dd87afc0c2b5e587b34b2379";
+
     let d: any;
     // Survey ownership is managed through a safe. Organiser is a signer to this safe 
     const userAddress = services.safe.getSignerAddress();
@@ -46,7 +48,7 @@ export const fetchAndDecryptSurveyWithOwner = async (services: any, deployment: 
     // let _cid = await services.lit.getActionCid(decryptForOwnerAction)
     // console.log(decryptForOwnerAction)
 
-    const data = await services.lit.decrypt(litApiKey, config.config.pkpId, config.encryptedForOwner, userAddress, signature, decryptForOwnerAction);
+    const data = await services.lit.decrypt(litApiKey, pkpId, config.encryptedForOwner, userAddress, signature, decryptForOwnerAction);
       d = JSON.parse(data);
 
     return {
@@ -64,6 +66,8 @@ export const fetchAndDecryptSurveyWithRespondent = async (services: any, deploym
     const cid = extractCid(ipfsCid);
     const config: EncryptedConfig = JSON.parse(await services.ipfs.fetchFromPinata(cid));
 
+    console.log("CC", config);
+
     // the account for pool membership is a simple account. 4337 with pimlico paymaster, only one signer 
     const signature = await services.account.signMessage('Request capability to decrypt');
     const litApiKey = await withRetry(
@@ -78,8 +82,10 @@ export const fetchAndDecryptSurveyWithRespondent = async (services: any, deploym
 
     const decryptForRespondentAction = compactAction(getDecryptForRespondentAction(poolId, deployment.address));
 
+    let pkpId = config.config.pkpId || "0x7598155069ba02e7dd87afc0c2b5e587b34b2379";
+
     let d: any;
-    const data = await services.lit.decrypt(litApiKey, config.config.pkpId, config.encryptedForRespondent, services.account.getSignerAddress(), signature, decryptForRespondentAction);
+    const data = await services.lit.decrypt(litApiKey, pkpId, config.encryptedForRespondent, services.account.getSignerAddress(), signature, decryptForRespondentAction);
     d = JSON.parse(data);
   
     return {
