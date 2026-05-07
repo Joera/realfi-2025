@@ -40,7 +40,7 @@ await initStorage();
 const litPoolKeys = new LitPoolKeys()
 const ipfs = new IPFSMethods(KUBO_ENDPOINT, PINATA_JWT, PINATA_GATEWAY);
 const pool = new PoolController(lit, litPoolKeys)
-const survey = new SurveyController(nildb, lit, ipfs, viem, litPoolKeys);
+const survey = new SurveyController(nildb, lit, litPoolKeys, ipfs, viem);
 await nildb.initBuilder();
 
 
@@ -274,7 +274,7 @@ app.use((_req: Request, res: Response) => {
 
 // ====== SERVER STARTUP ======
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8081;
 
 async function startServer() {
     try {

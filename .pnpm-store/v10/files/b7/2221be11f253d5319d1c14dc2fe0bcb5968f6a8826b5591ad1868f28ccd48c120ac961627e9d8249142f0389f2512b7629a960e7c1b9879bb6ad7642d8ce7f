@@ -1,0 +1,3 @@
+import type { FormatOptions } from './FormatOptions.js';
+export declare function formatArrayEntries(value: unknown[], sibling: unknown, options: FormatOptions, valueStack: unknown[], siblingStack: unknown[]): [number, string][];
+//# sourceMappingURL=formatArrayEntries.d.ts.map

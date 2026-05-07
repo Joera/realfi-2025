@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "lib": ["ES2022"],
+    "lib": ["ES2022", "DOM"],
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
@@ -11,7 +11,8 @@
     "skipLibCheck": true,
     "declaration": true,
     "declarationMap": true,
-    "useUnknownInCatchVariables": false
+    "useUnknownInCatchVariables": false,
+    "types": ["node"]
   },
   "include": ["src/shared/**/*", "src/node/**/*"],
   "exclude": ["node_modules", "dist", "src/browser/**/*", "src/assets/**/*", "src/componenets/**/*"]

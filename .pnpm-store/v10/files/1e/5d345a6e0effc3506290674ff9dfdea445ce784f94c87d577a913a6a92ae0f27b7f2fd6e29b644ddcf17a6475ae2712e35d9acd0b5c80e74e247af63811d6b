@@ -1,0 +1,2 @@
+import { AuthMethod } from '@lit-protocol/types';
+export declare function ethAuthMethodId(authMethod: AuthMethod): Promise<string>;

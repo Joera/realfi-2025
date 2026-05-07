@@ -119,7 +119,7 @@ export class IPFSMethods {
             body: formData
         });
 
-        console.log("PINATA UPLOAD", response)
+        // console.log("PINATA UPLOAD", response)
 
         if (!response.ok) {
             throw new Error(`Pinata upload failed: ${response.statusText}`);
@@ -127,7 +127,7 @@ export class IPFSMethods {
 
         const data: any = await response.json();
 
-        console.log("AFTER UPLOAD", data)
+        // console.log("AFTER UPLOAD", data)
         
         return data.IpfsHash;
     }

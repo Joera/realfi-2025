@@ -1,0 +1,13 @@
+import {
+  isError,
+  isFunc,
+  isObject,
+  isString
+} from "./chunk-ZPFGUXRO.mjs";
+import "./chunk-7P6ASYW6.mjs";
+export {
+  isError,
+  isFunc,
+  isObject,
+  isString
+};

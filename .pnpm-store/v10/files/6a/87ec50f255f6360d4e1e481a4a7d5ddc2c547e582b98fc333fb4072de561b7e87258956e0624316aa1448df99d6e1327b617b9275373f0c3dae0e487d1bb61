@@ -1,0 +1,2 @@
+import { RuleDefinitionWithoutConfig } from "./types.js";
+export declare const NoEmptyBlocks: RuleDefinitionWithoutConfig;

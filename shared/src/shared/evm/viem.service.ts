@@ -1,4 +1,4 @@
-import { createPublicClient, http } from "viem";
+import { createPublicClient, http, recoverMessageAddress } from "viem";
 import type { Chain } from "viem";
 import { getRPCUrl } from "./chains.factory.js";
 
@@ -22,5 +22,14 @@ export class ViemService {
             functionName,
             args,
         });
+    }
+
+     async verifyMessage(msg: string, signature: `0x${string}`): Promise<`0x${string}`> {
+        const address = await recoverMessageAddress({
+            message: msg,
+            signature,
+        });
+
+        return address;
     }
 }

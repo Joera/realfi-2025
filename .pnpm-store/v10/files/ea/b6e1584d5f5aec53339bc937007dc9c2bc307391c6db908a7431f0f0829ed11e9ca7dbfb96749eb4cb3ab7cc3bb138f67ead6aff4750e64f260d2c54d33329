@@ -1,0 +1,2 @@
+import { Cursor } from "@nomicfoundation/slang/cst";
+export declare function ignoreLeadingTrivia(cursor: Cursor): void;
