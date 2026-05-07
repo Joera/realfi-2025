@@ -78,7 +78,9 @@ export interface EncryptedConfig {
     encryptedForRespondent: EncryptedData
     encryptedScoring: string
     config: Config,
-    isScored: boolean
+    isScored: boolean,
+    pkpId?: string,
+    groupId?: string,
 }
 
 export interface Survey {

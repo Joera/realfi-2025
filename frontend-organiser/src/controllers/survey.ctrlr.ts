@@ -186,8 +186,20 @@ export class SurveyController {
     
     async process() {
 
-        // we need safeAddress to decrypt
-        await this.services.safe.connectToExistingSafe(this.survey.config?.safe || "") 
+        const poolId = "5f6b3f9b-5676-4927-b11a-0b1f02344cdf" // should be added or selected at import 
+
+        let safeAddress;
+        // die weten we dus niet - opnieuw afleiden
+        console.log("this", this.survey)
+        if (this.survey.config?.safe) {
+            safeAddress = this.survey.config?.safe;
+        } else  {
+            safeAddress = await this.services.safe.predictSafeAddress(poolId);
+            console.log("safe", safeAddress)
+        } 
+
+
+        await this.services.safe.connectToExistingSafe(safeAddress || "") 
         if (this.cancelled) return;
         // overwrite with decrypted content 
         this.survey = await fetchAndDecryptSurveyWithOwner(this.services, surveyStore, this.surveyId, BACKENDURL)
